@@ -1,3 +1,6 @@
+/* Font loaded dynamically in jelly.js */
+@import "./typography.css";
+
 :root {
   --jelly-surface: var(--card-background-color);
   --jelly-surface-2: var(--secondary-background-color);

@@ -1,12 +1,34 @@
 (function loadJellyTheme() {
-  const id = "jelly-theme";
-  if (document.getElementById(id)) return;
+  // Compute base path from this module's location
+  const moduleUrl = new URL(import.meta.url);
+  const basePath = moduleUrl.pathname.replace(/\/[^/]+$/, ''); // Remove jelly.js
 
-  const link = document.createElement("link");
-  link.id = id;
-  link.rel = "stylesheet";
-  link.href = "/local/jelly/src/styles/jelly-theme.css?v=dev1";
-  document.head.appendChild(link);
+  // Inject @font-face with dynamic path
+  const fontId = "jelly-font";
+  if (!document.getElementById(fontId)) {
+    const fontStyle = document.createElement("style");
+    fontStyle.id = fontId;
+    fontStyle.textContent = `
+      @font-face {
+        font-family: "Inter";
+        src: url("${basePath}/../dist/fonts/Inter.var.woff2") format("woff2-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+    `;
+    document.head.appendChild(fontStyle);
+  }
+
+  // Load theme CSS
+  const themeId = "jelly-theme";
+  if (!document.getElementById(themeId)) {
+    const link = document.createElement("link");
+    link.id = themeId;
+    link.rel = "stylesheet";
+    link.href = `${basePath}/styles/jelly-theme.css?v=dev1`;
+    document.head.appendChild(link);
+  }
 })();
 
 import "./jelly-editor.js";
