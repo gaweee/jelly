@@ -1,0 +1,40 @@
+.wrap {
+  padding: 16px;
+}
+
+.btn {
+  padding: 16px;
+  border-radius: var(--jelly-radius);
+  background: var(--jelly-surface);
+  color: var(--jelly-text);
+  cursor: pointer;
+  transition: background var(--jelly-fast),
+              transform var(--jelly-fast);
+}
+
+.btn.on {
+  background: var(--jelly-on);
+}
+
+.btn.off {
+  background: var(--jelly-off);
+}
+
+.btn.unavailable {
+  background: var(--jelly-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.label {
+  font-size: 14px;
+}
+
+.state {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}

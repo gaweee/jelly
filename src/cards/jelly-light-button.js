@@ -1,38 +1,70 @@
-class JellyLightButton extends HTMLElement {
-  setConfig(config) {
-    if (!config.entity) {
-      throw new Error("entity is required");
+import JellyCardBase from "../jelly-base.js";
+
+customElements.define(
+  "jelly-light-button",
+  class JellyLightButton extends JellyCardBase {
+    afterLoad() {
+      this.$btn = this.qs(".btn");
+      this.$label = this.qs(".label");
+      this.$state = this.qs(".state");
+
+      this.$btn?.addEventListener("click", () => this._handleClick());
     }
-    this.config = config;
-  }
 
-  set hass(hass) {
-    const state = hass.states[this.config.entity];
-    if (!state) return;
+    render() {
+      if (!this.hass || !this.config || !this.$btn) return;
 
-    const isOn = state.state === "on";
+      const stateObj = this.stateObj();
 
-    this.innerHTML = `
-      <ha-card>
-        <div style="
-          padding:16px;
-          border-radius:12px;
-          text-align:center;
-          cursor:pointer;
-          background:${isOn ? "#a6e3a1" : "#313244"};
-          color:${isOn ? "#11111b" : "#cdd6f4"};
-        ">
-          ${state.attributes.friendly_name}
-        </div>
-      </ha-card>
-    `;
+      this.$btn.classList.remove("on", "off", "unavailable");
 
-    this.onclick = () => {
-      hass.callService("light", "toggle", {
-        entity_id: this.config.entity
+      if (!stateObj) {
+        this.$label.textContent = "Entity not found";
+        this.$state.textContent = "missing";
+        this.$btn.classList.add("unavailable");
+        return;
+      }
+
+      const state = stateObj.state;
+      const name =
+        this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+
+      this.$label.textContent = name;
+      this.$state.textContent = state;
+
+      if (state === "on") {
+        this.$btn.classList.add("on");
+      } else if (state === "off") {
+        this.$btn.classList.add("off");
+      } else {
+        this.$btn.classList.add("unavailable");
+      }
+    }
+
+    _handleClick() {
+      const stateObj = this.stateObj();
+      if (!stateObj) {
+        console.warn("Jelly: No state for", this.config.entity);
+        return;
+      }
+
+      if (stateObj.state === "unavailable" || stateObj.state === "unknown") {
+        console.warn("Jelly: Entity unavailable", this.config.entity);
+        return;
+      }
+
+      const desiredState = stateObj.state === "on" ? "off" : "on";
+
+      this.optimisticToggle({
+        desiredState,
+        applyOptimistic: () => {
+          this.$btn.classList.toggle("on", desiredState === "on");
+          this.$btn.classList.toggle("off", desiredState === "off");
+          this.$state.textContent = desiredState;
+        },
+        rollback: () => this.render(),
+        confirm: (next) => next?.state === desiredState
       });
-    };
+    }
   }
-}
-
-customElements.define("jelly-light-button", JellyLightButton);
+);

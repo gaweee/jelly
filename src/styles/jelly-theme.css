@@ -1,0 +1,14 @@
+:root {
+  --jelly-surface: var(--card-background-color);
+  --jelly-surface-2: var(--secondary-background-color);
+
+  --jelly-text: var(--primary-text-color);
+  --jelly-text-2: var(--secondary-text-color);
+
+  --jelly-accent: var(--accent-color);
+  --jelly-on: var(--state-active-color, var(--accent-color));
+  --jelly-off: var(--disabled-text-color);
+
+  --jelly-radius: var(--ha-card-border-radius, 12px);
+  --jelly-fast: 120ms ease;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "jelly",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "push": "tar -czf - . | ssh root@192.168.64.2 \"mkdir -p /config/www/jelly && tar -xzf - -C /config/www/jelly\"",
+    "clean": "rm -rf dist",
+    "dev": "echo \"No dev server yet – edit src/ and run npm run push\""
+  }
+}
