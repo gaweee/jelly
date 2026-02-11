@@ -1,0 +1,70 @@
+// Shared editor shell for all Jelly cards.
+// Each widget supplies its own schema via static editorSchema.
+// Falls back to a simple entity picker when no schema is provided.
+
+class JellyCardEditor extends HTMLElement {
+
+  /* Called by JellyCardBase.getConfigElement with per-widget metadata */
+  setCardMeta({ tag, domains, editorSchema } = {}) {
+    this._cardTag = tag || null;
+    this._domains = domains || null;
+
+    // Per-widget override or sensible default
+    if (editorSchema) {
+      this._schema = editorSchema.schema;
+      this._labels = editorSchema.labels || {};
+    } else {
+      // Default: just an entity picker filtered by domains
+      this._schema = [
+        { name: "entity", selector: { entity: { domain: domains || undefined } } },
+      ];
+      this._labels = { entity: "Entity" };
+    }
+  }
+
+  setConfig(config) {
+    this._config = { ...config };
+    this._buildUI();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) {
+      this._form.hass = hass;
+    }
+  }
+
+  _buildUI() {
+    if (this._form) {
+      this._form.data = this._config;
+      return;
+    }
+
+    this.innerHTML = "";
+
+    const form = document.createElement("ha-form");
+    form.hass = this._hass;
+    form.data = this._config;
+    form.schema = this._schema;
+    form.computeLabel = (s) => this._labels[s.name] || s.name;
+
+    form.addEventListener("value-changed", (ev) => {
+      this._config = { ...this._config, ...ev.detail.value };
+      this.dispatchEvent(
+        new CustomEvent("config-changed", {
+          detail: { config: this._config },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    });
+
+    this._form = form;
+    this.appendChild(form);
+  }
+}
+
+customElements.define("jelly-card-editor", JellyCardEditor);
+
+export default JellyCardEditor;
+

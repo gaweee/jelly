@@ -3,6 +3,36 @@ import JellyCardBase from "../jelly-base.js";
 customElements.define(
   "jelly-light-button",
   class JellyLightButton extends JellyCardBase {
+    static get cardTag() {
+      return "jelly-light-button";
+    }
+
+    static get cardDomains() {
+      return ["light", "switch", "input_boolean", "fan"]; // toggle-ish
+    }
+
+    // Per-widget editor fields (ha-form selector format)
+    static get editorSchema() {
+      return {
+        schema: [
+          { name: "entity", selector: { entity: { domain: this.cardDomains } } },
+          { name: "name",   selector: { text: {} } },
+        ],
+        labels: {
+          entity: "Entity",
+          name:   "Display name (optional)",
+        },
+      };
+    }
+
+    static async getConfigElement() {
+      return await JellyCardBase.getConfigElement.call(this);
+    }
+
+    static getStubConfig(hass) {
+      return JellyCardBase.getStubConfig.call(this, hass);
+    }
+
     afterLoad() {
       this.$btn = this.qs(".btn");
       this.$label = this.qs(".label");

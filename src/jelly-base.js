@@ -11,6 +11,8 @@ async function fetchText(url) {
 
 export class JellyCardBase extends HTMLElement {
   static assetCache = new Map();
+  static cardTag = null; // subclasses should set; used for editor helpers
+  static cardDomains = null; // optional preferred domains for entity picker
 
   constructor() {
     super();
@@ -238,6 +240,47 @@ export class JellyCardBase extends HTMLElement {
 
   getCardSize() {
     return 1;
+  }
+
+  // ----- Lovelace editor plumbing -----
+
+  /**
+   * Override in subclass to define per-widget editor fields.
+   * Return { schema: [...], labels: {...} }.
+   * schema entries use HA selector format: { name, selector }.
+   * If not overridden, a default entity picker is generated from cardDomains.
+   */
+  static get editorSchema() {
+    return null; // subclasses override; null = use default
+  }
+
+  static async getConfigElement() {
+    if (!customElements.get("jelly-card-editor")) {
+      await import("./jelly-editor.js");
+    }
+    const el = document.createElement("jelly-card-editor");
+    el.setCardMeta({
+      tag: this.cardTag,
+      domains: this.cardDomains,
+      editorSchema: this.editorSchema,  // per-widget override
+    });
+    return el;
+  }
+
+  static getStubConfig(hass) {
+    const tag = this.cardTag || "jelly-card";
+    const entity = this._pickEntity(hass, this.cardDomains) || "light.example";
+    return { type: `custom:${tag}`, entity };
+  }
+
+  static _pickEntity(hass, domains) {
+    if (!hass || !hass.states) return null;
+    const preferred = domains && domains.length ? domains : ["light", "switch", "scene"];
+    for (const domain of preferred) {
+      const found = Object.keys(hass.states).find((id) => id.startsWith(domain + "."));
+      if (found) return found;
+    }
+    return Object.keys(hass.states)[0] || null;
   }
 
   disconnectedCallback() {
