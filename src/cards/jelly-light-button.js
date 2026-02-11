@@ -7,8 +7,14 @@ customElements.define(
       this.$btn = this.qs(".btn");
       this.$label = this.qs(".label");
       this.$state = this.qs(".state");
+      this.$debug = this.qs(".debug");
 
-      this.$btn?.addEventListener("click", () => this._handleClick());
+      this._unbind = this.bindInteractions(this.$btn, {
+        onTap: () => this._handleToggle("tap"),
+        onDoubleTap: () => this._handleToggle("double"),
+        onHold: () => this._handleHold(),
+        onSwipe: (dir) => this._handleSwipe(dir)
+      });
     }
 
     render() {
@@ -41,7 +47,7 @@ customElements.define(
       }
     }
 
-    _handleClick() {
+    _handleToggle(kind = "tap") {
       const stateObj = this.stateObj();
       if (!stateObj) {
         console.warn("Jelly: No state for", this.config.entity);
@@ -65,6 +71,25 @@ customElements.define(
         rollback: () => this.render(),
         confirm: (next) => next?.state === desiredState
       });
+
+      this.setDebugText(`toggle via ${kind}`);
+    }
+
+    _handleHold() {
+      this.setAnimState("hold");
+      this.setDebugText("hold");
+      setTimeout(() => this.setAnimState(null), 400);
+    }
+
+    _handleSwipe(dir) {
+      this.setDebugText(`swipe ${dir}`);
+      this.setAnimState(`swipe-${dir}`);
+      setTimeout(() => this.setAnimState(null), 300);
+    }
+
+    disconnectedCallback() {
+      this._unbind?.();
+      super.disconnectedCallback();
     }
   }
 );

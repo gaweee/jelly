@@ -1,4 +1,4 @@
-// Base class for Jelly cards. Handles asset loading, shadow DOM, helpers, and optimistic UI.
+// Base class for Jelly cards. Handles asset loading, shadow DOM, helpers, gestures, and optimistic UI.
 
 const ASSET_BASE = "/local/jelly/src/cards/";
 const DEFAULT_OPTIMISTIC_TIMEOUT = 1200;
@@ -17,6 +17,8 @@ export class JellyCardBase extends HTMLElement {
     this._assetsLoaded = false;
     this._assetPromise = null;
     this._pendingToggles = [];
+    this._gestureBindings = [];
+    this._animState = null;
   }
 
   async setConfig(config) {
@@ -56,6 +58,142 @@ export class JellyCardBase extends HTMLElement {
   callService(domain, service, data) {
     if (!this._hass?.callService) return;
     return this._hass.callService(domain, service, data);
+  }
+
+  /**
+   * Wire tap / double-tap / long-press / swipe semantics to a target element.
+   * Widgets only supply handlers; base handles timing + cleanup.
+   */
+  bindInteractions(target, handlers = {}) {
+    if (!target) return () => {};
+
+    const {
+      onTap,
+      onDoubleTap,
+      onHold,
+      onSwipe,
+      holdTime = 500,
+      doubleTime = 250,
+      swipeThreshold = 24
+    } = handlers;
+
+    let holdTimer = null;
+    let tapTimer = null;
+    let lastTap = 0;
+    let pointerDown = false;
+    let holdFired = false;
+    let startX = 0;
+    let startY = 0;
+
+    const clearTimers = () => {
+      if (holdTimer) clearTimeout(holdTimer);
+      if (tapTimer) clearTimeout(tapTimer);
+      holdTimer = tapTimer = null;
+    };
+
+    const cancel = () => {
+      pointerDown = false;
+      holdFired = false;
+      clearTimers();
+    };
+
+    const handlePointerDown = (ev) => {
+      pointerDown = true;
+      holdFired = false;
+      clearTimers();
+      startX = ev.clientX;
+      startY = ev.clientY;
+
+      if (onHold) {
+        holdTimer = setTimeout(() => {
+          holdFired = true;
+          onHold();
+        }, holdTime);
+      }
+    };
+
+    const handlePointerUp = (ev) => {
+      if (!pointerDown) return;
+      pointerDown = false;
+
+      if (holdFired) {
+        cancel();
+        return;
+      }
+
+      // Swipe detection
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (onSwipe && (absX > swipeThreshold || absY > swipeThreshold)) {
+        const dir =
+          absX > absY ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
+        onSwipe(dir);
+        cancel();
+        return;
+      }
+
+      const now = Date.now();
+      if (onDoubleTap && now - lastTap <= doubleTime) {
+        clearTimers();
+        lastTap = 0;
+        onDoubleTap();
+        return;
+      }
+
+      lastTap = now;
+      if (onTap) {
+        tapTimer = setTimeout(() => {
+          onTap();
+        }, doubleTime);
+      }
+      clearTimeout(holdTimer);
+    };
+
+    target.addEventListener("pointerdown", handlePointerDown);
+    target.addEventListener("pointerup", handlePointerUp);
+    target.addEventListener("pointercancel", cancel);
+    target.addEventListener("pointerleave", cancel);
+
+    const cleanup = () => {
+      cancel();
+      target.removeEventListener("pointerdown", handlePointerDown);
+      target.removeEventListener("pointerup", handlePointerUp);
+      target.removeEventListener("pointercancel", cancel);
+      target.removeEventListener("pointerleave", cancel);
+    };
+
+    this._gestureBindings.push(cleanup);
+    return cleanup;
+  }
+
+  /**
+   * Set animation state class on host (anim--STATE) and data-anim attribute.
+   */
+  setAnimState(state) {
+    const host = this.shadowRoot?.host || this;
+    if (this._animState) {
+      host.classList.remove(`anim--${this._animState}`);
+    }
+    this._animState = state || null;
+    if (this._animState) {
+      host.classList.add(`anim--${this._animState}`);
+      host.dataset.anim = this._animState;
+    } else {
+      delete host.dataset.anim;
+    }
+  }
+
+  /**
+   * Write debug text if a `.debug` element exists; always log to console.
+   */
+  setDebugText(text) {
+    const debugEl = this.qs(".debug");
+    if (debugEl) {
+      debugEl.textContent = text;
+    }
+    console.debug("[JELLY DEBUG]", text);
   }
 
   optimisticToggle(options = {}) {
@@ -100,6 +238,13 @@ export class JellyCardBase extends HTMLElement {
 
   getCardSize() {
     return 1;
+  }
+
+  disconnectedCallback() {
+    this._gestureBindings.forEach((fn) => fn());
+    this._gestureBindings = [];
+    this._pendingToggles.forEach((p) => p.timer && clearTimeout(p.timer));
+    this._pendingToggles = [];
   }
 
   async _ensureAssets() {

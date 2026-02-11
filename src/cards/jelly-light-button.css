@@ -35,6 +35,13 @@
   opacity: 0.7;
 }
 
+.debug {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--jelly-muted);
+  opacity: 0.9;
+}
+
 .btn:active {
   transform: scale(0.97);
 }
