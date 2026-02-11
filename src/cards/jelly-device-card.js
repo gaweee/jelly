@@ -88,12 +88,12 @@ customElements.define(
     }
 
     validateConfig(config) {
-      // No validation needed - shortcuts are now simple entity IDs
+      // No validation needed
     }
 
     afterLoad() {
       this.$card = this.qs(".device-card");
-      this.$mainArea = this.qs(".main-area");
+      this.$cardContent = this.qs(".card-content");
       this.$imageContainer = this.qs(".device-image-container");
       this.$image = this.qs(".device-image");
       this.$imagePlaceholder = this.qs(".device-image-placeholder");
@@ -101,7 +101,7 @@ customElements.define(
       this.$status = this.qs(".device-status");
       this.$shortcutsContainer = this.qs(".shortcuts");
 
-      this._unbind = this.bindInteractions(this.$mainArea, {
+      this._unbind = this.bindInteractions(this.$cardContent, {
         onTap: () => this._handleToggle()
       });
     }
@@ -161,7 +161,7 @@ customElements.define(
             </button>
           `;
         }).join('');
-        this.$shortcutsContainer.style.display = "flex";
+        this.$shortcutsContainer.style.display = "grid";
 
         shortcuts.forEach((entityId) => {
           const btn = this.qs(`.shortcut[data-entity="${entityId}"]`);

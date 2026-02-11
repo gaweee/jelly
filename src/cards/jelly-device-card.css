@@ -1,5 +1,8 @@
 :host {
   font-family: var(--font-sans);
+  display: block;
+  container-type: inline-size;
+  container-name: device-card;
 }
 
 .device-card {
@@ -7,62 +10,83 @@
   border-radius: var(--jelly-radius);
   overflow: hidden;
   transition: background var(--jelly-fast);
+  position: relative;
 }
 
-.main-area {
+.card-content {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 20px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: opacity var(--jelly-fast);
+  position: relative;
 }
 
-.main-area:active {
+.card-content:active {
   opacity: 0.8;
 }
 
-/* Device Image */
+/* Image Section - 60% width */
+.image-section {
+  flex: 0 0 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.device-image-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .device-image,
 .device-image-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  height: auto;
   border-radius: 12px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--jelly-surface-2);
+  object-fit: contain;
 }
 
 .device-image-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  opacity: 0.3;
+  font-size: 96px;
+  opacity: 0.2;
+  background: transparent;
 }
 
-/* Device Info */
-.device-info {
+/* Info Section - 40% width */
+.info-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   min-width: 0;
+}
+
+.device-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin-top: 36px;
 }
 
 .device-name {
   color: var(--jelly-text);
   font-weight: var(--w-medium);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: right;
 }
 
 .device-status {
   color: var(--jelly-text-2);
   opacity: 0.7;
+  text-align: right;
 }
 
 .device-card[data-state="on"] .device-status {
@@ -72,13 +96,16 @@
 
 /* Toggle Indicator */
 .toggle-indicator {
-  width: 52px;
-  height: 32px;
-  border-radius: 16px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
   background: var(--jelly-off);
-  position: relative;
-  flex-shrink: 0;
   transition: background var(--jelly-fast);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .device-card[data-state="on"] .toggle-indicator {
@@ -87,8 +114,8 @@
 
 .toggle-knob {
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: white;
   top: 2px;
@@ -98,16 +125,26 @@
 }
 
 .device-card[data-state="on"] .toggle-knob {
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
-/* Shortcuts */
+/* Shortcuts - 2x2 Grid */
 .shortcuts {
-  display: flex;
-  gap: 12px;
-  padding: 0 20px 20px;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  pointer-events: auto;
+  width: fit-content;
+  margin-left: auto;
+  align-self: flex-end;
 }
+
+/* Shortcut positioning: reverse Z pattern - top-right, top-left, bottom-right, bottom-left */
+.shortcut:nth-child(1) { grid-area: 1 / 2; }
+.shortcut:nth-child(2) { grid-area: 1 / 1; }
+.shortcut:nth-child(3) { grid-area: 2 / 2; }
+.shortcut:nth-child(4) { grid-area: 2 / 1; }
 
 .shortcut {
   display: flex;
@@ -115,16 +152,16 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: 68px;
-  height: 68px;
-  padding: 6px;
-  border-radius: 50%;
+  padding: 8px;
+  border-radius: 8px;
   background: var(--jelly-surface-2);
   border: none;
   cursor: pointer;
   transition: all var(--jelly-fast);
   color: var(--jelly-text);
   -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  aspect-ratio: 1;
 }
 
 .shortcut:hover {
@@ -142,11 +179,111 @@
 }
 
 .shortcut .t-label {
-  font-size: 10px;
+  font-size: 11px;
   opacity: 0.9;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  line-height: 1.2;
+}
+
+/* Compact Layout (<300px) - Container Query */
+@container device-card (max-width: 300px) {
+  .card-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 16px 12px;
+    padding: 16px;
+    min-height: unset;
+  }
+
+  .image-section {
+    grid-column: 1;
+    grid-row: 1;
+    flex: none;
+  }
+
+  .device-image-container {
+    max-width: 100%;
+  }
+
+  .device-image,
+  .device-image-placeholder {
+    width: 100%;
+    height: auto;
+  }
+
+  .device-image-placeholder {
+    font-size: 56px;
+  }
+
+  .info-section {
+    display: contents;
+  }
+
+  .device-info {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .device-name {
+    font-size: 15px;
+    line-height: 20px;
+    padding-right: 0;
+    text-align: left;
+  }
+
+  .device-status {
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .toggle-indicator {
+    width: 40px;
+    height: 24px;
+    border-radius: 12px;
+    top: 16px;
+    right: 16px;
+  }
+
+  .toggle-knob {
+    width: 20px;
+    height: 20px;
+  }
+
+  .device-card[data-state="on"] .toggle-knob {
+    transform: translateX(16px);
+  }
+
+  .shortcuts {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 50px;
+    margin-left: 0;
+    gap: 6px;
+    width: fit-content;
+    justify-self: end;
+    align-self: start;
+  }
+
+  .shortcut {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border-radius: 50%;
+    aspect-ratio: 1;
+  }
+
+  .shortcut ha-icon {
+    --mdc-icon-size: 18px;
+  }
+
+  .shortcut .t-label {
+    display: none;
+  }
 }
