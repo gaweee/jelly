@@ -1,0 +1,152 @@
+:host {
+  font-family: var(--font-sans);
+}
+
+.device-card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  transition: background var(--jelly-fast);
+}
+
+.main-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--jelly-fast);
+}
+
+.main-area:active {
+  opacity: 0.8;
+}
+
+/* Device Image */
+.device-image,
+.device-image-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--jelly-surface-2);
+}
+
+.device-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  opacity: 0.3;
+}
+
+/* Device Info */
+.device-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.device-name {
+  color: var(--jelly-text);
+  font-weight: var(--w-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-status {
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+}
+
+.device-card[data-state="on"] .device-status {
+  color: var(--jelly-on);
+  opacity: 1;
+}
+
+/* Toggle Indicator */
+.toggle-indicator {
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--jelly-off);
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--jelly-fast);
+}
+
+.device-card[data-state="on"] .toggle-indicator {
+  background: var(--jelly-on);
+}
+
+.toggle-knob {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--jelly-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.device-card[data-state="on"] .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* Shortcuts */
+.shortcuts {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 20px;
+  justify-content: flex-start;
+}
+
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 68px;
+  height: 68px;
+  padding: 6px;
+  border-radius: 50%;
+  background: var(--jelly-surface-2);
+  border: none;
+  cursor: pointer;
+  transition: all var(--jelly-fast);
+  color: var(--jelly-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shortcut:hover {
+  background: var(--jelly-accent);
+  color: white;
+  transform: scale(1.05);
+}
+
+.shortcut:active {
+  transform: scale(0.95);
+}
+
+.shortcut ha-icon {
+  --mdc-icon-size: 20px;
+}
+
+.shortcut .t-label {
+  font-size: 10px;
+  opacity: 0.9;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

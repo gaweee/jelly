@@ -33,6 +33,7 @@
 
 import "./jelly-editor.js";
 import "./cards/jelly-light-button.js";
+import "./cards/jelly-device-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -41,6 +42,11 @@ import "./cards/jelly-light-button.js";
       type: "jelly-light-button",
       name: "Jelly Light Button",
       description: "Optimistic light toggle with Jelly theme"
+    },
+    {
+      type: "jelly-device-card",
+      name: "Jelly Device Card",
+      description: "Device card with custom image, toggle, and helper button shortcuts"
     }
   ];
 
