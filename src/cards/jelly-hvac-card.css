@@ -143,8 +143,6 @@
   transform: none;
   pointer-events: none;
   z-index: 2;
-  filter: drop-shadow(0 0 18px rgba(137, 180, 250, .18))
-          drop-shadow(0 0 40px rgba(180, 190, 254, .10));
 }
 
 .overlay-fill {
@@ -160,7 +158,7 @@
     rgba(130, 175, 255, .95) 40%,
     rgba(210, 120, 255, .9) 70%,
     rgba(255, 105, 180, .9) 100%);
-  opacity: .5;
+  opacity: .6;
   mask: linear-gradient(to top, #000 50%, transparent 100%);
   -webkit-mask: linear-gradient(to top, #000 50%, transparent 100%);
   filter: blur(.15px);

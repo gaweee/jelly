@@ -116,7 +116,6 @@ customElements.define(
       this.$railContainer = this.qs(".rail-container");
       this.$thumb = this.qs(".thumb");
       this.$toggle = this.qs(".toggle-indicator");
-      this.$overlayFill = this.qs(".overlay-fill");
 
       this._initializeRail();
 
@@ -378,27 +377,6 @@ customElements.define(
 
       // centre rail on current target temperature
       this._scrollToTemp(temp);
-
-      // sync overlay fill with actual computed card background
-      this._syncOverlayFill();
-    }
-
-    /**
-     * Sync SVG overlay fill with computed card background color.
-     * CSS custom properties don't always resolve inside SVG fill attributes,
-     * so we read the computed value and apply it directly.
-     * @private
-     */
-    _syncOverlayFill() {
-      if (!this.$overlayFill) return;
-      // Read background from the <ha-card> element (the shadow host's first child),
-      // which is styled by HA's theme and is the true rendered card background.
-      const haCard = this.shadowRoot?.querySelector('ha-card');
-      if (!haCard) return;
-      const bg = getComputedStyle(haCard).backgroundColor;
-      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-        this.$overlayFill.setAttribute('fill', bg);
-      }
     }
 
     /**
