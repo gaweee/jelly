@@ -34,6 +34,7 @@
 import "./jelly-editor.js";
 import "./cards/jelly-light-button.js";
 import "./cards/jelly-device-card.js";
+import "./cards/jelly-hvac-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -47,6 +48,11 @@ import "./cards/jelly-device-card.js";
       type: "jelly-device-card",
       name: "Jelly Device Card",
       description: "Device card with custom image, toggle, and helper button shortcuts"
+    },
+    {
+      type: "jelly-hvac-card",
+      name: "Jelly HVAC Card",
+      description: "Beautiful temperature control with interactive slider"
     }
   ];
 
