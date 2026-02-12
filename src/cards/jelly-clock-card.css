@@ -1,0 +1,95 @@
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  container-type: inline-size;
+  container-name: clock-card;
+}
+
+ha-card {
+  height: 250px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.clock-card {
+  background: var(--jelly-accent, var(--accent-color, #89b4fa));
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Time */
+.clock-time {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: var(--w-medium);
+  color: #1e1e2e;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Date — hero, e.g. 12 Feb */
+.clock-date {
+  font-size: 48px;
+  line-height: 56px;
+  font-weight: var(--w-semibold);
+  color: #1e1e2e;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+/* Day of week */
+.clock-day {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: var(--w-regular);
+  color: rgba(30, 30, 46, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* Subtitle line from input_text */
+.clock-subtitle {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: var(--w-regular);
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 10px;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Hide time when toggled off */
+.clock-time.hidden {
+  display: none;
+}
+
+/* Compact Layout */
+@container clock-card (max-width: 300px) {
+  .card-content {
+    padding: 16px;
+  }
+  .clock-date {
+    font-size: 38px;
+    line-height: 44px;
+  }
+}
