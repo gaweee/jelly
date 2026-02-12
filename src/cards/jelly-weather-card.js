@@ -364,11 +364,6 @@ customElements.define(
       this.$forecastStrip.innerHTML = html;
     }
 
-    // ── Card size for Lovelace layout ─────────────────────────
-
-    getCardSize() {
-      return this.config?.show_forecast !== false ? 3 : 2;
-    }
 
     /**
      * Fetch SVG text and inject it inline into the main icon container

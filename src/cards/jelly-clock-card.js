@@ -114,10 +114,6 @@ customElements.define(
       }
     }
 
-    getCardSize() {
-      return 1;
-    }
-
     disconnectedCallback() {
       if (this._clockInterval) {
         clearInterval(this._clockInterval);

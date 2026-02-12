@@ -13,6 +13,7 @@ export class JellyCardBase extends HTMLElement {
   static assetCache = new Map();
   static cardTag = null; // subclasses should set; used for editor helpers
   static cardDomains = null; // optional preferred domains for entity picker
+  static defaultUnits = 1; // default card height units; subclasses can override
 
   constructor() {
     super();
@@ -34,6 +35,7 @@ export class JellyCardBase extends HTMLElement {
     }
 
     await this._ensureAssets();
+    this._applyCardDimensions();
     this.render?.();
   }
 
@@ -237,8 +239,38 @@ export class JellyCardBase extends HTMLElement {
     }
   }
 
+  // ─── Card Dimension Helpers ─────────────────────────────
+
+  /**
+   * Returns the number of height units for this card.
+   * Reads from config.card_units, then falls back to the class default.
+   */
+  _getCardUnits() {
+    return this.config?.card_units ?? this.constructor.defaultUnits ?? 1;
+  }
+
+  /**
+   * Compute card height from units: 175 + 75 * units.
+   * 1 unit → 250px, 2 → 325px, 3 → 400px.
+   */
+  _getCardHeight() {
+    return 175 + 75 * this._getCardUnits();
+  }
+
+  /**
+   * Apply --jelly-card-height and --jelly-card-units CSS custom properties
+   * on the host element so all card CSS can reference them.
+   */
+  _applyCardDimensions() {
+    const units = this._getCardUnits();
+    const height = 175 + 75 * units;
+    const host = this.shadowRoot?.host || this;
+    host.style.setProperty('--jelly-card-height', `${height}px`);
+    host.style.setProperty('--jelly-card-units', String(units));
+  }
+
   getCardSize() {
-    return 1;
+    return this._getCardUnits();
   }
 
   // ----- Lovelace editor plumbing -----
@@ -324,6 +356,7 @@ export class JellyCardBase extends HTMLElement {
       this.afterLoad();
     }
 
+    this._applyCardDimensions();
     this._assetsLoaded = true;
   }
 

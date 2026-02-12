@@ -243,10 +243,6 @@ customElements.define(
       super.disconnectedCallback();
     }
 
-    getCardSize() {
-      return 3;
-    }
-
     /* ---- Chart.js CDN loader ---- */
 
     _ensureChartJs() {
