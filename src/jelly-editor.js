@@ -11,8 +11,13 @@ class JellyCardEditor extends HTMLElement {
 
     // Per-widget override or sensible default
     if (editorSchema) {
-      this._schema = editorSchema.schema;
-      this._labels = editorSchema.labels || {};
+      // Check if editorSchema is a function (dynamic) or static object
+      if (typeof editorSchema === 'function') {
+        this._dynamicSchemaCallback = editorSchema;
+      } else {
+        this._schema = editorSchema.schema;
+        this._labels = editorSchema.labels || {};
+      }
     } else {
       // Default: just an entity picker filtered by domains
       this._schema = [
@@ -36,6 +41,8 @@ class JellyCardEditor extends HTMLElement {
 
   _buildUI() {
     if (this._form) {
+      // Rebuild schema dynamically based on current config
+      this._updateSchema();
       this._form.data = this._config;
       return;
     }
@@ -45,11 +52,15 @@ class JellyCardEditor extends HTMLElement {
     const form = document.createElement("ha-form");
     form.hass = this._hass;
     form.data = this._config;
+    this._updateSchema();
     form.schema = this._schema;
     form.computeLabel = (s) => this._labels[s.name] || s.name;
 
     form.addEventListener("value-changed", (ev) => {
       this._config = { ...this._config, ...ev.detail.value };
+      // Rebuild schema when config changes to handle conditional fields
+      this._updateSchema();
+      this._form.schema = this._schema;
       this.dispatchEvent(
         new CustomEvent("config-changed", {
           detail: { config: this._config },
@@ -61,6 +72,16 @@ class JellyCardEditor extends HTMLElement {
 
     this._form = form;
     this.appendChild(form);
+  }
+
+  _updateSchema() {
+    // Allow cards to provide dynamic schema based on current config
+    if (this._dynamicSchemaCallback) {
+      const result = this._dynamicSchemaCallback(this._config || {});
+      this._schema = result.schema;
+      this._labels = result.labels || {};
+    }
+    // Otherwise use static schema (already set in setCardMeta)
   }
 }
 

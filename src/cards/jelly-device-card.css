@@ -140,11 +140,11 @@
   align-self: flex-end;
 }
 
-/* Shortcut positioning: reverse Z pattern - top-right, top-left, bottom-right, bottom-left */
-.shortcut:nth-child(1) { grid-area: 1 / 2; }
-.shortcut:nth-child(2) { grid-area: 1 / 1; }
-.shortcut:nth-child(3) { grid-area: 2 / 2; }
-.shortcut:nth-child(4) { grid-area: 2 / 1; }
+/* Shortcut positioning: pure Z pattern - top-left, top-right, bottom-left, bottom-right */
+.shortcut:nth-child(1) { grid-area: 1 / 1; }
+.shortcut:nth-child(2) { grid-area: 1 / 2; }
+.shortcut:nth-child(3) { grid-area: 2 / 1; }
+.shortcut:nth-child(4) { grid-area: 2 / 2; }
 
 .shortcut {
   display: flex;

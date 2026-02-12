@@ -12,8 +12,9 @@ customElements.define(
     }
 
     static get editorSchema() {
-      return {
-        schema: [
+      // Return dynamic schema generator function
+      return (config) => {
+        const schema = [
           {
             name: "entity",
             selector: { 
@@ -33,49 +34,52 @@ customElements.define(
                 type: "url"
               }
             }
-          },
-          {
-            name: "shortcut_1",
-            selector: { 
-              entity: { 
-                domain: ["input_button", "button", "script", "scene"] 
-              } 
-            }
-          },
-          {
-            name: "shortcut_2",
-            selector: { 
-              entity: { 
-                domain: ["input_button", "button", "script", "scene"] 
-              } 
-            }
-          },
-          {
-            name: "shortcut_3",
-            selector: { 
-              entity: { 
-                domain: ["input_button", "button", "script", "scene"] 
-              } 
-            }
-          },
-          {
-            name: "shortcut_4",
-            selector: { 
-              entity: { 
-                domain: ["input_button", "button", "script", "scene"] 
-              } 
-            }
           }
-        ],
-        labels: {
+        ];
+
+        const labels = {
           entity: "Toggle Entity",
           name: "Display Name (optional)",
-          image: "Image Path (e.g., /local/device.png - upload via Media)",
-          shortcut_1: "Shortcut 1 (optional)",
-          shortcut_2: "Shortcut 2 (optional)",
-          shortcut_3: "Shortcut 3 (optional)",
-          shortcut_4: "Shortcut 4 (optional)"
+          image: "Image Path (e.g., /local/device.png - upload via Media)"
+        };
+
+        // Add fields for each shortcut
+        for (let i = 1; i <= 4; i++) {
+          const entityKey = `shortcut_${i}_automation`;
+          const isScript = config[entityKey]?.startsWith('script.');
+
+          schema.push({
+            name: entityKey,
+            selector: { 
+              entity: { 
+                domain: ["automation","script","scene","button"] 
+              } 
+            }
+          });
+          schema.push({
+            name: `shortcut_${i}_name`,
+            selector: { text: {} }
+          });
+          schema.push({
+            name: `shortcut_${i}_icon`,
+            selector: { icon: {} }
+          });
+
+          // Only add parameter field if selected entity is a script
+          if (isScript) {
+            schema.push({
+              name: `shortcut_${i}_parameter`,
+              selector: { text: {} }
+            });
+            labels[`shortcut_${i}_parameter`] = `Shortcut ${i} - Parameters (JSON: {"key": "value"} or {"speed": 75})`;
+          }
+
+          labels[entityKey] = `Shortcut ${i} - Entity`;
+          labels[`shortcut_${i}_name`] = `Shortcut ${i} - Name`;
+          labels[`shortcut_${i}_icon`] = `Shortcut ${i} - Icon`;
         }
+
+        return { schema, labels };
       };
     }
 
@@ -141,34 +145,46 @@ customElements.define(
     }
 
     _renderShortcuts() {
-      const shortcutKeys = ['shortcut_1', 'shortcut_2', 'shortcut_3', 'shortcut_4'];
-      const shortcuts = shortcutKeys
-        .map(key => this.config[key])
-        .filter(entityId => entityId && entityId.trim());
+      const shortcuts = [];
+      
+      for (let i = 1; i <= 4; i++) {
+        const automation = this.config[`shortcut_${i}_automation`];
+        const name = this.config[`shortcut_${i}_name`];
+        const icon = this.config[`shortcut_${i}_icon`];
+        const parameter = this.config[`shortcut_${i}_parameter`];
+        
+        if (automation) {
+          shortcuts.push({ automation, name, icon, parameter, index: i });
+        }
+      }
 
       if (shortcuts.length > 0) {
-        this.$shortcutsContainer.innerHTML = shortcuts.map((entityId, idx) => {
-          const entity = this.hass.states[entityId];
-          if (!entity) return '';
-          
-          const icon = entity.attributes.icon || this._getDefaultIcon(entityId);
-          const label = entity.attributes.friendly_name || entityId.split('.')[1];
+        this.$shortcutsContainer.innerHTML = shortcuts.map((shortcut) => {
+          const displayName = shortcut.name || 'Action';
+          const displayIcon = shortcut.icon || 'mdi:gesture-tap';
           
           return `
-            <button class="shortcut" data-entity="${entityId}">
-              <ha-icon icon="${icon}"></ha-icon>
-              <span class="t-label">${label}</span>
+            <button class="shortcut" data-index="${shortcut.index}">
+              <ha-icon icon="${displayIcon}"></ha-icon>
+              <span class="t-label">${displayName}</span>
             </button>
           `;
         }).join('');
         this.$shortcutsContainer.style.display = "grid";
 
-        shortcuts.forEach((entityId) => {
-          const btn = this.qs(`.shortcut[data-entity="${entityId}"]`);
+        shortcuts.forEach((shortcut) => {
+          const btn = this.qs(`.shortcut[data-index="${shortcut.index}"]`);
           if (btn) {
+            // Stop pointer events from bubbling to prevent parent tap handler
+            btn.addEventListener("pointerdown", (e) => {
+              e.stopPropagation();
+            });
+            btn.addEventListener("pointerup", (e) => {
+              e.stopPropagation();
+            });
             btn.addEventListener("click", (e) => {
               e.stopPropagation();
-              this._executeShortcut(entityId);
+              this._executeShortcut(shortcut);
             });
           }
         });
@@ -177,40 +193,88 @@ customElements.define(
       }
     }
 
-    _getDefaultIcon(entityId) {
-      const domain = entityId.split('.')[0];
-      const iconMap = {
-        'input_button': 'mdi:gesture-tap-button',
-        'button': 'mdi:gesture-tap-button',
-        'script': 'mdi:script-text',
-        'scene': 'mdi:palette'
-      };
-      return iconMap[domain] || 'mdi:button-pointer';
-    }
-
     _computeStatus(entity) {
       const state = entity.state;
+      const attrs = entity.attributes;
       
+      // Critical states
       if (state === "unavailable") return "Unavailable";
-      if (state === "off") return "Off";
+      if (state === "unknown") return "Unknown";
       
-      // For fans, show speed percentage
-      if (entity.attributes.percentage) {
-        return `On - ${entity.attributes.percentage}%`;
+      const statusParts = [];
+      
+      // Base state (capitalized)
+      const baseState = state.charAt(0).toUpperCase() + state.slice(1);
+      statusParts.push(baseState);
+      
+      // Only add details if device is active (not off/idle/standby)
+      if (state !== "off" && state !== "idle" && state !== "standby") {
+        // Intensity/Level indicators (brightness, speed, volume, position)
+        if (attrs.brightness !== undefined) {
+          const pct = Math.round((attrs.brightness / 255) * 100);
+          statusParts.push(`${pct}%`);
+        } else if (attrs.percentage !== undefined) {
+          statusParts.push(`${attrs.percentage}%`);
+        } else if (attrs.volume_level !== undefined) {
+          const vol = Math.round(attrs.volume_level * 100);
+          statusParts.push(`Vol ${vol}%`);
+        } else if (attrs.current_position !== undefined) {
+          statusParts.push(`${attrs.current_position}%`);
+        }
+        
+        // Mode information
+        if (attrs.hvac_mode && attrs.hvac_mode !== "off") {
+          statusParts.push(attrs.hvac_mode);
+        } else if (attrs.preset_mode) {
+          statusParts.push(attrs.preset_mode);
+        } else if (attrs.fan_mode) {
+          statusParts.push(attrs.fan_mode);
+        } else if (attrs.swing_mode && attrs.swing_mode !== "off") {
+          statusParts.push(attrs.swing_mode);
+        }
+        
+        // Media info
+        if (attrs.media_title) {
+          statusParts.push(attrs.media_title);
+        } else if (attrs.media_artist) {
+          statusParts.push(attrs.media_artist);
+        }
+        
+        // Color/Effect for lights
+        if (attrs.effect && attrs.effect !== "none") {
+          statusParts.push(attrs.effect);
+        } else if (attrs.color_mode === "color_temp" && attrs.color_temp) {
+          statusParts.push(`${attrs.color_temp}K`);
+        }
       }
       
-      // For lights, show brightness
-      if (entity.attributes.brightness) {
-        const pct = Math.round((entity.attributes.brightness / 255) * 100);
-        return `On - ${pct}%`;
+      // Temperature (show even when off for climate devices)
+      if (attrs.current_temperature !== undefined) {
+        statusParts.push(`${attrs.current_temperature}°`);
+      } else if (attrs.temperature !== undefined && state !== "off") {
+        statusParts.push(`→${attrs.temperature}°`);
       }
       
-      // For climate, show current temp
-      if (entity.attributes.current_temperature) {
-        return `${entity.attributes.current_temperature}°`;
+      // Humidity (useful context)
+      if (attrs.current_humidity !== undefined) {
+        statusParts.push(`${attrs.current_humidity}%RH`);
       }
       
-      return "On";
+      // Battery level (if low)
+      if (attrs.battery_level !== undefined && attrs.battery_level < 20) {
+        statusParts.push(`🔋${attrs.battery_level}%`);
+      }
+      
+      // Join with separator, limit to reasonable length
+      let status = statusParts.join(" · ");
+      
+      // Fallback for simple on/off devices
+      if (status === "On" || status === "Off") {
+        return status;
+      }
+      
+      // Trim if too long
+      return status.length > 40 ? status.substring(0, 37) + "..." : status;
     }
 
     _handleToggle() {
@@ -238,33 +302,68 @@ customElements.define(
       });
     }
 
-    _executeShortcut(entityId) {
-      const entity = this.hass.states[entityId];
+    _executeShortcut(shortcut) {
+      const entity = this.hass.states[shortcut.automation];
       if (!entity) {
-        console.warn("Shortcut entity not found", entityId);
+        console.warn("Entity not found", shortcut.automation);
         return;
       }
 
-      const [domain] = entityId.split(".");
-      
-      // Determine appropriate service based on domain
-      let service;
+      const [domain] = shortcut.automation.split(".");
+      let service, serviceData;
+
       switch (domain) {
-        case 'input_button':
-        case 'button':
-          service = 'press';
+        case "button":
+          service = "press";
+          serviceData = { entity_id: shortcut.automation };
           break;
-        case 'script':
-          service = 'turn_on';
+
+        case "scene":
+          service = "turn_on";
+          serviceData = { entity_id: shortcut.automation };
           break;
-        case 'scene':
-          service = 'turn_on';
+
+        case "automation":
+          service = "trigger";
+          serviceData = { entity_id: shortcut.automation };
           break;
+
+        case "script":
+          service = "turn_on";
+          serviceData = { entity_id: shortcut.automation };
+          
+          // Parse parameters for scripts - must be wrapped in 'variables' key
+          if (shortcut.parameter && shortcut.parameter.trim()) {
+            try {
+              const paramData = JSON.parse(shortcut.parameter);
+              // Scripts expect parameters under 'variables' key
+              serviceData.variables = paramData;
+            } catch (e) {
+              // Show user-friendly error notification
+              const errorMsg = `Invalid JSON in shortcut parameters. Use format: {"key": "value"} or {"percentage": 75}. Error: ${e.message}`;
+              console.error("Jelly:", errorMsg);
+              
+              // Try to show a notification if available
+              if (this.hass?.callService) {
+                this.hass.callService("persistent_notification", "create", {
+                  title: "Jelly Card - Invalid Parameters",
+                  message: errorMsg,
+                  notification_id: "jelly_param_error"
+                });
+              }
+              
+              // Don't execute the script with invalid parameters
+              return;
+            }
+          }
+          break;
+
         default:
-          service = 'toggle';
+          console.warn("Unsupported domain for shortcut", domain);
+          return;
       }
 
-      this.callService(domain, service, { entity_id: entityId });
+      this.callService(domain, service, serviceData);
     }
 
     disconnectedCallback() {
