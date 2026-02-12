@@ -68,14 +68,6 @@ customElements.define(
     }
 
     /**
-     * Validates card configuration
-     * @param {Object} config - Card configuration
-     */
-    validateConfig(config) {
-      // No validation needed
-    }
-
-    /**
      * Called after HTML/CSS assets are loaded
      * Sets up DOM references and interaction handlers
      */

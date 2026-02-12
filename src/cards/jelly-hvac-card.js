@@ -30,8 +30,8 @@ customElements.define(
      * @returns {Function} Function that takes config and returns {schema, labels}
      */
     static get editorSchema() {
-      return (config) => {
-        const schema = [
+      return {
+        schema: [
           {
             name: "entity",
             selector: {
@@ -72,15 +72,13 @@ customElements.define(
           }
         ];
 
-        const labels = {
+        labels: {
           entity: "Climate Entity",
           name: "Display Name (optional)",
           icon: "Icon (optional)",
           min_temp: "Minimum Temperature",
           max_temp: "Maximum Temperature"
-        };
-
-        return { schema, labels };
+        }
       };
     }
 

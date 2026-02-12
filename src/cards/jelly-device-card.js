@@ -1,5 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
-import { computeStatus, BRIGHTNESS_MAX } from "../utils/status-utils.js";
+import { computeStatus } from "../utils/status-utils.js";
 import { executeShortcut } from "../utils/automation-utils.js";
 
 /**
@@ -19,7 +19,7 @@ customElements.define(
 
     /** @returns {string[]} Preferred entity domains for this card */
     static get cardDomains() {
-      return ["fan", "light", "switch", "climate"];
+      return ["fan", "light", "switch", "climate", "input_boolean"];
     }
 
     /**
@@ -104,14 +104,6 @@ customElements.define(
 
     static getStubConfig(hass) {
       return JellyCardBase.getStubConfig.call(this, hass);
-    }
-
-    /**
-     * Validates card configuration (currently no-op)
-     * @param {Object} config - Card configuration
-     */
-    validateConfig(config) {
-      // No validation needed
     }
 
     /**

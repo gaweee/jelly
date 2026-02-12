@@ -133,7 +133,7 @@ customElements.define(
      * Editor schema – entity, title, default range.
      */
     static get editorSchema() {
-      return () => ({
+      return {
         schema: [
           {
             name: "entity",
@@ -160,7 +160,7 @@ customElements.define(
           title: "Card Title (optional)",
           range: "Default Range",
         },
-      });
+      };
     }
 
     static async getConfigElement() {
