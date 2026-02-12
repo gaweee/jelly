@@ -1,3 +1,4 @@
+/* ===== Host ===== */
 :host {
   font-family: var(--font-sans);
   display: block;
@@ -5,38 +6,95 @@
   container-name: hvac-card;
 }
 
+/* ===== Card Shell ===== */
 .hvac-card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
   overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
+  padding: 20px;
 }
 
-.card-content {
+/* ===== Top Section ===== */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  user-select: none;
+}
+
+.temp-block {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* HA mdi icon — replaces old .icon svg */
+.mdi-icon {
+  --mdc-icon-size: 42px;
+  width: 42px;
+  height: 42px;
+  margin-top: 6px;
+  opacity: .85;
+  color: rgba(205, 214, 244, .85);
+  filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
+}
+
+.numbers {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 24px;
+  gap: 2px;
 }
 
-/* Device Info Section */
-.hvac-info {
+.value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Large temperature readout */
+.value {
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 300;
+  color: var(--jelly-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.value-unit {
+  font-size: 20px;
+  font-weight: 300;
+  color: rgba(205, 214, 244, .55);
+}
+
+/* Right info column — toggle + name/status */
+.info-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.device-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+/* Name — matches jelly-device-card */
 .device-name {
   color: var(--jelly-text);
   font-weight: var(--w-medium);
-  text-align: left;
+  text-align: right;
 }
 
+/* Status — matches jelly-device-card */
 .device-status {
   color: var(--jelly-text-2);
   opacity: 0.7;
-  text-align: left;
+  text-align: right;
   text-transform: capitalize;
 }
 
@@ -47,207 +105,233 @@
   opacity: 1;
 }
 
-/* Temperature Display */
-.temperature-display {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  margin: 24px 0;
-}
-
-.temp-value {
-  font-size: 96px;
-  font-weight: var(--w-bold);
-  line-height: 1;
-  color: var(--jelly-text);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-}
-
-.temp-unit {
-  font-size: 36px;
-  font-weight: var(--w-medium);
-  color: var(--jelly-text-2);
-  opacity: 0.5;
-  margin-bottom: 12px;
-}
-
-/* Temperature Picker */
-.temperature-picker {
+/* ===== Temperature Rail ===== */
+.temp-rail {
   position: relative;
+  height: 110px;
+  margin-top: 10px;
+}
+
+.rail-scroller {
+  position: relative;
+  height: 100px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  cursor: grab;
+  mask: radial-gradient(ellipse 70% 200% at 50% 100%, #000 40%, transparent 72%);
+  -webkit-mask: radial-gradient(ellipse 70% 200% at 50% 100%, #000 40%, transparent 72%);
+}
+.rail-scroller:active { cursor: grabbing; }
+.rail-scroller::-webkit-scrollbar { display: none; }
+
+/* Rail container — width set dynamically in JS */
+.rail-container {
+  position: relative;
+  height: 100px;
+}
+
+/* SVG overlay — notch fill matches card background */
+.rail-overlay {
+  position: absolute;
+  left: 0;
+  bottom: 0;
   width: 100%;
-  height: 80px;
+  height: 100px;
+  transform: none;
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 0 18px rgba(137, 180, 250, .18))
+          drop-shadow(0 0 40px rgba(180, 190, 254, .10));
+}
+
+.overlay-fill {
+  fill: var(--jelly-surface);
+}
+
+/* Full-width gradient — blue/pink kept per spec */
+.rail-gradient-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    rgba(72, 165, 255, .95) 0%,
+    rgba(130, 175, 255, .95) 40%,
+    rgba(210, 120, 255, .9) 70%,
+    rgba(255, 105, 180, .9) 100%);
+  opacity: .5;
+  mask: linear-gradient(to top, #000 50%, transparent 100%);
+  -webkit-mask: linear-gradient(to top, #000 50%, transparent 100%);
+  filter: blur(.15px);
+}
+
+/* Subtle x-axis ticks — mask edges driven by --tick-start / --tick-end (set in JS) */
+.ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(205, 214, 244, .12) 0px,
+      rgba(205, 214, 244, .12) 3px,
+      transparent 3px,
+      transparent 54px
+    );
+  opacity: .55;
+  mask:
+    linear-gradient(to right,
+      transparent 0%,
+      transparent var(--tick-start, 16.67%),
+      #000 var(--tick-start, 16.67%),
+      #000 var(--tick-end, 83.33%),
+      transparent var(--tick-end, 83.33%),
+      transparent 100%),
+    linear-gradient(to top, transparent 15px, #000 19px, #000 30%, transparent 50%);
+  mask-composite: intersect;
+  -webkit-mask:
+    linear-gradient(to right,
+      transparent 0%,
+      transparent var(--tick-start, 16.67%),
+      #000 var(--tick-start, 16.67%),
+      #000 var(--tick-end, 83.33%),
+      transparent var(--tick-end, 83.33%),
+      transparent 100%),
+    linear-gradient(to top, transparent 15px, #000 19px, #000 30%, transparent 50%);
+  -webkit-mask-composite: source-in;
+}
+
+/* Thumb: drag handle centred under notch */
+.thumb {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 28px;
+  z-index: 3;
+  cursor: grab;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.thumb:active { cursor: grabbing; }
 
-.picker-line-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  cursor: grab;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-overflow-scrolling: touch;
+.thumb-dots {
+  display: grid;
+  grid-template-columns: repeat(3, 5px);
+  grid-template-rows: repeat(2, 5px);
+  gap: 3px;
 }
 
-.picker-line-container::-webkit-scrollbar {
+.thumb-dots::before,
+.thumb-dots::after {
+  content: '';
+}
+
+/* Six dots via box-shadow on a single pseudo-element */
+.thumb-dots::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(205, 214, 244, .40);
+  grid-column: 1;
+  grid-row: 1;
+  box-shadow:
+    8px 0 0 rgba(205, 214, 244, .40),
+   16px 0 0 rgba(205, 214, 244, .40),
+    0  8px 0 rgba(205, 214, 244, .40),
+    8px 8px 0 rgba(205, 214, 244, .40),
+   16px 8px 0 rgba(205, 214, 244, .40);
+}
+
+.thumb-dots::after {
   display: none;
 }
 
-.picker-line-container:active {
-  cursor: grabbing;
-}
-
-.picker-line {
+/* ===== Toggle Indicator (top-right) ===== */
+.toggle-indicator {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--jelly-off);
+  transition: background var(--jelly-fast);
+  cursor: pointer;
   position: relative;
-  height: 80px;
-  display: inline-block;
-  /* Width calculated dynamically based on temperature range */
-  min-width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.picker-gradient-bar {
+.hvac-card[data-state="heat"] .toggle-indicator,
+.hvac-card[data-state="cool"] .toggle-indicator,
+.hvac-card[data-state="auto"] .toggle-indicator,
+.hvac-card[data-state="heat_cool"] .toggle-indicator,
+.hvac-card[data-state="dry"] .toggle-indicator,
+.hvac-card[data-state="fan_only"] .toggle-indicator {
+  background: var(--jelly-on);
+}
+
+.toggle-knob {
   position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  transform: translateY(-50%);
-  background: linear-gradient(
-    90deg,
-    #89b4fa 0%,
-    #cba6f7 100%
-  );
-  border-radius: 2px;
-  z-index: 0;
-}
-
-/* Temperature Markers */
-.temp-marker {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Minor ticks (half degrees) */
-.temp-marker.minor .temp-marker-tick {
-  width: 2px;
-  height: 12px;
-  background: rgba(30, 30, 46, 0.4);
-  border-radius: 1px;
-}
-
-/* Major ticks (whole degrees) */
-.temp-marker.major .temp-marker-tick {
-  width: 2px;
-  height: 20px;
-  background: rgba(30, 30, 46, 0.6);
-  border-radius: 1px;
-}
-
-/* Endpoint markers (min/max) */
-.temp-marker.endpoint .temp-marker-tick {
-  width: 3px;
-  height: 32px;
-  background: rgba(30, 30, 46, 0.8);
-  border-radius: 1.5px;
-}
-
-.temp-marker-label {
-  font-size: 12px;
-  font-weight: var(--w-medium);
-  color: var(--jelly-text);
-  opacity: 0.6;
-  white-space: nowrap;
-}
-
-.temp-marker.endpoint .temp-marker-label {
-  font-size: 14px;
-  font-weight: var(--w-semibold);
-  opacity: 0.8;
-}
-
-/* Static Knob - centered */
-.picker-knob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.picker-knob-indicator {
-  width: 32px;
-  height: 32px;
-  background: #cdd6f4;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 4px solid rgba(30, 30, 46, 0.95);
-  box-sizing: border-box;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    0 0 0 4px rgba(205, 214, 244, 0.1);
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--jelly-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* State-specific styling */
-.hvac-card[data-state="off"] .picker-line-container {
+.hvac-card[data-state="heat"] .toggle-knob,
+.hvac-card[data-state="cool"] .toggle-knob,
+.hvac-card[data-state="auto"] .toggle-knob,
+.hvac-card[data-state="heat_cool"] .toggle-knob,
+.hvac-card[data-state="dry"] .toggle-knob,
+.hvac-card[data-state="fan_only"] .toggle-knob {
+  transform: translateX(18px);
+}
+
+/* ===== State treatments ===== */
+.hvac-card[data-state="off"] .rail-scroller {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-.hvac-card[data-state="off"] .picker-line {
-  opacity: 0.3;
-}
-
-.hvac-card[data-state="off"] .temp-value {
+.hvac-card[data-state="off"] .value {
   opacity: 0.5;
 }
 
-.hvac-card[data-state="unavailable"] .card-content {
+.hvac-card[data-state="unavailable"] .hvac-card {
   opacity: 0.5;
   pointer-events: none;
 }
 
-/* Responsive adjustments */
+/* ===== Responsive ===== */
 @container hvac-card (max-width: 300px) {
-  .temp-value {
-    font-size: 72px;
+  .value {
+    font-size: 48px;
   }
-  
-  .temp-unit {
-    font-size: 28px;
+
+  .mdi-icon {
+    --mdc-icon-size: 40px;
+    width: 40px;
+    height: 40px;
   }
-  
-  .temperature-display {
-    margin: 16px 0;
+
+  .temp-rail {
+    height: 140px;
   }
-  
-  .picker-knob-indicator {
-    width: 28px;
-    height: 28px;
+
+  .rail-scroller {
+    height: 120px;
   }
 }
 
-@container hvac-card (min-width: 400px) {
-  .card-content {
-    padding: 32px;
-  }
-  
-  .picker-knob-indicator {
-    width: 36px;
-    height: 36px;
+@container hvac-card (min-width: 500px) {
+  .hvac-card {
+    padding: 24px;
   }
 }

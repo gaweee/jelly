@@ -1,26 +1,102 @@
 <ha-card>
   <div class="hvac-card">
-    <div class="card-content">
-      <div class="hvac-info">
-        <div class="device-name t-h2"></div>
-        <div class="device-status t-label"></div>
-      </div>
-      
-      <div class="temperature-display">
-        <span class="temp-value"></span>
-        <span class="temp-unit">°C</span>
-      </div>
-      
-      <div class="temperature-picker">
-        <div class="picker-line-container">
-          <div class="picker-line">
-            <div class="picker-gradient-bar"></div>
-            <!-- Temperature markers generated dynamically -->
+    <div class="top">
+      <div class="temp-block">
+        <!-- HA mdi icon — set dynamically from entity/config -->
+        <ha-icon class="mdi-icon"></ha-icon>
+
+        <div class="numbers">
+          <div class="value-row">
+            <span class="value temp-value"></span>
+            <span class="value-unit temp-unit">°C</span>
           </div>
         </div>
-        <div class="picker-knob">
-          <div class="picker-knob-indicator"></div>
+      </div>
+
+      <div class="info-right">
+        <div class="toggle-indicator">
+          <div class="toggle-knob"></div>
         </div>
+        <div class="device-info">
+          <div class="device-name t-h2"></div>
+          <div class="device-status t-label"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="temp-rail">
+      <div class="rail-scroller">
+        <div class="rail-container">
+          <div class="rail-gradient-bg" aria-hidden="true"></div>
+          <div class="ticks" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <svg class="rail-overlay" viewBox="0 0 520 120" preserveAspectRatio="none" aria-hidden="true" role="presentation">
+        <defs>
+          <filter id="overlayShadow" x="-40%" y="-60%" width="180%" height="280%">
+            <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="rgba(0,0,0,.50)" flood-opacity="1"/>
+          </filter>
+          <filter id="overlayGlow" x="-50%" y="-70%" width="200%" height="240%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feColorMatrix in="blur" type="matrix"
+              values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      0 0 0 0.35 0" result="glow"/>
+            <feMerge>
+              <feMergeNode in="glow"/>
+            </feMerge>
+          </filter>
+          <!-- Radial stroke centered on the notch; bright core fading outward -->
+          <radialGradient id="overlayStroke"
+                          gradientUnits="userSpaceOnUse"
+                          cx="260" cy="70" r="260"
+                          fx="260" fy="70">
+            <stop offset="0%" stop-color="rgba(255,255,255,.98)"/>
+            <stop offset="35%" stop-color="rgba(255,255,255,.55)"/>
+            <stop offset="65%" stop-color="rgba(255,255,255,.16)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+        </defs>
+        <!-- background fill: area under notch matches card bg -->
+        <path class="overlay-fill"
+              d="M 0 92
+                 C 120 92, 170 92, 212 92
+                 C 236 92, 236 54, 260 54
+                 C 284 54, 284 92, 308 92
+                 C 350 92, 400 92, 520 92
+                 L 520 120 L 0 120 Z"/>
+        <!-- soft halo -->
+        <path d="M 0 92
+                 C 120 92, 170 92, 212 92
+                 C 236 92, 236 54, 260 54
+                 C 284 54, 284 92, 308 92
+                 C 350 92, 400 92, 520 92"
+              fill="none"
+              stroke="url(#overlayStroke)"
+              stroke-width="12"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity=".42"
+              filter="url(#overlayGlow)"/>
+        <!-- crisp stroke -->
+        <path d="M 0 92
+                 C 120 92, 170 92, 212 92
+                 C 236 92, 236 54, 260 54
+                 C 284 54, 284 92, 308 92
+                 C 350 92, 400 92, 520 92"
+              fill="none"
+              stroke="url(#overlayStroke)"
+              stroke-width="6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity=".92"
+              filter="url(#overlayShadow)"/>
+      </svg>
+
+      <div class="thumb" aria-label="Drag to adjust temperature">
+        <span class="thumb-dots" aria-hidden="true"></span>
       </div>
     </div>
   </div>

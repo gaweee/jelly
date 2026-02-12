@@ -1,8 +1,8 @@
 import JellyCardBase from "../jelly-base.js";
 
 /**
- * HVAC Card - Beautiful temperature control with slider
- * Displays device name, status, current temperature, and an interactive slider
+ * HVAC Card — temperature control with scrollable rail, SVG notch overlay,
+ * and HA mdi icon. Visual language follows the Jelly rail prototype (test.html).
  */
 customElements.define(
   "jelly-hvac-card",
@@ -11,13 +11,10 @@ customElements.define(
     static DEFAULT_MIN_TEMP = 18;
     static DEFAULT_MAX_TEMP = 35;
     static TEMP_STEP = 0.5;
-    static PIXELS_PER_DEGREE = 40; // Space between each degree marker
-    
-    // Scrollable bar width multiplier (bar width = viewport width * WIDTH_MULTIPLIER)
+
+    // Rail width = container width × WIDTH_MULTIPLIER
     static WIDTH_MULTIPLIER = 3;
-    // Min temp position: center of first panel = 1/(2*WIDTH_MULTIPLIER)
-    // Max temp position: center of last panel = (WIDTH_MULTIPLIER*2-1)/(2*WIDTH_MULTIPLIER)
-    
+
     /** @returns {string} Card HTML tag name */
     static get cardTag() {
       return "jelly-hvac-card";
@@ -37,10 +34,10 @@ customElements.define(
         const schema = [
           {
             name: "entity",
-            selector: { 
-              entity: { 
+            selector: {
+              entity: {
                 domain: ["climate"]
-              } 
+              }
             }
           },
           {
@@ -48,8 +45,12 @@ customElements.define(
             selector: { text: {} }
           },
           {
+            name: "icon",
+            selector: { icon: {} }
+          },
+          {
             name: "min_temp",
-            selector: { 
+            selector: {
               number: {
                 min: 10,
                 max: 30,
@@ -60,7 +61,7 @@ customElements.define(
           },
           {
             name: "max_temp",
-            selector: { 
+            selector: {
               number: {
                 min: 10,
                 max: 35,
@@ -74,6 +75,7 @@ customElements.define(
         const labels = {
           entity: "Climate Entity",
           name: "Display Name (optional)",
+          icon: "Icon (optional)",
           min_temp: "Minimum Temperature",
           max_temp: "Maximum Temperature"
         };
@@ -95,14 +97,16 @@ customElements.define(
      * @param {Object} config - Card configuration
      */
     validateConfig(config) {
-      if (!config.entity?.startsWith('climate.')) {
-        console.warn('Jelly HVAC Card: entity should be a climate entity');
+      if (!config.entity?.startsWith("climate.")) {
+        console.warn("Jelly HVAC Card: entity should be a climate entity");
       }
     }
 
+    // ─── Lifecycle ───────────────────────────────────────────────
+
     /**
-     * Called after HTML/CSS assets are loaded
-     * Sets up DOM references and interaction handlers
+     * Called after HTML/CSS assets are loaded.
+     * Sets up DOM references and interaction handlers.
      */
     afterLoad() {
       this.$card = this.qs(".hvac-card");
@@ -110,260 +114,226 @@ customElements.define(
       this.$status = this.qs(".device-status");
       this.$tempValue = this.qs(".temp-value");
       this.$tempUnit = this.qs(".temp-unit");
-      this.$pickerContainer = this.qs(".picker-line-container");
-      this.$pickerLine = this.qs(".picker-line");
-      this.$gradientBar = this.qs(".picker-gradient-bar");
-      this.$pickerKnob = this.qs(".picker-knob");
+      this.$icon = this.qs(".mdi-icon");
+      this.$scroller = this.qs(".rail-scroller");
+      this.$railContainer = this.qs(".rail-container");
+      this.$thumb = this.qs(".thumb");
+      this.$toggle = this.qs(".toggle-indicator");
+      this.$overlayFill = this.qs(".overlay-fill");
 
-      // Initialize temperature picker
-      this._initializePicker();
+      this._initializeRail();
+
+      // Toggle tap
+      if (this.$toggle) {
+        this.bindInteractions(this.$toggle, {
+          onTap: () => this._handleToggle()
+        });
+      }
     }
 
+    // ─── Rail Interactions ───────────────────────────────────────
+
     /**
-     * Initialize scrollable temperature picker
+     * Wire pointer-based drag on the thumb and the rail scroller,
+     * mirroring the test.html interaction model.
      * @private
      */
-    _initializePicker() {
-      let isScrolling = false;
+    _initializeRail() {
+      let thumbDragging = false;
+      let railDragging = false;
+      let lastX = 0;
+      let railLastX = 0;
       let scrollTimeout = null;
-      let lastScrollLeft = 0;
-      let isDragging = false;
-      let startX = 0;
-      let scrollStart = 0;
 
+      // ── live temperature readout on scroll ──
       const handleScroll = () => {
-        if (!isScrolling) {
-          isScrolling = true;
-        }
-
-        // Clear existing timeout
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout);
-        }
-
-        // Update temperature display in real-time
         const temp = this._getTempFromScroll();
-        this.$tempValue.textContent = temp.toFixed(1);
-
-        // Set timeout to detect end of scroll
+        if (this.$tempValue) {
+          this.$tempValue.textContent = temp.toFixed(1);
+        }
+        if (scrollTimeout) clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
-          isScrolling = false;
-          
-          // Only set temperature if it changed
-          const scrollLeft = this.$pickerContainer.scrollLeft;
-          if (Math.abs(scrollLeft - lastScrollLeft) > 2) {
-            lastScrollLeft = scrollLeft;
-            this._setTemperature(temp);
-          }
+          this._setTemperature(temp);
         }, 150);
       };
 
-      // Mouse/touch drag to scroll
-      const handleDragStart = (e) => {
-        isDragging = true;
-        startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-        scrollStart = this.$pickerContainer.scrollLeft;
-        this.$pickerContainer.style.cursor = 'grabbing';
-      };
-
-      const handleDragMove = (e) => {
-        if (!isDragging) return;
+      // ── thumb drag (opposite-direction scroll) ──
+      const onThumbDown = (e) => {
+        thumbDragging = true;
+        lastX = e.clientX;
+        this.$thumb.setPointerCapture(e.pointerId);
         e.preventDefault();
-        const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-        const deltaX = startX - x;
-        this.$pickerContainer.scrollLeft = scrollStart + deltaX;
       };
 
-      const handleDragEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        this.$pickerContainer.style.cursor = 'grab';
+      const onThumbMove = (e) => {
+        if (!thumbDragging) return;
+        const dx = e.clientX - lastX;
+        lastX = e.clientX;
+        this.$scroller.scrollLeft -= dx;
+        e.preventDefault();
       };
 
-      // Listen to scroll events
-      this.$pickerContainer.addEventListener('scroll', handleScroll, { passive: true });
-      
-      // Mouse events
-      this.$pickerContainer.addEventListener('mousedown', handleDragStart);
-      document.addEventListener('mousemove', handleDragMove);
-      document.addEventListener('mouseup', handleDragEnd);
-      
-      // Touch events
-      this.$pickerContainer.addEventListener('touchstart', handleDragStart, { passive: true });
-      this.$pickerContainer.addEventListener('touchmove', handleDragMove, { passive: false });
-      this.$pickerContainer.addEventListener('touchend', handleDragEnd);
+      const onThumbEnd = (e) => {
+        if (!thumbDragging) return;
+        thumbDragging = false;
+        try { this.$thumb.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+        e.preventDefault();
+      };
 
-      // Store cleanup function
-      this._unbindPicker = () => {
-        this.$pickerContainer.removeEventListener('scroll', handleScroll);
-        this.$pickerContainer.removeEventListener('mousedown', handleDragStart);
-        document.removeEventListener('mousemove', handleDragMove);
-        document.removeEventListener('mouseup', handleDragEnd);
-        this.$pickerContainer.removeEventListener('touchstart', handleDragStart);
-        this.$pickerContainer.removeEventListener('touchmove', handleDragMove);
-        this.$pickerContainer.removeEventListener('touchend', handleDragEnd);
+      // ── rail drag ──
+      const onRailDown = (e) => {
+        if (e.target.closest(".thumb")) return;
+        railDragging = true;
+        railLastX = e.clientX;
+        this.$scroller.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      };
+
+      const onRailMove = (e) => {
+        if (!railDragging) return;
+        const dx = e.clientX - railLastX;
+        railLastX = e.clientX;
+        this.$scroller.scrollLeft -= dx;
+        e.preventDefault();
+      };
+
+      const onRailEnd = (e) => {
+        if (!railDragging) return;
+        railDragging = false;
+        try { this.$scroller.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+      };
+
+      // ── prevent text selection while dragging ──
+      const preventSelect = (e) => {
+        if (thumbDragging || railDragging) e.preventDefault();
+      };
+
+      // bind
+      this.$scroller.addEventListener("scroll", handleScroll, { passive: true });
+
+      this.$thumb.addEventListener("pointerdown", onThumbDown);
+      this.$thumb.addEventListener("pointermove", onThumbMove);
+      this.$thumb.addEventListener("pointerup", onThumbEnd);
+      this.$thumb.addEventListener("pointercancel", onThumbEnd);
+
+      this.$scroller.addEventListener("pointerdown", onRailDown);
+      this.$scroller.addEventListener("pointermove", onRailMove);
+      this.$scroller.addEventListener("pointerup", onRailEnd);
+      this.$scroller.addEventListener("pointercancel", onRailEnd);
+
+      document.addEventListener("selectstart", preventSelect);
+
+      // cleanup reference
+      this._unbindRail = () => {
+        this.$scroller.removeEventListener("scroll", handleScroll);
+        this.$thumb.removeEventListener("pointerdown", onThumbDown);
+        this.$thumb.removeEventListener("pointermove", onThumbMove);
+        this.$thumb.removeEventListener("pointerup", onThumbEnd);
+        this.$thumb.removeEventListener("pointercancel", onThumbEnd);
+        this.$scroller.removeEventListener("pointerdown", onRailDown);
+        this.$scroller.removeEventListener("pointermove", onRailMove);
+        this.$scroller.removeEventListener("pointerup", onRailEnd);
+        this.$scroller.removeEventListener("pointercancel", onRailEnd);
+        document.removeEventListener("selectstart", preventSelect);
         if (scrollTimeout) clearTimeout(scrollTimeout);
       };
     }
 
-    /**
-     * Get minimum temperature
-     * @private
-     */
+    // ─── Temperature Helpers ─────────────────────────────────────
+
+    /** @private */
     _getMinTemp() {
       const entity = this.stateObj();
       return this.config.min_temp ?? entity?.attributes?.min_temp ?? JellyHvacCard.DEFAULT_MIN_TEMP;
     }
 
-    /**
-     * Get maximum temperature
-     * @private
-     */
+    /** @private */
     _getMaxTemp() {
       const entity = this.stateObj();
       return this.config.max_temp ?? entity?.attributes?.max_temp ?? JellyHvacCard.DEFAULT_MAX_TEMP;
     }
 
-    /**
-     * Get current target temperature
-     * @private
-     */
+    /** @private */
     _getCurrentTemp() {
       const entity = this.stateObj();
       return entity?.attributes?.temperature ?? this._getMinTemp();
     }
 
     /**
-     * Calculate temperature from current scroll position
+     * Compute and cache rail-container dimensions.
+     * Min-temp sits at 1/(2·W) of bar width, max at (2W−1)/(2·W).
+     * @private
+     */
+    _computeRailDimensions() {
+      const containerWidth = this.$scroller.clientWidth || 300;
+      const barWidth = containerWidth * JellyHvacCard.WIDTH_MULTIPLIER;
+      const W = JellyHvacCard.WIDTH_MULTIPLIER;
+
+      this._barWidth = barWidth;
+      this._minPosition = barWidth * (1 / (2 * W));
+      this._maxPosition = barWidth * ((W * 2 - 1) / (2 * W));
+
+      this.$railContainer.style.width = `${barWidth}px`;
+      this.$railContainer.style.minWidth = `${barWidth}px`;
+
+      // Drive tick mask edges: start at 1/(2W), end at 1-1/(2W)
+      const tickStart = (100 / (2 * W)).toFixed(2);
+      const tickEnd = (100 - 100 / (2 * W)).toFixed(2);
+      this.$railContainer.style.setProperty('--tick-start', `${tickStart}%`);
+      this.$railContainer.style.setProperty('--tick-end', `${tickEnd}%`);
+    }
+
+    /**
+     * Derive temperature from current scroll position.
      * @private
      */
     _getTempFromScroll() {
-      const scrollLeft = this.$pickerContainer.scrollLeft;
-      const containerWidth = this.$pickerContainer.clientWidth;
-      const centerOffset = scrollLeft + (containerWidth / 2);
-      
-      // Use formula-based positioning
+      const scrollLeft = this.$scroller.scrollLeft;
+      const containerWidth = this.$scroller.clientWidth;
+      const centerOffset = scrollLeft + containerWidth / 2;
+
       const minTemp = this._getMinTemp();
       const maxTemp = this._getMaxTemp();
-      const W = JellyHvacCard.WIDTH_MULTIPLIER;
-      const minPos = this._minPosition || (this._barWidth * (1 / (2 * W)));
-      const maxPos = this._maxPosition || (this._barWidth * ((W * 2 - 1) / (2 * W)));
-      
-      // Linear interpolation between min and max positions
+      const minPos = this._minPosition || 0;
+      const maxPos = this._maxPosition || 1;
+
       const ratio = (centerOffset - minPos) / (maxPos - minPos);
-      const temp = minTemp + (ratio * (maxTemp - minTemp));
-      
-      // Round to step
+      const temp = minTemp + ratio * (maxTemp - minTemp);
       const rounded = Math.round(temp / JellyHvacCard.TEMP_STEP) * JellyHvacCard.TEMP_STEP;
       return Math.max(minTemp, Math.min(maxTemp, rounded));
     }
 
     /**
-     * Scroll to position for given temperature
+     * Scroll the rail so the given temperature is centred under the notch.
      * @private
      */
     _scrollToTemp(temp) {
       const minTemp = this._getMinTemp();
       const maxTemp = this._getMaxTemp();
-      const containerWidth = this.$pickerContainer.clientWidth;
-      
-      // Use formula-based positioning
-      const W = JellyHvacCard.WIDTH_MULTIPLIER;
-      const minPos = this._minPosition || (this._barWidth * (1 / (2 * W)));
-      const maxPos = this._maxPosition || (this._barWidth * ((W * 2 - 1) / (2 * W)));
-      
-      // Linear interpolation to find position
+      const containerWidth = this.$scroller.clientWidth;
+      const minPos = this._minPosition || 0;
+      const maxPos = this._maxPosition || 1;
+
       const ratio = (temp - minTemp) / (maxTemp - minTemp);
-      const tempPosition = minPos + (ratio * (maxPos - minPos));
-      
-      // Center that position in viewport
-      const scrollLeft = tempPosition - (containerWidth / 2);
-      
-      this.$pickerContainer.scrollLeft = scrollLeft;
+      const tempPosition = minPos + ratio * (maxPos - minPos);
+      this.$scroller.scrollLeft = tempPosition - containerWidth / 2;
     }
 
     /**
-     * Generate temperature markers along the line
-     * @private
-     */
-    _generateMarkers() {
-      const minTemp = this._getMinTemp();
-      const maxTemp = this._getMaxTemp();
-      const tempRange = maxTemp - minTemp;
-      
-      // Ensure container has dimensions
-      const containerWidth = this.$pickerContainer.clientWidth || 300;
-      
-      // Bar width based on multiplier constant
-      const barWidth = containerWidth * JellyHvacCard.WIDTH_MULTIPLIER;
-      
-      this.$pickerLine.style.width = `${barWidth}px`;
-      this.$gradientBar.style.width = `${barWidth}px`;
-      
-      // Clear existing markers
-      const existingMarkers = this.$pickerLine.querySelectorAll('.temp-marker');
-      existingMarkers.forEach(marker => marker.remove());
-      
-      // Calculate min/max positions using formula
-      // Min: center of first panel = 1/(2*WIDTH_MULTIPLIER) of bar width
-      // Max: center of last panel = (WIDTH_MULTIPLIER*2-1)/(2*WIDTH_MULTIPLIER) of bar width
-      const W = JellyHvacCard.WIDTH_MULTIPLIER;
-      const minPosition = barWidth * (1 / (2 * W));
-      const maxPosition = barWidth * ((W * 2 - 1) / (2 * W));
-      const effectiveWidth = maxPosition - minPosition;
-      
-      // Generate markers for each temperature value (every 0.5 degree)
-      for (let temp = minTemp; temp <= maxTemp; temp += JellyHvacCard.TEMP_STEP) {
-        // Major ticks at every 2 degrees
-        const isMajor = temp % 2 === 0;
-        const isEndpoint = temp === minTemp || temp === maxTemp;
-        
-        // Calculate position
-        const ratio = (temp - minTemp) / tempRange;
-        const position = minPosition + (ratio * effectiveWidth);
-        
-        const marker = document.createElement('div');
-        marker.className = `temp-marker ${isMajor ? 'major' : 'minor'} ${isEndpoint ? 'endpoint' : ''}`;
-        marker.style.left = `${position}px`;
-        
-        const tick = document.createElement('div');
-        tick.className = 'temp-marker-tick';
-        marker.appendChild(tick);
-        
-        // Only show labels for major ticks (every 2 degrees)
-        if (isMajor) {
-          const label = document.createElement('div');
-          label.className = 'temp-marker-label';
-          label.textContent = `${temp}°`;
-          marker.appendChild(label);
-        }
-        
-        this.$pickerLine.appendChild(marker);
-      }
-      
-      // Store dimensions for scroll calculations
-      this._barWidth = barWidth;
-      this._minPosition = minPosition;
-      this._maxPosition = maxPosition;
-    }
-
-    /**
-     * Set temperature via Home Assistant service
+     * Send temperature to HA via climate service.
      * @private
      */
     _setTemperature(temp) {
       const entity = this.stateObj();
       if (!entity) return;
-
-      this.callService('climate', 'set_temperature', {
+      this.callService("climate", "set_temperature", {
         entity_id: this.config.entity,
         temperature: temp
       });
     }
 
-    /**
-     * Renders the card with current entity state
-     */
+    // ─── Render ──────────────────────────────────────────────────
+
     render() {
       if (!this.hass || !this.config || !this.$card) return;
 
@@ -379,50 +349,128 @@ customElements.define(
       const state = entity.state;
       const temp = this._getCurrentTemp();
 
-      // Update card state
+      // state data-attribute
       this.$card.setAttribute("data-state", state);
-      
-      // Update device info
+
+      // device info
       this.$name.textContent = name;
       this.$status.textContent = this._getStatusText(state);
 
-      // Update temperature display
-      const unit = entity.attributes.unit_of_measurement || '°C';
+      // icon — configurable or pulled from entity
+      const icon = this.config.icon || entity.attributes.icon || "mdi:thermostat";
+      if (this.$icon) {
+        this.$icon.setAttribute("icon", icon);
+      }
+
+      // temperature display
+      const unit = entity.attributes.unit_of_measurement || "°C";
       this.$tempValue.textContent = temp.toFixed(1);
       this.$tempUnit.textContent = unit;
 
-      // Generate markers if not already done or if range changed
-      if (!this._markersGenerated || this._lastMinTemp !== this._getMinTemp() || this._lastMaxTemp !== this._getMaxTemp()) {
-        this._generateMarkers();
-        this._markersGenerated = true;
+      // rail dimensions (recompute when temp range changes)
+      if (
+        !this._railInitialized ||
+        this._lastMinTemp !== this._getMinTemp() ||
+        this._lastMaxTemp !== this._getMaxTemp()
+      ) {
+        this._computeRailDimensions();
+        this._railInitialized = true;
         this._lastMinTemp = this._getMinTemp();
         this._lastMaxTemp = this._getMaxTemp();
       }
-      
-      // Scroll to current temperature
+
+      // centre rail on current target temperature
       this._scrollToTemp(temp);
+
+      // sync overlay fill with actual computed card background
+      this._syncOverlayFill();
     }
 
     /**
-     * Get human-readable status text
+     * Sync SVG overlay fill with computed card background color.
+     * CSS custom properties don't always resolve inside SVG fill attributes,
+     * so we read the computed value and apply it directly.
+     * @private
+     */
+    _syncOverlayFill() {
+      if (!this.$overlayFill) return;
+      // Read background from the <ha-card> element (the shadow host's first child),
+      // which is styled by HA's theme and is the true rendered card background.
+      const haCard = this.shadowRoot?.querySelector('ha-card');
+      if (!haCard) return;
+      const bg = getComputedStyle(haCard).backgroundColor;
+      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+        this.$overlayFill.setAttribute('fill', bg);
+      }
+    }
+
+    /**
+     * Human-readable HVAC status text.
      * @private
      */
     _getStatusText(state) {
       const stateMap = {
-        'heat': 'Heating',
-        'cool': 'Cooling',
-        'heat_cool': 'Auto',
-        'auto': 'Auto',
-        'dry': 'Dry',
-        'fan_only': 'Fan',
-        'off': 'Off',
-        'unavailable': 'Unavailable'
+        heat: "Heating",
+        cool: "Cooling",
+        heat_cool: "Auto",
+        auto: "Auto",
+        dry: "Dry",
+        fan_only: "Fan",
+        off: "Off",
+        unavailable: "Unavailable"
       };
       return stateMap[state] || state;
     }
 
+    /**
+     * Toggle HVAC on/off with optimistic UI.
+     * @private
+     */
+    _handleToggle() {
+      const entity = this.stateObj();
+      if (!entity) return;
+
+      if (entity.state === "unavailable" || entity.state === "unknown") {
+        console.warn("Jelly HVAC: Entity unavailable", this.config.entity);
+        return;
+      }
+
+      const isOff = entity.state === "off";
+
+      if (isOff) {
+        // Turn on — use climate.turn_on
+        this.callService("climate", "turn_on", {
+          entity_id: this.config.entity
+        });
+        this.optimisticToggle({
+          sendToggle: false,
+          applyOptimistic: () => {
+            this.$card.setAttribute("data-state", "auto");
+            this.$status.textContent = "Auto";
+          },
+          rollback: () => this.render(),
+          confirm: (next) => next?.state !== "off"
+        });
+      } else {
+        // Turn off
+        this.callService("climate", "turn_off", {
+          entity_id: this.config.entity
+        });
+        this.optimisticToggle({
+          sendToggle: false,
+          desiredState: "off",
+          applyOptimistic: () => {
+            this.$card.setAttribute("data-state", "off");
+            this.$status.textContent = "Off";
+          },
+          rollback: () => this.render(),
+          confirm: (next) => next?.state === "off"
+        });
+      }
+    }
+
     disconnectedCallback() {
-      this._unbindPicker?.();
+      this._unbindRail?.();
       super.disconnectedCallback();
     }
   }
