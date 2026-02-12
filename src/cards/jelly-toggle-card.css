@@ -1,0 +1,164 @@
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  container-type: inline-size;
+  container-name: toggle-card;
+}
+
+.toggle-card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  transition: background var(--jelly-fast);
+  position: relative;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--jelly-fast);
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.card-content:active {
+  opacity: 0.8;
+}
+
+/* Toggle Indicator */
+.toggle-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--jelly-off);
+  transition: background var(--jelly-fast);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.toggle-card[data-state="on"] .toggle-indicator {
+  background: var(--jelly-on);
+}
+
+.toggle-knob {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--jelly-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-card[data-state="on"] .toggle-knob {
+  transform: translateX(18px);
+}
+
+/* Image / Icon */
+.device-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding-top: 20px;
+}
+
+.device-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.device-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+}
+
+.device-image-placeholder .entity-icon {
+  --mdc-icon-size: 39px;
+  color: var(--jelly-text);
+  opacity: 0.3;
+  transition: opacity var(--jelly-fast), color var(--jelly-fast);
+}
+
+.toggle-card[data-state="on"] .device-image-placeholder .entity-icon {
+  opacity: 0.9;
+  color: var(--jelly-on);
+}
+
+/* Info */
+.device-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+.device-name {
+  color: var(--jelly-text);
+  font-weight: var(--w-medium);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.device-status {
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+  text-align: center;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.toggle-card[data-state="on"] .device-status {
+  color: var(--jelly-on);
+  opacity: 1;
+}
+
+/* Compact Layout (<300px) */
+@container toggle-card (max-width: 300px) {
+  .toggle-indicator {
+    width: 31px;
+    height: 18px;
+    border-radius: 9px;
+    top: 16px;
+    right: 16px;
+  }
+
+  .toggle-knob {
+    width: 14px;
+    height: 14px;
+  }
+
+  .toggle-card[data-state="on"] .toggle-knob {
+    transform: translateX(13px);
+  }
+
+  .card-content {
+    padding: 16px;
+  }
+}

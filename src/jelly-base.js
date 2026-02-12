@@ -195,7 +195,6 @@ export class JellyCardBase extends HTMLElement {
     if (debugEl) {
       debugEl.textContent = text;
     }
-    console.debug("[JELLY DEBUG]", text);
   }
 
   optimisticToggle(options = {}) {

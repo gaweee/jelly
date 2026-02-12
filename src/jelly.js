@@ -36,6 +36,7 @@ import "./cards/jelly-light-button.js";
 import "./cards/jelly-device-card.js";
 import "./cards/jelly-hvac-card.js";
 import "./cards/jelly-sensor-graph.js";
+import "./cards/jelly-toggle-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -59,6 +60,11 @@ import "./cards/jelly-sensor-graph.js";
       type: "jelly-sensor-graph",
       name: "Jelly Sensor Graph",
       description: "Static sensor history chart with smooth line and latest-value label"
+    },
+    {
+      type: "jelly-toggle-card",
+      name: "Jelly Toggle Card",
+      description: "Compact 1x1 toggle card with image or icon, name, and status"
     }
   ];
 
@@ -75,5 +81,3 @@ import "./cards/jelly-sensor-graph.js";
     }
   });
 })();
-
-console.info("🪼 Jelly loaded");

@@ -305,7 +305,6 @@ customElements.define(
           significant_changes_only: false,
         });
         const entries = result?.[eid] || [];
-        console.log("Jelly sensor-graph: WS returned", entries.length, "entries");
         if (entries.length) return this._normalizeWS(entries);
       } catch (_wsErr) {
         console.warn("Jelly sensor-graph: WS history failed", _wsErr);
@@ -318,7 +317,6 @@ customElements.define(
           `history/period/${start}?filter_entity_id=${eid}&end_time=${end}&minimal_response&no_attributes`
         );
         const entries = r?.[0] || [];
-        console.log("Jelly sensor-graph: REST returned", entries.length, "entries");
         return entries;
       } catch (e) {
         console.warn("Jelly sensor-graph: REST history failed", e);
@@ -359,8 +357,6 @@ customElements.define(
         out.push({ state, last_changed: ts }); // ts is now millis (number)
       }
 
-      console.log("Jelly sensor-graph: normalized", out.length, "entries,",
-        "first:", out[0], "last:", out[out.length - 1]);
       return out;
     }
 
@@ -388,8 +384,6 @@ customElements.define(
         })
         .filter((p) => isFinite(p.v) && isFinite(p.t))
         .sort((a, b) => a.t - b.t);
-
-      console.log("Jelly sensor-graph: bucketing", pts.length, "valid points");
 
       if (!pts.length) return { labels: [], data: [] };
 
