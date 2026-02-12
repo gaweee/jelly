@@ -1,0 +1,71 @@
+/* ===== Host ===== */
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  container-type: inline-size;
+  container-name: sensor-graph;
+}
+
+/* ===== Card Shell ===== */
+.sensor-graph-card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  padding: 20px 20px 16px;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--jelly-text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Chart Container ===== */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+}
+
+.chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: var(--jelly-text-2, var(--jelly-off));
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+/* ===== Responsive ===== */
+@container sensor-graph (max-width: 300px) {
+  .sensor-graph-card {
+    padding: 16px 14px 12px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .chart-wrap {
+    height: 140px;
+  }
+}

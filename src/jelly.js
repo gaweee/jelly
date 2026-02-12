@@ -35,6 +35,7 @@ import "./jelly-editor.js";
 import "./cards/jelly-light-button.js";
 import "./cards/jelly-device-card.js";
 import "./cards/jelly-hvac-card.js";
+import "./cards/jelly-sensor-graph.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -53,6 +54,11 @@ import "./cards/jelly-hvac-card.js";
       type: "jelly-hvac-card",
       name: "Jelly HVAC Card",
       description: "Beautiful temperature control with interactive slider"
+    },
+    {
+      type: "jelly-sensor-graph",
+      name: "Jelly Sensor Graph",
+      description: "Static sensor history chart with smooth line and latest-value label"
     }
   ];
 
