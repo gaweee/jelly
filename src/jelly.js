@@ -36,6 +36,7 @@ import "./cards/jelly-device-card.js";
 import "./cards/jelly-hvac-card.js";
 import "./cards/jelly-sensor-graph.js";
 import "./cards/jelly-toggle-card.js";
+import "./cards/jelly-weather-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -59,6 +60,11 @@ import "./cards/jelly-toggle-card.js";
       type: "jelly-toggle-card",
       name: "Jelly Toggle Card",
       description: "Compact 1x1 toggle card with image or icon, name, and status"
+    },
+    {
+      type: "jelly-weather-card",
+      name: "Jelly Weather Card",
+      description: "Weather forecast with condition icons and candle-style temperature range chart"
     }
   ];
 

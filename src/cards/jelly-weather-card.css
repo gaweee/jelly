@@ -1,0 +1,199 @@
+/* ===== Host ===== */
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  container-type: inline-size;
+  container-name: weather-card;
+}
+
+/* ===== Card Shell ===== */
+.weather-card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* ===== Header ===== */
+.weather-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.current-icon {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.current-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+
+.header-row-top,
+.header-row-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-title {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: var(--w-medium);
+  letter-spacing: -0.01em;
+  color: var(--jelly-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.current-temp-value {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 300;
+  color: var(--jelly-text);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.weather-location {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: var(--w-regular);
+  color: var(--jelly-text-2);
+  opacity: 0.65;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.today-hilo {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: var(--w-regular);
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ===== Forecast Strip ===== */
+.forecast-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 20px;
+}
+
+.forecast-strip:empty {
+  display: none;
+}
+
+/* Single forecast day column */
+.forecast-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.forecast-day-label {
+  font-size: 12px;
+  font-weight: var(--w-medium);
+  color: var(--jelly-text-2);
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.forecast-day-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Candle SVG container */
+.forecast-candle-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.forecast-candle-svg {
+  display: block;
+}
+
+.candle-wick {
+  stroke: var(--jelly-text-2);
+  stroke-opacity: 0.3;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.candle-body {
+  fill: var(--jelly-accent, #89b4fa);
+  rx: 3;
+  ry: 3;
+  opacity: 0.75;
+}
+
+/* High / Low labels flanking the candle */
+.forecast-temp-labels {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--w-regular);
+}
+
+.forecast-high {
+  color: var(--jelly-text);
+}
+
+.forecast-low {
+  color: var(--jelly-text-2);
+  opacity: 0.6;
+}
+
+/* Precipitation probability */
+.forecast-precip {
+  font-size: 11px;
+  color: #89b4fa;
+  opacity: 0.8;
+  font-weight: var(--w-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Responsive ===== */
+@container weather-card (max-width: 320px) {
+  .weather-title,
+  .current-temp-value {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .current-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .forecast-day-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
