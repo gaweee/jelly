@@ -70,8 +70,7 @@ customElements.define(
               }
             }
           }
-        ];
-
+        ],
         labels: {
           entity: "Climate Entity",
           name: "Display Name (optional)",
