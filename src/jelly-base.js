@@ -13,7 +13,7 @@ export class JellyCardBase extends HTMLElement {
   static assetCache = new Map();
   static cardTag = null; // subclasses should set; used for editor helpers
   static cardDomains = null; // optional preferred domains for entity picker
-  static defaultUnits = 1; // default card height units; subclasses can override
+  static minUnits = 2; // minimum height units (50 + 50*u px); subclasses override
 
   constructor() {
     super();
@@ -243,18 +243,20 @@ export class JellyCardBase extends HTMLElement {
 
   /**
    * Returns the number of height units for this card.
-   * Reads from config.card_units, then falls back to the class default.
+   * Reads from config.card_units, floored by the class minimum.
    */
   _getCardUnits() {
-    return this.config?.card_units ?? this.constructor.defaultUnits ?? 1;
+    const min = this.constructor.minUnits ?? 1;
+    const configured = this.config?.card_units ?? min;
+    return Math.max(min, configured);
   }
 
   /**
-   * Compute card height from units: 175 + 75 * units.
-   * 1 unit → 250px, 2 → 325px, 3 → 400px.
+   * Compute card height: 50 + 50 * units.
+   * 2u = 150px, 3u = 200px, 4u = 250px.
    */
-  _getCardHeight() {
-    return 175 + 75 * this._getCardUnits();
+  static unitsToPx(units) {
+    return 50 + 50 * units;
   }
 
   /**
@@ -263,10 +265,23 @@ export class JellyCardBase extends HTMLElement {
    */
   _applyCardDimensions() {
     const units = this._getCardUnits();
-    const height = 175 + 75 * units;
+    const height = JellyCardBase.unitsToPx(units);
     const host = this.shadowRoot?.host || this;
     host.style.setProperty('--jelly-card-height', `${height}px`);
     host.style.setProperty('--jelly-card-units', String(units));
+  }
+
+  /**
+   * Layout hints for HA Sections grid.
+   */
+  getLayoutOptions() {
+    const min = this.constructor.minUnits ?? 1;
+    return {
+      grid_columns: 4,
+      grid_min_columns: 2,
+      grid_rows: min,
+      grid_min_rows: min,
+    };
   }
 
   getCardSize() {

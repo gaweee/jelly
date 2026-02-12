@@ -57,6 +57,8 @@ customElements.define(
   "jelly-weather-card",
   class JellyWeatherCard extends JellyCardBase {
 
+    static minUnits = 4;
+
     /** @returns {string} Card HTML tag name */
     static get cardTag() {
       return "jelly-weather-card";

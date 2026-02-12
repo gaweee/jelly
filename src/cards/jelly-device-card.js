@@ -11,6 +11,7 @@ customElements.define(
   class JellyDeviceCard extends JellyCardBase {
     // Constants
     static MAX_SHORTCUTS = 4;
+    static minUnits = 3;
 
     /** @returns {string} Card HTML tag name */
     static get cardTag() {

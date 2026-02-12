@@ -13,6 +13,8 @@ customElements.define(
   "jelly-clock-card",
   class JellyClockCard extends JellyCardBase {
 
+    static minUnits = 3;
+
     static get cardTag() {
       return "jelly-clock-card";
     }
@@ -59,6 +61,7 @@ customElements.define(
     async setConfig(config) {
       this.config = { show_time: true, ...config };
       await this._ensureAssets();
+      this._applyCardDimensions();
       this._startClock();
       this.render?.();
     }

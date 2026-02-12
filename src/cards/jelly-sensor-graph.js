@@ -122,6 +122,8 @@ customElements.define(
   class JellySensorGraph extends JellyCardBase {
     /* ---- static card metadata ---- */
 
+    static minUnits = 4;
+
     static get cardTag() {
       return "jelly-sensor-graph";
     }

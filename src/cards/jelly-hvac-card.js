@@ -11,6 +11,7 @@ customElements.define(
     static DEFAULT_MIN_TEMP = 18;
     static DEFAULT_MAX_TEMP = 35;
     static TEMP_STEP = 0.5;
+    static minUnits = 4;
 
     // Rail width = container width × WIDTH_MULTIPLIER
     static WIDTH_MULTIPLIER = 3;
