@@ -1,13 +1,19 @@
-/* ===== ha-card container name ===== */
+/* ───────────────────────────────────────────
+   Container name
+   ─────────────────────────────────────────── */
 ha-card {
   container-name: sensor-graph;
 }
 
-/* ===== Card Shell ===== */
-.sensor-graph-card {
+/* ───────────────────────────────────────────
+   Layout
+   ─────────────────────────────────────────── */
+.card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
+  contain: layout style;
   overflow: hidden;
+  position: relative;
   padding: 20px;
   flex: 1;
   display: flex;
@@ -15,10 +21,13 @@ ha-card {
   min-height: 0;
 }
 
-/* ===== Header ===== */
+/* ───────────────────────────────────────────
+   Header
+   ─────────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .title {
@@ -31,12 +40,14 @@ ha-card {
   text-overflow: ellipsis;
 }
 
-/* ===== Chart Container ===== */
+/* ───────────────────────────────────────────
+   Chart — flex fill
+   ─────────────────────────────────────────── */
 .chart-wrap {
   position: relative;
-  width: 100%;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .chart-canvas {
@@ -44,7 +55,9 @@ ha-card {
   height: 100% !important;
 }
 
-/* ===== Empty State ===== */
+/* ───────────────────────────────────────────
+   Empty state
+   ─────────────────────────────────────────── */
 .empty-state {
   display: none;
   align-items: center;
@@ -57,17 +70,15 @@ ha-card {
   opacity: 0.6;
 }
 
-/* ===== Responsive ===== */
+/* ───────────────────────────────────────────
+   Responsive — @container sensor-graph
+   ─────────────────────────────────────────── */
 @container sensor-graph (max-width: 300px) {
-  .sensor-graph-card {
+  .card {
     padding: 16px;
   }
 
   .title {
     font-size: 15px;
-  }
-
-  .chart-wrap {
-    min-height: 0;
   }
 }
