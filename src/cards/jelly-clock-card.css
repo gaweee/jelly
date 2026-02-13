@@ -63,7 +63,7 @@ ha-card {
   font-size: 36px;
   line-height: 40px;
   font-weight: 100;
-  color: var(--card-text);
+  color: var(--accent-color);
   letter-spacing: -0.02em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -160,6 +160,14 @@ ha-card {
 /* XS: ≤ 119 px (row 1) — hide subtitle entirely */
 @container clock (max-height: 119px) {
   .subtitle { display: none; }
+}
+
+/* LG: ≥ 248 px (row 4+) — relax subtitle clamp */
+@container clock (min-height: 120px) {
+  .subtitle {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
 }
 
 /* LG: ≥ 248 px (row 4+) — relax subtitle clamp */

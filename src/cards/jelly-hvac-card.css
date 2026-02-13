@@ -88,8 +88,8 @@ ha-card {
 }
 
 .unit {
-  font-size: 48px;
-  font-weight: 300;
+  font-size: 32px;
+  font-weight: 200;
   color: rgba(205, 214, 244, .55);
 }
 
@@ -97,33 +97,17 @@ ha-card {
    Info — top-right: title + status
    ─────────────────────────────────────────── */
 .info {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
-  padding-top: 28px; /* clear floating toggle */
-  min-width: 0;
+  padding-top: 38px; /* clear floating toggle */
 }
 
 .title {
-  color: var(--jelly-text);
-  font-weight: var(--w-medium);
   text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .status {
-  color: var(--jelly-text-2);
-  opacity: 0.7;
   text-align: right;
   text-transform: capitalize;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .card[data-state="heat"] .status,

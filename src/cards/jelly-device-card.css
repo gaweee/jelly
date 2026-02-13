@@ -77,37 +77,16 @@ ha-card {
 .info {
   grid-column: 2;
   grid-row: 1;
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
   padding-top: 38px; /* clear floating toggle */
-  min-width: 0;
 }
 
 .title {
-  color: var(--jelly-text);
-  font-weight: var(--w-medium);
   text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .status {
-  color: var(--jelly-text-2);
-  opacity: 0.7;
   text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.card[data-state="on"] .status {
-  color: var(--jelly-on);
-  opacity: 1;
 }
 
 /* ───────────────────────────────────────────

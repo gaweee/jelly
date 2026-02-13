@@ -122,8 +122,6 @@ ha-card {
 }
 
 .title {
-  color: var(--jelly-text);
-  font-weight: var(--w-medium);
   text-align: center;
   opacity: 0.7;
 }
@@ -145,18 +143,15 @@ ha-card {
 
 .unit {
   font-size: clamp(14px, 10cqw, 28px);
-  font-weight: 300;
+  font-weight: 200;
   color: rgba(205, 214, 244, .55);
 }
 
 .status {
-  color: var(--jelly-text-2);
-  opacity: 0.7;
   text-align: center;
   text-transform: capitalize;
 }
 
-.card[data-state="on"] .status,
 .card[data-state="heat"] .status,
 .card[data-state="cool"] .status,
 .card[data-state="auto"] .status {

@@ -32,6 +32,7 @@
 | Card dimensions | `unitsToPx(u) = 50 + 50*u`; sets `--jelly-card-height` and `--jelly-card-units` CSS vars on host as min-height floor |
 | Layout hints | `getLayoutOptions()` → `{ grid_columns: 4, grid_min_columns: 2, grid_rows: _getCardUnits(), grid_min_rows: minUnits }` |
 | Height model | HA grid controls actual height via `grid_rows`; `:host` fills grid cell (`height: 100%`); `ha-card` enforces floor (`min-height`), clips (`overflow: hidden`), and enables height-responsive CSS (`container-type: size`) |
+| Info block | Shared `.info > .title + .status` contract: flex column, gap 0, text truncation, `--jelly-text` / `--jelly-text-2` colors, `on`-state accent color. Cards override only alignment, positioning, and responsive sizing |
 | Gestures | `bindInteractions(target, { onTap, onDoubleTap, onHold, onSwipe })` — pointer-based, auto-cleanup |
 | Optimistic toggle | `optimisticToggle({ desiredState, applyOptimistic, rollback, confirm, timeout })` — 1200ms default |
 | Helpers | `qs()`, `stateObj()`, `callService()`, `setAnimState()`, `setDebugText()` |

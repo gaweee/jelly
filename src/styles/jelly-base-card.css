@@ -67,6 +67,37 @@ ha-card {
 .card[data-state="on"] .toggle { background: var(--jelly-on); }
 .card[data-state="on"] .toggle-knob { transform: translateX(18px); }
 
+/* ===== Info block — title + status stack ===== */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.title {
+  color: var(--jelly-text);
+  font-weight: var(--w-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.status {
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.card[data-state="on"] .status {
+  color: var(--jelly-on);
+  opacity: 1;
+}
+
 /* State treatments */
 .card[data-state="unavailable"] {
   opacity: 0.5;
