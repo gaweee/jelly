@@ -41,6 +41,7 @@ import "./cards/jelly-clock-card.js";
 import "./cards/jelly-knob-card.js";
 import "./cards/jelly-generic-card.js";
 import "./cards/jelly-camera-card.js";
+import "./cards/jelly-group-toggle-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -89,6 +90,11 @@ import "./cards/jelly-camera-card.js";
       type: "jelly-camera-card",
       name: "Jelly Camera Card",
       description: "Live camera still-image viewer with periodic refresh and full-screen live view"
+    },
+    {
+      type: "jelly-group-toggle-card",
+      name: "Jelly Group Toggle Card",
+      description: "Group entity card with master toggle and dense member toggle list"
     }
   ];
 
