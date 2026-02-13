@@ -89,6 +89,7 @@
 | Weather | `jelly-weather-card` | weather | 4 | No | No | No |
 | Sensor Graph | `jelly-sensor-graph` | sensor | 4 | No | No | No |
 | Knob | `jelly-knob-card` | climate, number, input_number, fan, light | 4 | 4 max | Yes (4u→5u) | Yes |
+| Camera | `jelly-camera-card` | camera | 2 | No | No | No |
 | Shell | `jelly-shell-card` | *(none)* | — | No | No | No |
 
 ---
@@ -223,9 +224,23 @@ Minimal placeholder card. Does **not** extend JellyCardBase. Renders static "Jel
 
 ---
 
+### jelly-camera-card
+
+Live camera still-image card with periodic refresh and full-screen live view.
+
+**Config:** `entity` (required, camera), `name`, `refresh_interval` (5/10/15/30/60s, default 10)
+**States:** `idle`, `unavailable`
+**Behavior:**
+- Fetches camera still image via `/api/camera_proxy/` with cache-busting timestamp
+- Image fills the entire card background (object-fit: cover) — card behaves like a picture tile
+- Top-left translucent pill with blinking red recording dot and camera name (config.name > friendly_name > entity_id)
+- Bottom-right translucent "Live View" pill with fullscreen icon → opens HA more-info dialog (live stream)
+- Periodic refresh at configurable interval; uses off-screen Image preload to avoid blank-frame flicker
+- Respects height/width via HA grid; minimum height of 2 units
+
+---
+
 ## TODO
-- Camera card
 - Sparkline card
 - Zone control (with multiple sub switches)
-- Offer a very tiny clock card
 - Calendar/Agenda widget
