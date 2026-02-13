@@ -43,7 +43,7 @@ ha-card {
 .temp-block {
   display: flex;
   gap: 18px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 /* HA mdi icon — replaces old .icon svg */
@@ -51,7 +51,6 @@ ha-card {
   --mdc-icon-size: 42px;
   width: 42px;
   height: 42px;
-  margin-top: 6px;
   opacity: .85;
   color: rgba(205, 214, 244, .85);
   filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
@@ -71,7 +70,7 @@ ha-card {
 
 /* Large temperature readout */
 .value {
-  font-size: 54px;
+  font-size: 48px;
   line-height: 1;
   font-weight: 300;
   color: var(--jelly-text);
@@ -79,7 +78,7 @@ ha-card {
 }
 
 .value-unit {
-  font-size: 20px;
+  font-size: 48px;
   font-weight: 300;
   color: rgba(205, 214, 244, .55);
 }

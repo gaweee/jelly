@@ -24,6 +24,8 @@ ha-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  --clock-text: var(--jelly-surface);
+  --clock-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
 }
 
 .card-content {
@@ -42,7 +44,7 @@ ha-card {
   font-size: 18px;
   line-height: 24px;
   font-weight: var(--w-medium);
-  color: #1e1e2e;
+  color: var(--clock-text);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
@@ -52,7 +54,7 @@ ha-card {
   font-size: 48px;
   line-height: 56px;
   font-weight: var(--w-semibold);
-  color: #1e1e2e;
+  color: var(--clock-text);
   letter-spacing: -0.02em;
   margin-top: 4px;
 }
@@ -62,7 +64,7 @@ ha-card {
   font-size: 13px;
   line-height: 18px;
   font-weight: var(--w-regular);
-  color: rgba(30, 30, 46, 0.65);
+  color: var(--clock-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-top: 2px;
@@ -73,7 +75,7 @@ ha-card {
   font-size: 12px;
   line-height: 16px;
   font-weight: var(--w-regular);
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--clock-text-muted);
   margin-top: 10px;
   text-align: center;
   max-width: 100%;

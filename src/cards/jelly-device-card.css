@@ -156,11 +156,11 @@ ha-card {
   align-self: flex-end;
 }
 
-/* Shortcut positioning: pure Z pattern - top-left, top-right, bottom-left, bottom-right */
-.shortcut:nth-child(1) { grid-area: 1 / 1; }
-.shortcut:nth-child(2) { grid-area: 1 / 2; }
-.shortcut:nth-child(3) { grid-area: 2 / 1; }
-.shortcut:nth-child(4) { grid-area: 2 / 2; }
+/* Shortcut positioning: Z pattern by data-index — 1=top-left, 2=top-right, 3=bottom-left, 4=bottom-right */
+.shortcut[data-index="1"] { grid-area: 1 / 1; }
+.shortcut[data-index="2"] { grid-area: 1 / 2; }
+.shortcut[data-index="3"] { grid-area: 2 / 1; }
+.shortcut[data-index="4"] { grid-area: 2 / 2; }
 
 .shortcut {
   display: flex;
