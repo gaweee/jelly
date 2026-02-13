@@ -73,6 +73,7 @@ customElements.define(
       this.$status = this.qs(".status");
       this.$masterToggle = this.qs(".master-toggle");
       this.$memberList = this.qs(".member-list");
+      this.$treeTrunk = this.qs(".tree-trunk");
 
       this.bindInteractions(this.$masterToggle, {
         onTap: () => this._handleMasterToggle()
@@ -134,7 +135,13 @@ customElements.define(
 
       if (changed) {
         this._memberIds = memberIds.slice();
+        // Detach trunk before clearing
+        if (this.$treeTrunk?.parentNode) {
+          this.$treeTrunk.remove();
+        }
         this.$memberList.innerHTML = "";
+        // Re-insert trunk
+        this.$memberList.appendChild(this.$treeTrunk);
         this._memberCleanups?.forEach((fn) => fn());
         this._memberCleanups = [];
 
@@ -148,6 +155,26 @@ customElements.define(
       memberIds.forEach((entityId) => {
         this._updateMemberRow(entityId);
       });
+
+      // Size trunk to stop at last row center
+      this._updateTrunkHeight();
+    }
+
+    /**
+     * Set trunk height so it ends at the vertical center of the last member row.
+     */
+    _updateTrunkHeight() {
+      if (!this.$treeTrunk || !this.$memberList) return;
+      const rows = this.$memberList.querySelectorAll(".member-row");
+      if (!rows.length) {
+        this.$treeTrunk.style.height = "0";
+        return;
+      }
+      const lastRow = rows[rows.length - 1];
+      const listRect = this.$memberList.getBoundingClientRect();
+      const rowRect = lastRow.getBoundingClientRect();
+      const endY = (rowRect.top + rowRect.height / 2) - listRect.top;
+      this.$treeTrunk.style.height = `${endY}px`;
     }
 
     /**

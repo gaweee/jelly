@@ -35,6 +35,7 @@ ha-card {
   align-items: center;
   padding: 20px;
   padding-right: 76px; /* room for master toggle */
+  padding-bottom: 10px;
   gap: 12px;
   flex-shrink: 0;
 }
@@ -44,12 +45,18 @@ ha-card {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
 }
 
 .header-icon .entity-icon {
-  --mdc-icon-size: 24px;
+  --mdc-icon-size: 26px;
   color: var(--jelly-text);
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity var(--jelly-fast), color var(--jelly-fast);
 }
 
@@ -59,14 +66,12 @@ ha-card {
 }
 
 /* ───────────────────────────────────────────
-   Divider
+   Tree color — shared between trunk + branches
    ─────────────────────────────────────────── */
-.divider {
-  height: 1px;
-  background: var(--jelly-text);
-  opacity: 0.08;
-  margin: 0 20px;
-  flex-shrink: 0;
+.card {
+  --tree-color: rgba(0, 0, 0, 0.25);
+  --tree-stroke: 2px;
+  --tree-left: 44px; /* 20px pad + 48px icon / 2 */
 }
 
 /* ───────────────────────────────────────────
@@ -79,6 +84,7 @@ ha-card {
   flex: 1;
   min-height: 0;
   padding: 4px 0;
+  position: relative;
 }
 
 /* Hide scrollbar but keep scrollable */
@@ -86,19 +92,69 @@ ha-card {
 .member-list { scrollbar-width: none; }
 
 /* ───────────────────────────────────────────
+   Tree line — vertical trunk + horizontal branches
+   ─────────────────────────────────────────── */
+
+/* Vertical trunk line — drawn by JS on .tree-trunk element */
+.tree-trunk {
+  position: absolute;
+  left: var(--tree-left);
+  top: 0;
+  width: var(--tree-stroke);
+  background: var(--tree-color);
+  pointer-events: none;
+  z-index: 0;
+  /* height set dynamically by JS to stop at last row center */
+}
+
+/* Connector from header icon circle to member list trunk */
+.header {
+  position: relative;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  left: var(--tree-left);
+  bottom: 0;
+  width: var(--tree-stroke);
+  height: 12px; /* bridge gap from icon circle bottom to member list top */
+  background: var(--tree-color);
+  pointer-events: none;
+}
+
+/* Clip trunk at last row: hide overflow below */
+.member-row:last-child {
+  /* trunk ends at this row's center */
+}
+
+/* ───────────────────────────────────────────
    Member row — dense toggle row
    ─────────────────────────────────────────── */
 .member-row {
   display: flex;
   align-items: center;
-  padding: 10px 20px;
+  padding: 10px 20px 10px 20px;
   gap: 10px;
   flex-shrink: 0;
   transition: opacity var(--jelly-fast);
+  position: relative;
 }
 
 .member-row:active {
   opacity: 0.7;
+}
+
+/* Horizontal branch from trunk to icon */
+.member-row::before {
+  content: "";
+  position: absolute;
+  left: var(--tree-left);
+  top: 50%;
+  width: 16px;
+  height: var(--tree-stroke);
+  background: var(--tree-color);
+  pointer-events: none;
 }
 
 /* Icon */
@@ -107,6 +163,7 @@ ha-card {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-left: 40px; /* indent past tree-left + branch */
 }
 
 .member-icon ha-icon {
@@ -131,7 +188,7 @@ ha-card {
 
 .member-name {
   color: var(--jelly-text);
-  font-size: 14px;
+  font-size: 12px;
   line-height: 18px;
   font-weight: var(--w-medium);
   white-space: nowrap;
@@ -141,7 +198,7 @@ ha-card {
 
 .member-status {
   color: var(--jelly-text-2);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 14px;
   opacity: 0.7;
   white-space: nowrap;
@@ -191,19 +248,23 @@ ha-card {
    Responsive — @container
    ─────────────────────────────────────────── */
 @container group-toggle-card (max-width: 250px) {
+  .card {
+    --tree-left: 36px;
+  }
+
   .header {
     padding: 16px;
     padding-right: 64px;
     gap: 8px;
   }
 
-  .divider {
-    margin: 0 16px;
-  }
-
   .member-row {
     padding: 8px 16px;
     gap: 8px;
+  }
+
+  .member-icon {
+    margin-left: 28px;
   }
 
   .member-name {
