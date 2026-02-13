@@ -13,7 +13,7 @@ customElements.define(
   "jelly-clock-card",
   class JellyClockCard extends JellyCardBase {
 
-    static minUnits = 3;
+    static minUnits = 1;
 
     static get cardTag() {
       return "jelly-clock-card";
@@ -60,14 +60,27 @@ customElements.define(
       };
     }
 
+    getLayoutOptions() {
+      return {
+        grid_columns: 4,
+        grid_min_columns: 2,
+        grid_rows: 3,
+        grid_min_rows: 1,
+      };
+    }
+
     /**
      * Override: entity is NOT required for this card.
      */
     async setConfig(config) {
       this.config = { show_time: true, ...config };
       await this._ensureAssets();
-      this._applyCardDimensions();
       this.render?.();
+    }
+
+    /** Clock card relies on HA grid sizing, not fixed card-height. */
+    _applyCardDimensions() {
+      // no-op — prevents base class from setting --jelly-card-height
     }
 
     afterLoad() {
@@ -76,6 +89,7 @@ customElements.define(
       this.$date = this.qs(".clock-date");
       this.$day = this.qs(".clock-day");
       this.$subtitle = this.qs(".clock-subtitle");
+      this.$icon = this.qs(".clock-icon");
       this._startClock();
     }
 
@@ -103,13 +117,14 @@ customElements.define(
         this.$time.classList.add("hidden");
       }
 
-      // Date — e.g. "12 Feb"
-      const day = now.getDate();
+      // Date — e.g. "Thu, 13 Feb"
+      const dayName = DAYS_FULL[now.getDay()];
+      const dayNum = now.getDate();
       const month = MONTHS[now.getMonth()];
-      this.$date.textContent = `${day} ${month}`;
+      this.$date.textContent = `${dayNum} ${month}`;
 
       // Day of week
-      this.$day.textContent = DAYS_FULL[now.getDay()];
+      this.$day.textContent = dayName;
 
       // Subtitle from input_text entity
       const textEntity = this.config?.text_entity;

@@ -1,18 +1,18 @@
 :host {
   font-family: var(--font-sans);
   display: block;
-  container-type: inline-size;
-  container-name: clock-card;
+  height: 100%;
 }
 
 ha-card {
   height: 100%;
-  min-height: var(--jelly-card-height, 200px);
   display: flex;
   flex-direction: column;
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
+  container-type: size;
+  container-name: clock;
 }
 
 .clock-card {
@@ -24,8 +24,8 @@ ha-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  --clock-text: var(--jelly-accent, var(--accent-color, #89b4fa));
-  --clock-text-muted: color-mix(in srgb, var(--jelly-accent, var(--accent-color, #89b4fa)) 65%, transparent);
+  --clock-text: var(--jelly-text);
+  --clock-text-muted: var(--jelly-text-2);
 }
 
 .card-content {
@@ -37,6 +37,31 @@ ha-card {
   user-select: none;
   flex: 1;
   box-sizing: border-box;
+}
+
+/* Main layout wrapper */
+.clock-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.clock-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clock-top-row {
+  display: contents;
+}
+
+/* Clock icon — hidden in tall/default layout */
+.clock-icon {
+  display: none;
+  --mdc-icon-size: 32px;
+  color: var(--clock-text-muted);
 }
 
 /* Time */
@@ -51,9 +76,9 @@ ha-card {
 
 /* Date — hero, e.g. 12 Feb */
 .clock-date {
-  font-size: 48px;
-  line-height: 56px;
-  font-weight: var(--w-semibold);
+  font-size: 40px;
+  line-height: 48px;
+  font-weight: 100;
   color: var(--clock-text);
   letter-spacing: -0.02em;
   margin-top: 4px;
@@ -82,6 +107,7 @@ ha-card {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -97,13 +123,64 @@ ha-card {
   --clock-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
 }
 
-/* Compact Layout */
-@container clock-card (max-width: 300px) {
+/* ========== Compact (1-row) Layout ========== */
+@container clock (max-height: 120px) {
   .card-content {
-    padding: 16px;
+    padding: 12px 16px;
+    align-items: stretch;
+    justify-content: center;
   }
+
+  .clock-main {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .clock-text-block {
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .clock-top-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .clock-time {
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: var(--w-semibold);
+    padding-right: 10px;
+    border-right: 1px solid var(--clock-text-muted);
+  }
+
   .clock-date {
-    font-size: 38px;
-    line-height: 44px;
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: var(--w-medium);
+    margin-top: 0;
+    letter-spacing: 0;
+  }
+
+  .clock-day {
+    display: none;
+  }
+
+  .clock-subtitle {
+    font-size: 12px;
+    line-height: 16px;
+    margin-top: 4px;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    text-align: left;
+    color: var(--jelly-accent, var(--accent-color, #89b4fa));
+  }
+
+  .clock-icon {
+    display: block;
+    flex-shrink: 0;
   }
 }
