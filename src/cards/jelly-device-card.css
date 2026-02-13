@@ -1,10 +1,17 @@
+/* ───────────────────────────────────────────
+   Container name
+   ─────────────────────────────────────────── */
 ha-card {
   container-name: device-card;
 }
 
-.device-card {
+/* ───────────────────────────────────────────
+   Layout
+   ─────────────────────────────────────────── */
+.card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
+  contain: layout style;
   overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
@@ -14,136 +21,110 @@ ha-card {
   min-height: 0;
 }
 
-.card-content {
-  display: flex;
-  gap: 5px 10px;
+.content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
   padding: 20px;
+  flex: 1;
+  min-height: 0;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: opacity var(--jelly-fast);
-  position: relative;
-  flex: 1;
-  min-height: 0;
 }
 
-.card-content:active {
+.content:active {
   opacity: 0.8;
 }
 
-/* Image Section - 60% width */
-.image-section {
-  flex: 0 0 60%;
+/* ───────────────────────────────────────────
+   Image — fills left column, expands to fit
+   ─────────────────────────────────────────── */
+.image {
+  grid-column: 1;
+  grid-row: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.device-image-container {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.device-image,
-.device-image-placeholder {
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
+.image img {
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  border-radius: 12px;
 }
 
-.device-image-placeholder {
+.image-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
   font-size: 96px;
   opacity: 0.2;
-  background: transparent;
 }
 
-/* Info Section - 40% width */
-.info-section {
-  flex: 1;
+/* ───────────────────────────────────────────
+   Info — top-right: title + status
+   ─────────────────────────────────────────── */
+.info {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 4px;
+  padding-top: 38px; /* clear floating toggle */
   min-width: 0;
 }
 
-.device-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 36px;
-}
-
-.device-name {
+.title {
   color: var(--jelly-text);
   font-weight: var(--w-medium);
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.device-status {
+.status {
   color: var(--jelly-text-2);
   opacity: 0.7;
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.device-card[data-state="on"] .device-status {
+.card[data-state="on"] .status {
   color: var(--jelly-on);
   opacity: 1;
 }
 
-/* Toggle Indicator */
-.toggle-indicator {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  background: var(--jelly-off);
-  transition: background var(--jelly-fast);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.device-card[data-state="on"] .toggle-indicator {
-  background: var(--jelly-on);
-}
-
-.toggle-knob {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: white;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--jelly-fast);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.device-card[data-state="on"] .toggle-knob {
-  transform: translateX(18px);
-}
-
-/* Shortcuts - 2x2 Grid */
+/* ───────────────────────────────────────────
+   Shortcuts — middle-right: 2×2 grid
+   ─────────────────────────────────────────── */
 .shortcuts {
+  grid-column: 2;
+  grid-row: 2;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
   gap: 8px;
+  align-self: center;
+  justify-self: end;
   pointer-events: auto;
-  width: fit-content;
-  margin-left: auto;
-  align-self: flex-end;
 }
 
-/* Shortcut positioning: Z pattern by data-index — 1=top-left, 2=top-right, 3=bottom-left, 4=bottom-right */
+/* Z-order: sparse shortcuts must hold their grid position */
 .shortcut[data-index="1"] { grid-area: 1 / 1; }
 .shortcut[data-index="2"] { grid-area: 1 / 2; }
 .shortcut[data-index="3"] { grid-area: 2 / 1; }
@@ -163,7 +144,6 @@ ha-card {
   transition: all var(--jelly-fast);
   color: var(--jelly-text);
   -webkit-tap-highlight-color: transparent;
-  pointer-events: auto;
   aspect-ratio: 1;
 }
 
@@ -192,86 +172,48 @@ ha-card {
   line-height: 1.2;
 }
 
-/* Compact Layout (<300px) - Container Query */
-@container device-card (max-width: 300px) {
-  .card-content {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 5px 10px;
+/* ───────────────────────────────────────────
+   Responsive — @container device-card
+   ─────────────────────────────────────────── */
+@container device-card (max-height: 184px) {
+  .content {
+    grid-template-rows: 1fr auto;
     padding: 16px;
-    min-height: unset;
   }
 
-  .image-section {
+  .image {
     grid-column: 1;
     grid-row: 1;
-    flex: none;
   }
 
-  .device-image-container {
-    max-width: 100%;
-  }
-
-  .device-image,
-  .device-image-placeholder {
-    width: 100%;
-    height: auto;
-  }
-
-  .device-image-placeholder {
-    font-size: 56px;
-  }
-
-  .info-section {
-    display: contents;
-  }
-
-  .device-info {
+  .info {
     grid-column: 1 / -1;
     grid-row: 2;
-    margin-top: 0;
-    text-align: left;
+    align-items: flex-start;
+    padding-top: 0;
   }
 
-  .device-name {
+  .title {
     font-size: 15px;
     line-height: 20px;
-    padding-right: 0;
     text-align: left;
   }
 
-  .device-status {
+  .status {
     font-size: 12px;
     text-align: left;
   }
 
-  .toggle-indicator {
-    width: 40px;
-    height: 24px;
-    border-radius: 12px;
-    top: 16px;
-    right: 16px;
-  }
-
-  .toggle-knob {
-    width: 20px;
-    height: 20px;
-  }
-
-  .device-card[data-state="on"] .toggle-knob {
-    transform: translateX(16px);
+  .image-placeholder {
+    font-size: 56px;
   }
 
   .shortcuts {
     grid-column: 2;
     grid-row: 1;
-    margin-top: 50px;
-    margin-left: 0;
-    gap: 6px;
-    width: fit-content;
-    justify-self: end;
-    align-self: start;
+    align-self: center;
+    gap: 3px;
+    margin-top: 42px;
   }
 
   .shortcut {

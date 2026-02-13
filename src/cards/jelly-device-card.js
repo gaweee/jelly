@@ -112,16 +112,15 @@ customElements.define(
      * Sets up DOM references and interaction handlers
      */
     afterLoad() {
-      this.$card = this.qs(".device-card");
-      this.$cardContent = this.qs(".card-content");
-      this.$imageContainer = this.qs(".device-image-container");
-      this.$image = this.qs(".device-image");
-      this.$imagePlaceholder = this.qs(".device-image-placeholder");
-      this.$name = this.qs(".device-name");
-      this.$status = this.qs(".device-status");
-      this.$shortcutsContainer = this.qs(".shortcuts");
+      this.$card = this.qs(".card");
+      this.$content = this.qs(".content");
+      this.$image = this.qs(".image img");
+      this.$imagePlaceholder = this.qs(".image-placeholder");
+      this.$title = this.qs(".title");
+      this.$status = this.qs(".status");
+      this.$shortcuts = this.qs(".shortcuts");
 
-      this._unbind = this.bindInteractions(this.$cardContent, {
+      this._unbind = this.bindInteractions(this.$content, {
         onTap: () => this._handleToggle()
       });
     }
@@ -135,7 +134,7 @@ customElements.define(
 
       const entity = this.stateObj();
       if (!entity) {
-        this.$name.textContent = "Entity not found";
+        this.$title.textContent = "Entity not found";
         this.$status.textContent = this.config.entity;
         this.$card.setAttribute("data-state", "unavailable");
         return;
@@ -146,7 +145,7 @@ customElements.define(
       const status = computeStatus(entity);
 
       this.$card.setAttribute("data-state", isOn ? "on" : "off");
-      this.$name.textContent = name;
+      this.$title.textContent = name;
       this.$status.textContent = status;
 
       // Handle image
@@ -184,7 +183,7 @@ customElements.define(
       }
 
       if (shortcuts.length > 0) {
-        this.$shortcutsContainer.innerHTML = shortcuts.map((shortcut) => {
+        this.$shortcuts.innerHTML = shortcuts.map((shortcut) => {
           const displayName = shortcut.name || 'Action';
           const displayIcon = shortcut.icon || 'mdi:gesture-tap';
           
@@ -195,7 +194,7 @@ customElements.define(
             </button>
           `;
         }).join('');
-        this.$shortcutsContainer.style.display = "grid";
+        this.$shortcuts.style.display = "grid";
 
         shortcuts.forEach((shortcut) => {
           const btn = this.qs(`.shortcut[data-index="${shortcut.index}"]`);
@@ -211,7 +210,7 @@ customElements.define(
           }
         });
       } else {
-        this.$shortcutsContainer.style.display = "none";
+        this.$shortcuts.style.display = "none";
       }
     }
 
