@@ -214,6 +214,4 @@ Minimal placeholder card. Does **not** extend JellyCardBase. Renders static "Jel
 - Sparkline card
 - Zone control (with multiple sub switches)
 - Offer a very tiny clock card
-  -- option for inverse color
-- Inverse control for knob
 - Calendar/Agenda widget

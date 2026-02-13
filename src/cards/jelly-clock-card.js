@@ -67,7 +67,6 @@ customElements.define(
       this.config = { show_time: true, ...config };
       await this._ensureAssets();
       this._applyCardDimensions();
-      this._startClock();
       this.render?.();
     }
 
@@ -77,6 +76,7 @@ customElements.define(
       this.$date = this.qs(".clock-date");
       this.$day = this.qs(".clock-day");
       this.$subtitle = this.qs(".clock-subtitle");
+      this._startClock();
     }
 
     _startClock() {
