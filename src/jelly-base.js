@@ -1,6 +1,7 @@
 // Base class for Jelly cards. Handles asset loading, shadow DOM, helpers, gestures, and optimistic UI.
 
 const ASSET_BASE = "/local/jelly/src/cards/";
+const STYLE_BASE = "/local/jelly/src/styles/";
 const DEFAULT_OPTIMISTIC_TIMEOUT = 1200;
 
 async function fetchText(url) {
@@ -11,6 +12,8 @@ async function fetchText(url) {
 
 export class JellyCardBase extends HTMLElement {
   static assetCache = new Map();
+  static _baseCssPromise = null;
+  static _baseCss = '';
   static cardTag = null; // subclasses should set; used for editor helpers
   static cardDomains = null; // optional preferred domains for entity picker
   static minUnits = 2; // minimum height units (50 + 50*u px); subclasses override
@@ -347,6 +350,13 @@ export class JellyCardBase extends HTMLElement {
 
   async _loadAssets() {
     const tag = this.tagName.toLowerCase();
+    // Load shared base CSS once (singleton promise)
+    if (!JellyCardBase._baseCssPromise) {
+      JellyCardBase._baseCssPromise = fetchText(`${STYLE_BASE}jelly-base-card.css`)
+        .then(text => { JellyCardBase._baseCss = text; });
+    }
+    await JellyCardBase._baseCssPromise;
+
     const cached = JellyCardBase.assetCache.get(tag);
 
     let html;
@@ -366,7 +376,7 @@ export class JellyCardBase extends HTMLElement {
       this.attachShadow({ mode: "open" });
     }
 
-    this.shadowRoot.innerHTML = `<style>${css}</style>${html}`;
+    this.shadowRoot.innerHTML = `<style>${JellyCardBase._baseCss}\n${css}</style>${html}`;
 
     if (typeof this.afterLoad === "function") {
       this.afterLoad();

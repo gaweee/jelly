@@ -1,188 +1,171 @@
-:host {
-  font-family: var(--font-sans);
-  display: block;
-  height: 100%;
-}
-
+/* ───────────────────────────────────────────
+   Container name
+   ─────────────────────────────────────────── */
 ha-card {
-  height: 100%;
-  min-height: var(--jelly-card-height, 100px);
-  display: flex;
-  flex-direction: column;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  overflow: hidden;
-  container-type: size;
   container-name: clock;
 }
 
-.clock-card {
+/* ───────────────────────────────────────────
+   Layout
+   ─────────────────────────────────────────── */
+.card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
+  contain: layout style;
   overflow: hidden;
-  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  --clock-text: var(--jelly-text);
-  --clock-text-muted: var(--jelly-text-2);
+  --card-text: var(--jelly-text);
+  --card-text-muted: var(--jelly-text-2);
 }
 
-.card-content {
+.content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  user-select: none;
   flex: 1;
+  min-height: 0;
   box-sizing: border-box;
+  user-select: none;
+  overflow: hidden;
 }
 
-/* Main layout wrapper */
-.clock-main {
+.content-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.clock-text-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.clock-top-row {
-  display: contents;
-}
-
-/* Clock icon — hidden in tall/default layout */
-.clock-icon {
-  display: none;
-  --mdc-icon-size: 32px;
-  color: var(--clock-text-muted);
-}
-
-/* Time */
-.clock-time {
+/* ───────────────────────────────────────────
+   Typography — default (tall layout, row 3+)
+   ─────────────────────────────────────────── */
+.time {
   font-size: 18px;
   line-height: 24px;
   font-weight: var(--w-medium);
-  color: var(--clock-text);
+  color: var(--card-text);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 
-/* Date — hero, e.g. 12 Feb */
-.clock-date {
-  font-size: 40px;
-  line-height: 48px;
+.time.hidden { display: none; }
+
+.date {
+  font-size: 36px;
+  line-height: 40px;
   font-weight: 100;
-  color: var(--clock-text);
+  color: var(--card-text);
   letter-spacing: -0.02em;
-  margin-top: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Day of week */
-.clock-day {
+.day {
   font-size: 13px;
   line-height: 18px;
   font-weight: var(--w-regular);
-  color: var(--clock-text-muted);
+  color: var(--card-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-top: 2px;
+  flex-shrink: 0;
 }
 
-/* Subtitle line from input_text */
-.clock-subtitle {
+/* Subtitle — pressure-valve element; shrinks first, clamps lines */
+.subtitle {
   font-size: 12px;
   line-height: 16px;
   font-weight: var(--w-regular);
-  color: var(--clock-text-muted);
+  color: var(--card-text-muted);
   margin-top: 10px;
   text-align: center;
   max-width: 100%;
+  flex-shrink: 1;
+  min-height: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-/* Hide time when toggled off */
-.clock-time.hidden {
-  display: none;
-}
+.subtitle:empty { display: none; }
 
-/* Inverted mode — accent bg, surface text */
-.clock-card[data-invert="true"] {
+/* ───────────────────────────────────────────
+   Variants
+   ─────────────────────────────────────────── */
+.card.invert {
   background: var(--jelly-accent, var(--accent-color, #89b4fa));
-  --clock-text: var(--jelly-surface);
-  --clock-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
+  --card-text: var(--jelly-surface);
+  --card-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
 }
 
-/* ========== Compact (1-row) Layout ========== */
-@container clock (max-height: 120px) {
-  .card-content {
+/* ───────────────────────────────────────────
+   Responsive — @container clock
+   Row formula: rows × 64 − 8
+   56 → 120 → 184 → 248 → 312 …
+   ─────────────────────────────────────────── */
+
+/* SM: ≤ 183 px (rows 1–2) — compact inline layout */
+@container clock (max-height: 183px) {
+  .content {
     padding: 12px 16px;
-    align-items: stretch;
-    justify-content: center;
-  }
-
-  .clock-main {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .clock-text-block {
     align-items: flex-start;
-    flex: 1;
-    min-width: 0;
   }
 
-  .clock-top-row {
-    display: flex;
+  .content-wrap {
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 10px;
+    gap: 0 10px;
   }
 
-  .clock-time {
-    font-size: 18px;
-    line-height: 24px;
+  .time {
     font-weight: var(--w-semibold);
     padding-right: 10px;
-    border-right: 1px solid var(--clock-text-muted);
+    border-right: 1px solid var(--card-text-muted);
   }
 
-  .clock-date {
+  .date {
     font-size: 18px;
     line-height: 24px;
     font-weight: var(--w-medium);
+    letter-spacing: 0;
+  }
+
+  .day {
+    font-size: 18px;
+    line-height: 24px;
     margin-top: 0;
     letter-spacing: 0;
   }
 
-  .clock-day {
-    display: none;
-  }
-
-  .clock-subtitle {
-    font-size: 12px;
-    line-height: 16px;
+  .subtitle {
+    flex-basis: 100%;
     margin-top: 4px;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
     text-align: left;
-    color: var(--jelly-accent, var(--accent-color, #89b4fa));
   }
+}
 
-  .clock-icon {
-    display: block;
-    flex-shrink: 0;
+/* XS: ≤ 119 px (row 1) — hide subtitle entirely */
+@container clock (max-height: 119px) {
+  .subtitle { display: none; }
+}
+
+/* LG: ≥ 248 px (row 4+) — relax subtitle clamp */
+@container clock (min-height: 248px) {
+  .subtitle {
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
   }
 }

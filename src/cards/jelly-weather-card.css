@@ -1,21 +1,5 @@
-/* ===== Host ===== */
-:host {
-  font-family: var(--font-sans);
-  display: block;
-  height: 100%;
-}
-
-/* ===== ha-card flex host ===== */
+/* ===== ha-card container name ===== */
 ha-card {
-  height: 100%;
-  min-height: var(--jelly-card-height, 250px);
-  display: flex;
-  flex-direction: column;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  overflow: hidden;
-  container-type: size;
   container-name: weather-card;
 }
 

@@ -1,27 +1,4 @@
-/* ===== Host ===== */
-:host {
-  font-family: var(--font-sans);
-  display: block;
-  height: 100%;
-}
-
-/*
- * ha-card — Sizing contract
- *
- * HA Sections grid owns height.  Row formula: rows × 64 - 8.
- * :host fills the grid cell (height:100%), ha-card fills :host.
- * NO min-height — nothing competes with the grid.
- * overflow:hidden — hard clamp; content never escapes the cell.
- */
-ha-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  overflow: hidden;
-}
+/* Card-specific: no container queries needed */
 
 /* ===== Card shell ===== */
 .card {

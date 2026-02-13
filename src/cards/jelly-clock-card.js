@@ -1,9 +1,9 @@
 import JellyCardBase from "../jelly-base.js";
 
 /**
- * Clock Card — 1×1 tile showing current time, date, day of week,
- * and a subtitle line. Primary-colored background.
+ * Clock Card — time, date, day of week, and optional subtitle.
  * No entity required — purely client-side clock.
+ * Follows generic card sizing contract: HA grid owns height.
  */
 
 const DAYS_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -20,25 +20,17 @@ customElements.define(
     }
 
     static get cardDomains() {
-      return null; // no entity needed
+      return null;
     }
 
     static get editorSchema() {
       return {
         schema: [
-          {
-            name: "show_time",
-            selector: { boolean: {} }
-          },
-          {
-            name: "invert",
-            selector: { boolean: {} }
-          },
+          { name: "show_time", selector: { boolean: {} } },
+          { name: "invert", selector: { boolean: {} } },
           {
             name: "text_entity",
-            selector: {
-              entity: { domain: ["input_text"] }
-            }
+            selector: { entity: { domain: ["input_text"] } }
           }
         ],
         labels: {
@@ -54,10 +46,7 @@ customElements.define(
     }
 
     static getStubConfig() {
-      return {
-        type: "custom:jelly-clock-card",
-        show_time: true
-      };
+      return { type: "custom:jelly-clock-card", show_time: true };
     }
 
     getLayoutOptions() {
@@ -69,22 +58,22 @@ customElements.define(
       };
     }
 
-    /**
-     * Override: entity is NOT required for this card.
-     */
+    /** Override: entity is NOT required for this card. */
     async setConfig(config) {
       this.config = { show_time: true, ...config };
       await this._ensureAssets();
       this.render?.();
     }
 
+    /** No-op: HA grid rows are the sole height authority. */
+    _applyCardDimensions() {}
+
     afterLoad() {
-      this.$card = this.qs(".clock-card");
-      this.$time = this.qs(".clock-time");
-      this.$date = this.qs(".clock-date");
-      this.$day = this.qs(".clock-day");
-      this.$subtitle = this.qs(".clock-subtitle");
-      this.$icon = this.qs(".clock-icon");
+      this.$card = this.qs(".card");
+      this.$time = this.qs(".time");
+      this.$date = this.qs(".date");
+      this.$day = this.qs(".day");
+      this.$subtitle = this.qs(".subtitle");
       this._startClock();
     }
 
@@ -96,14 +85,13 @@ customElements.define(
     render() {
       if (!this.$card) return;
 
-      // Invert colors
-      this.$card.setAttribute("data-invert", this.config?.invert ? "true" : "false");
+      // Invert utility class
+      this.$card.classList.toggle("invert", !!this.config?.invert);
 
       const now = new Date();
 
       // Time
-      const showTime = this.config?.show_time !== false;
-      if (showTime) {
+      if (this.config?.show_time !== false) {
         const h = String(now.getHours()).padStart(2, "0");
         const m = String(now.getMinutes()).padStart(2, "0");
         this.$time.textContent = `${h}:${m}`;
@@ -112,27 +100,19 @@ customElements.define(
         this.$time.classList.add("hidden");
       }
 
-      // Date — e.g. "Thu, 13 Feb"
-      const dayName = DAYS_FULL[now.getDay()];
-      const dayNum = now.getDate();
-      const month = MONTHS[now.getMonth()];
-      this.$date.textContent = `${dayNum} ${month}`;
+      // Date
+      const dateStr = `${now.getDate()} ${MONTHS[now.getMonth()]}`;
+      this.$date.textContent = dateStr;
 
-      // Day of week
-      this.$day.textContent = dayName;
+      // Day
+      this.$day.textContent = DAYS_FULL[now.getDay()];
 
-      // Subtitle from input_text entity
+      // Subtitle
       const textEntity = this.config?.text_entity;
-      if (textEntity && this._hass?.states?.[textEntity]) {
-        this.$subtitle.textContent = this._hass.states[textEntity].state || "";
-        this.$subtitle.style.display = "";
-      } else if (textEntity) {
-        this.$subtitle.textContent = "";
-        this.$subtitle.style.display = "none";
-      } else {
-        this.$subtitle.textContent = "";
-        this.$subtitle.style.display = "none";
-      }
+      const subtitleText = textEntity && this._hass?.states?.[textEntity]
+        ? this._hass.states[textEntity].state || ""
+        : "";
+      this.$subtitle.textContent = subtitleText;
     }
 
     disconnectedCallback() {
