@@ -235,9 +235,22 @@ Live camera still-image card with periodic refresh and full-screen live view.
 - Fetches camera still image via `/api/camera_proxy/` with cache-busting timestamp
 - Image fills the entire card background (object-fit: cover) — card behaves like a picture tile
 - Top-left translucent pill with blinking red recording dot and camera name (config.name > friendly_name > entity_id)
-- Bottom-right translucent "Live View" pill with fullscreen icon → opens HA more-info dialog (live stream)
+- Bottom-right translucent "Live View" pill with fullscreen icon → opens full-screen live stream dialog
 - Periodic refresh at configurable interval; uses off-screen Image preload to avoid blank-frame flicker
 - Respects height/width via HA grid; minimum height of 2 units
+
+#### Camera Dialog (`jelly-camera-dialog`)
+
+Full-viewport live stream overlay, appended to `document.body` to escape Shadow DOM stacking.
+
+| Feature | Detail |
+|---|---|
+| Stream | Uses HA's `<ha-camera-stream>` (auto WebRTC/HLS/MJPEG); falls back to MJPEG proxy `<img>` |
+| Header | Recording dot + camera name pill (left), close button (right); gradient fade overlay |
+| Close | X button, backdrop click, or Escape key |
+| Animation | Scale + fade entrance (280ms cubic-bezier), reverse on exit |
+| Singleton | Only one dialog at a time; previous is removed on open |
+| Mobile | Full-viewport (no border-radius) at ≤ 600px |
 
 ---
 

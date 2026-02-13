@@ -6,6 +6,8 @@
   flex: 1;
   display: flex;
   background: #111;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ===== Camera still image ===== */

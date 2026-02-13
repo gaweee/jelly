@@ -1,4 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
+import JellyCameraDialog from "./jelly-camera-dialog.js";
 
 /**
  * Camera Card — live camera still-image viewer with periodic refresh.
@@ -78,8 +79,8 @@ customElements.define(
       this._refreshTimer = null;
       this._lastUrl = null;
 
-      // Live View opens HA more-info dialog for this camera entity
-      this.bindInteractions(this.$live, {
+      // Entire card opens the live stream dialog
+      this.bindInteractions(this.$card, {
         onTap: () => this._openLiveView()
       });
     }
@@ -168,13 +169,16 @@ customElements.define(
 
     _openLiveView() {
       if (!this.config?.entity) return;
-      // Fire HA event to open the more-info dialog (full live stream)
-      const event = new CustomEvent("hass-more-info", {
-        detail: { entityId: this.config.entity },
-        bubbles: true,
-        composed: true
+
+      const entity = this.stateObj();
+      const title =
+        this.config.name || entity?.attributes?.friendly_name || this.config.entity;
+
+      JellyCameraDialog.open({
+        hass: this.hass,
+        entityId: this.config.entity,
+        title
       });
-      this.dispatchEvent(event);
     }
 
     /* ---- Lifecycle ---- */
