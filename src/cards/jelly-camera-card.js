@@ -71,10 +71,10 @@ customElements.define(
     _applyCardDimensions() {}
 
     afterLoad() {
-      this.$card   = this.qs(".card");
-      this.$image  = this.qs(".camera-image");
-      this.$label  = this.qs(".rec-label");
-      this.$live   = this.qs(".live-pill");
+      this.$card      = this.qs(".card");
+      this.$image     = this.qs(".camera-image");
+      this.$label     = this.qs(".rec-label");
+      this.$timestamp = this.qs(".timestamp");
 
       this._refreshTimer = null;
       this._lastUrl = null;
@@ -135,6 +135,7 @@ customElements.define(
           if (this.$image) {
             this.$image.src = url;
           }
+          this._updateTimestamp();
         };
         img.onerror = () => {
           // Leave previous frame in place on error
@@ -163,6 +164,17 @@ customElements.define(
         clearInterval(this._refreshTimer);
         this._refreshTimer = null;
       }
+    }
+
+    _updateTimestamp() {
+      if (!this.$timestamp) return;
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+      const s = String(now.getSeconds()).padStart(2, "0");
+      const day = now.getDate();
+      const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()];
+      this.$timestamp.textContent = `${h}:${m}:${s} · ${day} ${mon}`;
     }
 
     /* ---- Actions ---- */
