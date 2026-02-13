@@ -104,13 +104,13 @@ customElements.define(
     // ─── Lifecycle ──────────────────────────────────────────────
 
     afterLoad() {
-      this.$card       = this.qs(".knob-card");
-      this.$name       = this.qs(".device-name");
-      this.$status     = this.qs(".device-status");
-      this.$value      = this.qs(".knob-value");
-      this.$unit       = this.qs(".knob-unit");
+      this.$card       = this.qs(".card");
+      this.$title      = this.qs(".title");
+      this.$status     = this.qs(".status");
+      this.$value      = this.qs(".value");
+      this.$unit       = this.qs(".unit");
       this.$icon       = this.qs(".prefix-icon");
-      this.$toggle     = this.qs(".toggle-indicator");
+      this.$toggle     = this.qs(".toggle");
       this.$svg        = this.qs(".knob-svg");
       this.$spokes     = this.qs(".knob-spokes");
       this.$outerArc   = this.qs(".knob-outer-arc");
@@ -423,7 +423,7 @@ customElements.define(
 
       const entity = this.stateObj();
       if (!entity) {
-        this.$name.textContent = "Entity not found";
+        this.$title.textContent = "Entity not found";
         this.$status.textContent = this.config.entity;
         this.$card.setAttribute("data-state", "unavailable");
         return;
@@ -450,7 +450,7 @@ customElements.define(
       }
 
       // Name + status inside knob
-      this.$name.textContent = name;
+      this.$title.textContent = name;
       this.$status.textContent = this._getStatusText(state, domain);
 
       // Knob
@@ -459,9 +459,6 @@ customElements.define(
 
       // Shortcuts
       this._renderShortcuts();
-
-      // Card height: 5 units if shortcuts, 4 otherwise
-      this._applyDynamicHeight();
     }
 
     _getStatusText(state, domain) {
@@ -473,15 +470,6 @@ customElements.define(
     }
 
     // ─── Dynamic Height ─────────────────────────────────────────
-
-    _applyDynamicHeight() {
-      const hasShortcuts = this._hasShortcuts();
-      const units = hasShortcuts ? 5 : 4;
-      const height = JellyCardBase.unitsToPx(units);
-      const host = this.shadowRoot?.host || this;
-      host.style.setProperty("--jelly-card-height", `${height}px`);
-      host.style.setProperty("--jelly-card-units", String(units));
-    }
 
     _hasShortcuts() {
       for (let i = 1; i <= JellyKnobCard.MAX_SHORTCUTS; i++) {

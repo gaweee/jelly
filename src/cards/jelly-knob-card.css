@@ -1,12 +1,17 @@
-/* ===== ha-card container name ===== */
+/* ───────────────────────────────────────────
+   Container name
+   ─────────────────────────────────────────── */
 ha-card {
   container-name: knob-card;
 }
 
-/* ===== Card Shell ===== */
-.knob-card {
+/* ───────────────────────────────────────────
+   Layout
+   ─────────────────────────────────────────── */
+.card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
+  contain: layout style;
   overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
@@ -17,25 +22,28 @@ ha-card {
   min-height: 0;
 }
 
-/* ===== Top Section — icon left, toggle right ===== */
-.top {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  right: 20px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  user-select: none;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.top > * {
+/* ───────────────────────────────────────────
+   Toggle — make tappable (base is pointer-events:none)
+   ─────────────────────────────────────────── */
+.toggle {
   pointer-events: auto;
+  cursor: pointer;
 }
 
-/* HA mdi icon — prefix */
+/* Multi-state active toggles (climate domains) */
+.card[data-state="heat"] .toggle,
+.card[data-state="cool"] .toggle,
+.card[data-state="auto"] .toggle,
+.card[data-state="heat_cool"] .toggle { background: var(--jelly-on); }
+
+.card[data-state="heat"] .toggle-knob,
+.card[data-state="cool"] .toggle-knob,
+.card[data-state="auto"] .toggle-knob,
+.card[data-state="heat_cool"] .toggle-knob { transform: translateX(18px); }
+
+/* ───────────────────────────────────────────
+   Prefix icon — top-left overlay
+   ─────────────────────────────────────────── */
 .prefix-icon {
   --mdc-icon-size: 42px;
   width: 42px;
@@ -43,67 +51,35 @@ ha-card {
   opacity: .85;
   color: rgba(205, 214, 244, .85);
   filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
+  position: absolute;
+  top: 0;
+  left: 0;
   display: none;
 }
 
-.knob-card[data-has-icon="true"] .prefix-icon {
+.card[data-has-icon="true"] .prefix-icon {
   display: block;
 }
 
-/* ===== Toggle Indicator (top-right) ===== */
-.toggle-indicator {
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  background: var(--jelly-off);
-  transition: background var(--jelly-fast);
-  cursor: pointer;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-  margin-left: auto;
-}
-
-.knob-card[data-state="on"] .toggle-indicator,
-.knob-card[data-state="heat"] .toggle-indicator,
-.knob-card[data-state="cool"] .toggle-indicator,
-.knob-card[data-state="auto"] .toggle-indicator,
-.knob-card[data-state="heat_cool"] .toggle-indicator {
-  background: var(--jelly-on);
-}
-
-.toggle-knob {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: white;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--jelly-fast);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.knob-card[data-state="on"] .toggle-knob,
-.knob-card[data-state="heat"] .toggle-knob,
-.knob-card[data-state="cool"] .toggle-knob,
-.knob-card[data-state="auto"] .toggle-knob,
-.knob-card[data-state="heat_cool"] .toggle-knob {
-  transform: translateX(18px);
-}
-
-/* ===== Knob Section ===== */
+/* ───────────────────────────────────────────
+   Knob section — flex fill
+   ─────────────────────────────────────────── */
 .knob-section {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
   min-height: 0;
-  margin-top: -5px;
+  top: -10px;
 }
 
 .knob-container {
   position: relative;
   width: 220px;
-  height: 220px;
+  flex: 1;
+  min-height: 0;
+  max-height: 260px;
   overflow: visible;
 }
 
@@ -112,6 +88,7 @@ ha-card {
   height: 100%;
   display: block;
   overflow: visible;
+  aspect-ratio: 1;
 }
 
 .knob-outer-arc {
@@ -127,7 +104,9 @@ ha-card {
   fill: var(--jelly-accent, #2196f3);
 }
 
-/* ===== Center Label (inside knob) ===== */
+/* ───────────────────────────────────────────
+   Knob label — centered overlay
+   ─────────────────────────────────────────── */
 .knob-label {
   position: absolute;
   top: 50%;
@@ -141,31 +120,13 @@ ha-card {
   gap: 0px;
 }
 
-/* Name — inside knob, centered */
-.device-name {
+.title {
   color: var(--jelly-text);
   font-weight: var(--w-medium);
   text-align: center;
   opacity: 0.7;
 }
 
-/* Status — inside knob */
-.device-status {
-  color: var(--jelly-text-2);
-  opacity: 0.7;
-  text-align: center;
-  text-transform: capitalize;
-}
-
-.knob-card[data-state="on"] .device-status,
-.knob-card[data-state="heat"] .device-status,
-.knob-card[data-state="cool"] .device-status,
-.knob-card[data-state="auto"] .device-status {
-  color: var(--jelly-on);
-  opacity: 1;
-}
-
-/* Value readout — large, matches HVAC card treatment */
 .knob-value-row {
   display: flex;
   align-items: baseline;
@@ -181,13 +142,30 @@ ha-card {
   font-variant-numeric: tabular-nums;
 }
 
-.value-unit {
+.unit {
   font-size: 36px;
   font-weight: 300;
   color: rgba(205, 214, 244, .55);
 }
 
-/* ===== Footer: min — [−] [+] — max ===== */
+.status {
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.card[data-state="on"] .status,
+.card[data-state="heat"] .status,
+.card[data-state="cool"] .status,
+.card[data-state="auto"] .status {
+  color: var(--jelly-on);
+  opacity: 1;
+}
+
+/* ───────────────────────────────────────────
+   Knob footer — min / +- buttons / max
+   ─────────────────────────────────────────── */
 .knob-footer {
   position: absolute;
   bottom: 10px;
@@ -215,7 +193,6 @@ ha-card {
   margin-left: auto;
 }
 
-/* ===== +/- Buttons ===== */
 .knob-btn {
   background: var(--jelly-surface-2);
   border: none;
@@ -238,12 +215,14 @@ ha-card {
   color: #fff;
 }
 
-/* ===== Shortcuts ===== */
+/* ───────────────────────────────────────────
+   Shortcuts — always at card bottom
+   ─────────────────────────────────────────── */
 .shortcuts {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .shortcut {
@@ -293,36 +272,27 @@ ha-card {
   line-height: 1.2;
 }
 
-/* ===== State treatments ===== */
-.knob-card[data-state="off"] .knob-svg {
+/* ───────────────────────────────────────────
+   State treatments
+   ─────────────────────────────────────────── */
+.card[data-state="off"] .knob-svg {
   opacity: 0.35;
   pointer-events: none;
 }
 
-.knob-card[data-state="off"] .knob-footer .knob-btn {
+.card[data-state="off"] .knob-footer .knob-btn {
   opacity: 0.35;
   pointer-events: none;
 }
 
-.knob-card[data-state="off"] .value {
+.card[data-state="off"] .value {
   opacity: 0.5;
 }
 
-.knob-card[data-state="unavailable"] {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* ===== Responsive ===== */
+/* ───────────────────────────────────────────
+   Responsive — @container knob-card
+   ─────────────────────────────────────────── */
 @container knob-card (max-width: 300px) {
-  .value {
-    font-size: 42px;
-  }
-
-  .value-unit {
-    font-size: 16px;
-  }
-
   .prefix-icon {
     --mdc-icon-size: 36px;
     width: 36px;
