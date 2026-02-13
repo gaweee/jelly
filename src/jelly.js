@@ -38,6 +38,7 @@ import "./cards/jelly-sensor-graph.js";
 import "./cards/jelly-toggle-card.js";
 import "./cards/jelly-weather-card.js";
 import "./cards/jelly-clock-card.js";
+import "./cards/jelly-knob-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -71,6 +72,11 @@ import "./cards/jelly-clock-card.js";
       type: "jelly-clock-card",
       name: "Jelly Clock Card",
       description: "1×1 tile showing current time, date, and day of week"
+    },
+    {
+      type: "jelly-knob-card",
+      name: "Jelly Knob Card",
+      description: "Circular arc knob control with spokes, pointer, +/- buttons, and optional shortcuts"
     }
   ];
 

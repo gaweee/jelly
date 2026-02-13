@@ -1,0 +1,357 @@
+/* ===== Host ===== */
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  height: 100%;
+  container-type: inline-size;
+  container-name: knob-card;
+}
+
+/* ===== ha-card flex host ===== */
+ha-card {
+  height: 100%;
+  min-height: var(--jelly-card-height, 250px);
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* ===== Card Shell ===== */
+.knob-card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  transition: background var(--jelly-fast);
+  position: relative;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== Top Section — icon left, toggle right ===== */
+.top {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  user-select: none;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.top > * {
+  pointer-events: auto;
+}
+
+/* HA mdi icon — prefix */
+.prefix-icon {
+  --mdc-icon-size: 42px;
+  width: 42px;
+  height: 42px;
+  opacity: .85;
+  color: rgba(205, 214, 244, .85);
+  filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
+  display: none;
+}
+
+.knob-card[data-has-icon="true"] .prefix-icon {
+  display: block;
+}
+
+/* ===== Toggle Indicator (top-right) ===== */
+.toggle-indicator {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--jelly-off);
+  transition: background var(--jelly-fast);
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  margin-left: auto;
+}
+
+.knob-card[data-state="on"] .toggle-indicator,
+.knob-card[data-state="heat"] .toggle-indicator,
+.knob-card[data-state="cool"] .toggle-indicator,
+.knob-card[data-state="auto"] .toggle-indicator,
+.knob-card[data-state="heat_cool"] .toggle-indicator {
+  background: var(--jelly-on);
+}
+
+.toggle-knob {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--jelly-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.knob-card[data-state="on"] .toggle-knob,
+.knob-card[data-state="heat"] .toggle-knob,
+.knob-card[data-state="cool"] .toggle-knob,
+.knob-card[data-state="auto"] .toggle-knob,
+.knob-card[data-state="heat_cool"] .toggle-knob {
+  transform: translateX(18px);
+}
+
+/* ===== Knob Section ===== */
+.knob-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  margin-top: -5px;
+}
+
+.knob-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  overflow: visible;
+}
+
+.knob-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.knob-outer-arc {
+  stroke: rgba(205, 214, 244, .18);
+}
+
+.knob-spokes line {
+  stroke: var(--jelly-accent, #2196f3);
+  stroke-linecap: round;
+}
+
+.knob-pointer {
+  fill: var(--jelly-accent, #2196f3);
+}
+
+/* ===== Center Label (inside knob) ===== */
+.knob-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+}
+
+/* Name — inside knob, centered */
+.device-name {
+  color: var(--jelly-text);
+  font-weight: var(--w-medium);
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Status — inside knob */
+.device-status {
+  color: var(--jelly-text-2);
+  opacity: 0.7;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.knob-card[data-state="on"] .device-status,
+.knob-card[data-state="heat"] .device-status,
+.knob-card[data-state="cool"] .device-status,
+.knob-card[data-state="auto"] .device-status {
+  color: var(--jelly-on);
+  opacity: 1;
+}
+
+/* Value readout — large, matches HVAC card treatment */
+.knob-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.value {
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 300;
+  color: var(--jelly-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.value-unit {
+  font-size: 36px;
+  font-weight: 300;
+  color: rgba(205, 214, 244, .55);
+}
+
+/* ===== Footer: min — [−] [+] — max ===== */
+.knob-footer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.knob-min, .knob-max {
+  color: var(--jelly-text-2);
+  user-select: none;
+  pointer-events: none;
+  min-width: 28px;
+}
+
+.knob-min {
+  text-align: left;
+  margin-right: auto;
+}
+
+.knob-max {
+  text-align: right;
+  margin-left: auto;
+}
+
+/* ===== +/- Buttons ===== */
+.knob-btn {
+  background: var(--jelly-surface-2);
+  border: none;
+  outline: none;
+  color: var(--jelly-text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.knob-btn:active, .knob-btn.flash {
+  background: var(--jelly-accent, #2196f3);
+  color: #fff;
+}
+
+/* ===== Shortcuts ===== */
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: auto;
+}
+
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  background: var(--jelly-surface-2);
+  border: none;
+  cursor: pointer;
+  transition: all var(--jelly-fast);
+  color: var(--jelly-text);
+  -webkit-tap-highlight-color: transparent;
+  min-width: 0;
+}
+
+.shortcut[data-index="1"] { grid-column: 1; }
+.shortcut[data-index="2"] { grid-column: 2; }
+.shortcut[data-index="3"] { grid-column: 3; }
+.shortcut[data-index="4"] { grid-column: 4; }
+
+.shortcut:hover {
+  background: var(--jelly-accent);
+  color: white;
+  transform: scale(1.05);
+}
+
+.shortcut:active {
+  transform: scale(0.95);
+}
+
+.shortcut ha-icon {
+  --mdc-icon-size: 20px;
+}
+
+.shortcut .t-label {
+  font-size: 11px;
+  opacity: 0.9;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+/* ===== State treatments ===== */
+.knob-card[data-state="off"] .knob-svg {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.knob-card[data-state="off"] .knob-footer .knob-btn {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.knob-card[data-state="off"] .value {
+  opacity: 0.5;
+}
+
+.knob-card[data-state="unavailable"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ===== Responsive ===== */
+@container knob-card (max-width: 300px) {
+  .value {
+    font-size: 42px;
+  }
+
+  .value-unit {
+    font-size: 16px;
+  }
+
+  .prefix-icon {
+    --mdc-icon-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .knob-container {
+    width: 170px;
+    height: 170px;
+  }
+
+  .knob-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
+}
