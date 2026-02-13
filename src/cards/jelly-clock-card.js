@@ -31,6 +31,10 @@ customElements.define(
             selector: { boolean: {} }
           },
           {
+            name: "invert",
+            selector: { boolean: {} }
+          },
+          {
             name: "text_entity",
             selector: {
               entity: { domain: ["input_text"] }
@@ -39,6 +43,7 @@ customElements.define(
         ],
         labels: {
           show_time: "Show Time",
+          invert: "Invert Colors",
           text_entity: "Subtitle Text Entity (input_text helper)"
         }
       };
@@ -81,6 +86,9 @@ customElements.define(
 
     render() {
       if (!this.$card) return;
+
+      // Invert colors
+      this.$card.setAttribute("data-invert", this.config?.invert ? "true" : "false");
 
       const now = new Date();
 

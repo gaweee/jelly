@@ -16,7 +16,7 @@ ha-card {
 }
 
 .clock-card {
-  background: var(--jelly-accent, var(--accent-color, #89b4fa));
+  background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
   overflow: hidden;
   position: relative;
@@ -24,8 +24,8 @@ ha-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  --clock-text: var(--jelly-surface);
-  --clock-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
+  --clock-text: var(--jelly-accent, var(--accent-color, #89b4fa));
+  --clock-text-muted: color-mix(in srgb, var(--jelly-accent, var(--accent-color, #89b4fa)) 65%, transparent);
 }
 
 .card-content {
@@ -88,6 +88,13 @@ ha-card {
 /* Hide time when toggled off */
 .clock-time.hidden {
   display: none;
+}
+
+/* Inverted mode — accent bg, surface text */
+.clock-card[data-invert="true"] {
+  background: var(--jelly-accent, var(--accent-color, #89b4fa));
+  --clock-text: var(--jelly-surface);
+  --clock-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
 }
 
 /* Compact Layout */

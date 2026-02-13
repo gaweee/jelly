@@ -250,8 +250,8 @@ customElements.define(
         const hi = this._getHigh(today);
         const lo = this._getLow(today);
         const parts = [];
-        if (hi != null) parts.push(`H: ${Math.round(hi)}°`);
         if (lo != null) parts.push(`L: ${Math.round(lo)}°`);
+        if (hi != null) parts.push(`H: ${Math.round(hi)}°`);
         this.$todayHiLo.textContent = parts.join("  ");
         this.$todayHiLo.style.display = "";
       } else {

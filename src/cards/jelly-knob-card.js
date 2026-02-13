@@ -46,6 +46,7 @@ customElements.define(
           { name: "max", selector: { number: { min: -100, max: 500, step: 0.5, mode: "box" } } },
           { name: "step", selector: { number: { min: 0.1, max: 50, step: 0.1, mode: "box" } } },
           { name: "script", selector: { entity: { domain: ["script"] } } },
+          { name: "reverse", selector: { boolean: {} } },
         ];
 
         const labels = {
@@ -57,6 +58,7 @@ customElements.define(
           max: "Maximum Value",
           step: "Step Increment",
           script: "Script to call on change (optional, receives value + unit)",
+          reverse: "Reverse Knob Direction (HIGH → LOW)",
         };
 
         for (let i = 1; i <= JellyKnobCard.MAX_SHORTCUTS; i++) {
@@ -184,7 +186,11 @@ customElements.define(
         flash(this.$decr);
         const step = this._getStep();
         const min = this._getMin();
-        const next = Math.max(min, (this._currentValue ?? min) - step);
+        const max = this._getMax();
+        const rev = this._isReversed();
+        const next = rev
+          ? Math.min(max, (this._currentValue ?? max) + step)
+          : Math.max(min, (this._currentValue ?? min) - step);
         this._setValueOptimistic(next);
         this._sendValue(next);
       });
@@ -193,8 +199,12 @@ customElements.define(
         e.stopPropagation();
         flash(this.$incr);
         const step = this._getStep();
+        const min = this._getMin();
         const max = this._getMax();
-        const next = Math.min(max, (this._currentValue ?? max) + step);
+        const rev = this._isReversed();
+        const next = rev
+          ? Math.max(min, (this._currentValue ?? min) - step)
+          : Math.min(max, (this._currentValue ?? max) + step);
         this._setValueOptimistic(next);
         this._sendValue(next);
       });
@@ -249,12 +259,19 @@ customElements.define(
 
     // ─── Knob Angle Math ────────────────────────────────────────
 
+    _isReversed() {
+      return !!this.config?.reverse;
+    }
+
     _valueToAngle(val) {
       const { ARC_START, ARC_END } = JellyKnobCard;
       const sweep = ARC_END - ARC_START;
       const min = this._getMin();
       const max = this._getMax();
-      return (ARC_START + ((val - min) / (max - min)) * sweep) % 360;
+      const frac = this._isReversed()
+        ? (max - val) / (max - min)
+        : (val - min) / (max - min);
+      return (ARC_START + frac * sweep) % 360;
     }
 
     _angleToValue(angle) {
@@ -264,7 +281,9 @@ customElements.define(
       const max = this._getMax();
       const step = this._getStep();
       let normAngle = angle < ARC_START ? angle + 360 : angle;
-      let raw = (normAngle - ARC_START) / sweep * (max - min) + min;
+      let raw = this._isReversed()
+        ? max - (normAngle - ARC_START) / sweep * (max - min)
+        : (normAngle - ARC_START) / sweep * (max - min) + min;
       raw = Math.round(raw / step) * step;
       return Math.max(min, Math.min(max, raw));
     }
@@ -330,12 +349,17 @@ customElements.define(
       const by2 = SVG_CENTER + baseR * Math.sin(pointerRad) - halfBase * Math.sin(perpRad);
       this.$pointer.setAttribute("points", `${tipX},${tipY} ${bx1},${by1} ${bx2},${by2}`);
 
-      // Min/max labels
+      // Min/max labels (swap when reversed)
       const min = this._getMin();
       const max = this._getMax();
       const unit = this._getUnit();
-      this.$minLabel.textContent = `${min}${unit}`;
-      this.$maxLabel.textContent = `${max}${unit}`;
+      if (this._isReversed()) {
+        this.$minLabel.textContent = `${max}${unit}`;
+        this.$maxLabel.textContent = `${min}${unit}`;
+      } else {
+        this.$minLabel.textContent = `${min}${unit}`;
+        this.$maxLabel.textContent = `${max}${unit}`;
+      }
 
       // Center value readout
       const step = this._getStep();
