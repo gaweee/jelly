@@ -137,13 +137,13 @@ customElements.define(
     // ── Lifecycle ──────────────────────────────────────────────
 
     afterLoad() {
-      this.$card = this.qs(".weather-card");
-      this.$title = this.qs(".weather-title");
-      this.$location = this.qs(".weather-location");
-      this.$currentIcon = this.qs(".current-icon");
-      this.$currentTemp = this.qs(".current-temp-value");
-      this.$todayHiLo = this.qs(".today-hilo");
-      this.$forecastStrip = this.qs(".forecast-strip");
+      this.$card = this.qs(".card");
+      this.$title = this.qs(".title");
+      this.$status = this.qs(".status");
+      this.$icon = this.qs(".icon");
+      this.$value = this.qs(".value");
+      this.$hilo = this.qs(".hilo");
+      this.$forecast = this.qs(".forecast");
 
       // Subscribe to HA forecast service (HA 2023.12+)
       this._forecastData = null;
@@ -214,8 +214,8 @@ customElements.define(
       const entity = this.stateObj();
       if (!entity) {
         this.$title.textContent = "Entity not found";
-        this.$location.textContent = this.config.entity;
-        this.$forecastStrip.innerHTML = "";
+        this.$status.textContent = this.config.entity;
+        this.$forecast.innerHTML = "";
         return;
       }
 
@@ -228,7 +228,7 @@ customElements.define(
       this.$title.textContent = humanizeCondition(condition);
       const friendlyName = attrs.friendly_name || "";
       // Strip "weather." prefix if friendly_name not set
-      this.$location.textContent = friendlyName
+      this.$status.textContent = friendlyName
         ? friendlyName.replace(/^weather\.\s*/i, "").replace(/\bforecast\b\s*/i, "").trim()
         : "Home";
 
@@ -237,10 +237,10 @@ customElements.define(
 
       // ── Current temperature
       if (currentTemp != null) {
-        this.$currentTemp.textContent = `${Math.round(currentTemp)}${unit}`;
-        this.$currentTemp.style.display = "";
+        this.$value.textContent = `${Math.round(currentTemp)}${unit}`;
+        this.$value.style.display = "";
       } else {
-        this.$currentTemp.style.display = "none";
+        this.$value.style.display = "none";
       }
 
       // ── Today hi/lo from first forecast item
@@ -252,10 +252,10 @@ customElements.define(
         const parts = [];
         if (lo != null) parts.push(`L: ${Math.round(lo)}°`);
         if (hi != null) parts.push(`H: ${Math.round(hi)}°`);
-        this.$todayHiLo.textContent = parts.join("  ");
-        this.$todayHiLo.style.display = "";
+        this.$hilo.textContent = parts.join("  ");
+        this.$hilo.style.display = "";
       } else {
-        this.$todayHiLo.style.display = "none";
+        this.$hilo.style.display = "none";
       }
 
       // ── Forecast strip
@@ -263,7 +263,7 @@ customElements.define(
       if (showForecast && forecast.length > 0) {
         this._renderForecast(forecast, unit);
       } else {
-        this.$forecastStrip.innerHTML = "";
+        this.$forecast.innerHTML = "";
       }
     }
 
@@ -333,7 +333,7 @@ customElements.define(
         const wickX = CANDLE_WIDTH / 2;
         const bodyX = (CANDLE_WIDTH - bodyW) / 2;
 
-        const candleSVG = `<svg class="forecast-candle-svg" width="${CANDLE_WIDTH}" height="${CANDLE_HEIGHT}" viewBox="0 0 ${CANDLE_WIDTH} ${CANDLE_HEIGHT}">
+        const candleSVG = `<svg class="forecast-candle-svg" viewBox="0 0 ${CANDLE_WIDTH} ${CANDLE_HEIGHT}" preserveAspectRatio="none">
           <line class="candle-wick" x1="${wickX}" y1="${hiY}" x2="${wickX}" y2="${loY}" />
           <rect class="candle-body" x="${bodyX}" y="${hiY}" width="${bodyW}" height="${bodyH}" />
         </svg>`;
@@ -363,7 +363,7 @@ customElements.define(
           </div>`;
       }
 
-      this.$forecastStrip.innerHTML = html;
+      this.$forecast.innerHTML = html;
     }
 
 
@@ -372,7 +372,7 @@ customElements.define(
      * so SMIL animations play inside shadow DOM.
      */
     async _loadMainIcon(url) {
-      if (!this.$currentIcon || this._currentIconUrl === url) return;
+      if (!this.$icon || this._currentIconUrl === url) return;
       this._currentIconUrl = url;
       try {
         const res = await fetch(url);
@@ -380,7 +380,7 @@ customElements.define(
         const text = await res.text();
         // Only update if URL hasn't changed while we were fetching
         if (this._currentIconUrl === url) {
-          this.$currentIcon.innerHTML = text;
+          this.$icon.innerHTML = text;
         }
       } catch (_) { /* network error — leave previous icon */ }
     }
