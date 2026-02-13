@@ -72,15 +72,15 @@ customElements.define(
      * Sets up DOM references and interaction handlers
      */
     afterLoad() {
-      this.$card = this.qs(".toggle-card");
-      this.$cardContent = this.qs(".card-content");
-      this.$image = this.qs(".device-image");
-      this.$imagePlaceholder = this.qs(".device-image-placeholder");
+      this.$card = this.qs(".card");
+      this.$content = this.qs(".content");
+      this.$image = this.qs(".image img");
+      this.$imagePlaceholder = this.qs(".image-placeholder");
       this.$icon = this.qs(".entity-icon");
-      this.$name = this.qs(".device-name");
-      this.$status = this.qs(".device-status");
+      this.$title = this.qs(".title");
+      this.$status = this.qs(".status");
 
-      this._unbind = this.bindInteractions(this.$cardContent, {
+      this._unbind = this.bindInteractions(this.$content, {
         onTap: () => this._handleToggle()
       });
     }
@@ -94,7 +94,7 @@ customElements.define(
 
       const entity = this.stateObj();
       if (!entity) {
-        this.$name.textContent = "Entity not found";
+        this.$title.textContent = "Entity not found";
         this.$status.textContent = this.config.entity;
         this.$card.setAttribute("data-state", "unavailable");
         return;
@@ -105,7 +105,7 @@ customElements.define(
       const status = computeStatus(entity);
 
       this.$card.setAttribute("data-state", isOn ? "on" : "off");
-      this.$name.textContent = name;
+      this.$title.textContent = name;
       this.$status.textContent = status;
 
       // Handle image (priority) or icon fallback

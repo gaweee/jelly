@@ -28,10 +28,8 @@
   min-width: 0;
 }
 
-/* ===== Toggle — inline override (base positions absolute) ===== */
+/* ===== Toggle — tappable (base positions absolute) ===== */
 .toggle {
-  position: relative;
-  flex-shrink: 0;
   pointer-events: auto;
   cursor: pointer;
 }
