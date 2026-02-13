@@ -1,33 +1,24 @@
 <ha-card>
-  <div class="hvac-card">
-    <div class="top">
-      <div class="temp-block">
-        <!-- HA mdi icon — set dynamically from entity/config -->
+  <div class="card">
+    <div class="toggle"><div class="toggle-knob"></div></div>
+    <div class="content">
+      <div class="value-wrap">
         <ha-icon class="mdi-icon"></ha-icon>
-
-        <div class="numbers">
-          <div class="value-row">
-            <span class="value temp-value"></span>
-            <span class="value-unit temp-unit">°C</span>
-          </div>
+        <div class="value-row">
+          <span class="value"></span>
+          <span class="unit">°C</span>
         </div>
       </div>
-
-      <div class="info-right">
-        <div class="toggle-indicator">
-          <div class="toggle-knob"></div>
-        </div>
-        <div class="device-info">
-          <div class="device-name t-h2"></div>
-          <div class="device-status t-label"></div>
-        </div>
+      <div class="info">
+        <span class="title t-h2"></span>
+        <span class="status t-label"></span>
       </div>
     </div>
 
-    <div class="temp-rail">
+    <div class="rail">
       <div class="rail-scroller">
         <div class="rail-container">
-          <div class="rail-gradient-bg" aria-hidden="true"></div>
+          <div class="rail-gradient" aria-hidden="true"></div>
           <div class="ticks" aria-hidden="true"></div>
         </div>
       </div>
@@ -60,7 +51,7 @@
           </radialGradient>
         </defs>
         <!-- background fill: area under notch matches card bg -->
-        <path class="overlay-fill"
+        <path class="rail-fill"
               d="M 0 92
                  C 120 92, 170 92, 212 92
                  C 236 92, 236 54, 260 54

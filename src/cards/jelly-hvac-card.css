@@ -1,38 +1,67 @@
-/* ===== ha-card container name ===== */
+/* ───────────────────────────────────────────
+   Container name
+   ─────────────────────────────────────────── */
 ha-card {
   container-name: hvac-card;
 }
 
-/* ===== Card Shell ===== */
-.hvac-card {
+/* ───────────────────────────────────────────
+   Layout
+   ─────────────────────────────────────────── */
+.card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
+  contain: layout style;
   overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
-  padding: 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-/* ===== Top Section ===== */
-.top {
+.content {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+  padding: 20px;
   user-select: none;
 }
 
-.temp-block {
+/* ───────────────────────────────────────────
+   Toggle — make tappable (base is pointer-events:none)
+   ─────────────────────────────────────────── */
+.toggle {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* HVAC active states */
+.card[data-state="heat"] .toggle,
+.card[data-state="cool"] .toggle,
+.card[data-state="auto"] .toggle,
+.card[data-state="heat_cool"] .toggle,
+.card[data-state="dry"] .toggle,
+.card[data-state="fan_only"] .toggle { background: var(--jelly-on); }
+
+.card[data-state="heat"] .toggle-knob,
+.card[data-state="cool"] .toggle-knob,
+.card[data-state="auto"] .toggle-knob,
+.card[data-state="heat_cool"] .toggle-knob,
+.card[data-state="dry"] .toggle-knob,
+.card[data-state="fan_only"] .toggle-knob { transform: translateX(18px); }
+
+/* ───────────────────────────────────────────
+   Value wrap — icon + temperature readout
+   ─────────────────────────────────────────── */
+.value-wrap {
   display: flex;
   gap: 18px;
   align-items: center;
 }
 
-/* HA mdi icon — replaces old .icon svg */
 .mdi-icon {
   --mdc-icon-size: 42px;
   width: 42px;
@@ -40,12 +69,7 @@ ha-card {
   opacity: .85;
   color: rgba(205, 214, 244, .85);
   filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
-}
-
-.numbers {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-shrink: 0;
 }
 
 .value-row {
@@ -54,7 +78,6 @@ ha-card {
   gap: 4px;
 }
 
-/* Large temperature readout */
 .value {
   font-size: 48px;
   line-height: 1;
@@ -63,50 +86,54 @@ ha-card {
   font-variant-numeric: tabular-nums;
 }
 
-.value-unit {
+.unit {
   font-size: 48px;
   font-weight: 300;
   color: rgba(205, 214, 244, .55);
 }
 
-/* Right info column — toggle + name/status */
-.info-right {
+/* ───────────────────────────────────────────
+   Info — top-right: title + status
+   ─────────────────────────────────────────── */
+.info {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
-}
-
-.device-info {
-  display: flex;
-  flex-direction: column;
   gap: 4px;
+  padding-top: 28px; /* clear floating toggle */
+  min-width: 0;
 }
 
-/* Name — matches jelly-device-card */
-.device-name {
+.title {
   color: var(--jelly-text);
   font-weight: var(--w-medium);
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-/* Status — matches jelly-device-card */
-.device-status {
+.status {
   color: var(--jelly-text-2);
   opacity: 0.7;
   text-align: right;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.hvac-card[data-state="heat"] .device-status,
-.hvac-card[data-state="cool"] .device-status,
-.hvac-card[data-state="auto"] .device-status {
+.card[data-state="heat"] .status,
+.card[data-state="cool"] .status,
+.card[data-state="auto"] .status {
   color: var(--jelly-on);
   opacity: 1;
 }
 
 /* ===== Temperature Rail ===== */
-.temp-rail {
+.rail {
   position: relative;
   height: 110px;
   margin-top: auto; /* push rail to bottom; gap fills above */
@@ -145,12 +172,12 @@ ha-card {
   z-index: 2;
 }
 
-.overlay-fill {
+.rail-fill {
   fill: var(--jelly-surface);
 }
 
 /* Full-width gradient — blue/pink kept per spec */
-.rail-gradient-bg {
+.rail-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg,
@@ -249,77 +276,30 @@ ha-card {
   display: none;
 }
 
-/* ===== Toggle Indicator (top-right) ===== */
-.toggle-indicator {
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  background: var(--jelly-off);
-  transition: background var(--jelly-fast);
-  cursor: pointer;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.hvac-card[data-state="heat"] .toggle-indicator,
-.hvac-card[data-state="cool"] .toggle-indicator,
-.hvac-card[data-state="auto"] .toggle-indicator,
-.hvac-card[data-state="heat_cool"] .toggle-indicator,
-.hvac-card[data-state="dry"] .toggle-indicator,
-.hvac-card[data-state="fan_only"] .toggle-indicator {
-  background: var(--jelly-on);
-}
-
-.toggle-knob {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: white;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--jelly-fast);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.hvac-card[data-state="heat"] .toggle-knob,
-.hvac-card[data-state="cool"] .toggle-knob,
-.hvac-card[data-state="auto"] .toggle-knob,
-.hvac-card[data-state="heat_cool"] .toggle-knob,
-.hvac-card[data-state="dry"] .toggle-knob,
-.hvac-card[data-state="fan_only"] .toggle-knob {
-  transform: translateX(18px);
-}
-
-/* ===== State treatments ===== */
-.hvac-card[data-state="off"] .rail-scroller {
+/* ───────────────────────────────────────────
+   State treatments
+   ─────────────────────────────────────────── */
+.card[data-state="off"] .rail-scroller {
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.hvac-card[data-state="off"] .value {
+.card[data-state="off"] .value {
   opacity: 0.5;
 }
 
-.hvac-card[data-state="unavailable"] .hvac-card {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* ===== Responsive ===== */
+/* ───────────────────────────────────────────
+   Responsive — @container hvac-card
+   ─────────────────────────────────────────── */
 @container hvac-card (max-width: 300px) {
-  .value {
-    font-size: 48px;
-  }
-
   .mdi-icon {
     --mdc-icon-size: 40px;
     width: 40px;
     height: 40px;
   }
 
-  .temp-rail {
+  .rail {
     height: 140px;
   }
 
@@ -329,7 +309,11 @@ ha-card {
 }
 
 @container hvac-card (min-width: 500px) {
-  .hvac-card {
+  .content {
     padding: 24px;
+  }
+
+  .rail {
+    padding: 0 4px;
   }
 }

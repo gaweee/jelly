@@ -107,16 +107,16 @@ customElements.define(
      * Sets up DOM references and interaction handlers.
      */
     afterLoad() {
-      this.$card = this.qs(".hvac-card");
-      this.$name = this.qs(".device-name");
-      this.$status = this.qs(".device-status");
-      this.$tempValue = this.qs(".temp-value");
-      this.$tempUnit = this.qs(".temp-unit");
+      this.$card = this.qs(".card");
+      this.$title = this.qs(".title");
+      this.$status = this.qs(".status");
+      this.$value = this.qs(".value");
+      this.$unit = this.qs(".unit");
       this.$icon = this.qs(".mdi-icon");
       this.$scroller = this.qs(".rail-scroller");
       this.$railContainer = this.qs(".rail-container");
       this.$thumb = this.qs(".thumb");
-      this.$toggle = this.qs(".toggle-indicator");
+      this.$toggle = this.qs(".toggle");
 
       this._initializeRail();
 
@@ -145,8 +145,8 @@ customElements.define(
       // ── live temperature readout on scroll ──
       const handleScroll = () => {
         const temp = this._getTempFromScroll();
-        if (this.$tempValue) {
-          this.$tempValue.textContent = temp.toFixed(1);
+        if (this.$value) {
+          this.$value.textContent = temp.toFixed(1);
         }
         if (scrollTimeout) clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
@@ -336,7 +336,7 @@ customElements.define(
 
       const entity = this.stateObj();
       if (!entity) {
-        this.$name.textContent = "Entity not found";
+        this.$title.textContent = "Entity not found";
         this.$status.textContent = this.config.entity;
         this.$card.setAttribute("data-state", "unavailable");
         return;
@@ -350,7 +350,7 @@ customElements.define(
       this.$card.setAttribute("data-state", state);
 
       // device info
-      this.$name.textContent = name;
+      this.$title.textContent = name;
       this.$status.textContent = this._getStatusText(state);
 
       // icon — configurable or pulled from entity
@@ -361,8 +361,8 @@ customElements.define(
 
       // temperature display
       const unit = entity.attributes.unit_of_measurement || "°C";
-      this.$tempValue.textContent = temp.toFixed(1);
-      this.$tempUnit.textContent = unit;
+      this.$value.textContent = temp.toFixed(1);
+      this.$unit.textContent = unit;
 
       // rail dimensions (recompute when temp range changes)
       if (
