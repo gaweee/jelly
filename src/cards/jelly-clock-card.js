@@ -78,11 +78,6 @@ customElements.define(
       this.render?.();
     }
 
-    /** Clock card relies on HA grid sizing, not fixed card-height. */
-    _applyCardDimensions() {
-      // no-op — prevents base class from setting --jelly-card-height
-    }
-
     afterLoad() {
       this.$card = this.qs(".clock-card");
       this.$time = this.qs(".clock-time");

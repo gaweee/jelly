@@ -29,8 +29,9 @@
 | Capability | Detail |
 |---|---|
 | Asset loading | Fetches `<tag>.html` + `<tag>.css` from `/local/jelly/src/cards/`, caches per tag, injects into shadow DOM |
-| Card dimensions | `unitsToPx(u) = 50 + 50*u`; sets `--jelly-card-height` and `--jelly-card-units` CSS vars on host |
-| Layout hints | `getLayoutOptions()` → `{ grid_columns: 4, grid_min_columns: 2, grid_rows, grid_min_rows }` |
+| Card dimensions | `unitsToPx(u) = 50 + 50*u`; sets `--jelly-card-height` and `--jelly-card-units` CSS vars on host as min-height floor |
+| Layout hints | `getLayoutOptions()` → `{ grid_columns: 4, grid_min_columns: 2, grid_rows: _getCardUnits(), grid_min_rows: minUnits }` |
+| Height model | HA grid controls actual height via `grid_rows`; `:host` fills grid cell (`height: 100%`); `ha-card` enforces floor (`min-height`), clips (`overflow: hidden`), and enables height-responsive CSS (`container-type: size`) |
 | Gestures | `bindInteractions(target, { onTap, onDoubleTap, onHold, onSwipe })` — pointer-based, auto-cleanup |
 | Optimistic toggle | `optimisticToggle({ desiredState, applyOptimistic, rollback, confirm, timeout })` — 1200ms default |
 | Helpers | `qs()`, `stateObj()`, `callService()`, `setAnimState()`, `setDebugText()` |
@@ -80,14 +81,27 @@
 
 | Card | Tag | Domains | minUnits | Shortcuts | Dynamic Height | Toggle |
 |---|---|---|---|---|---|---|
+| Generic | `jelly-generic-card` | switch, light, fan, input_boolean | 1 | No | No | Yes |
 | Toggle | `jelly-toggle-card` | switch, light, fan, input_boolean | 2 | No | No | Yes |
 | Device | `jelly-device-card` | fan, light, switch, climate, input_boolean | 3 | 4 max | No | Yes |
 | HVAC | `jelly-hvac-card` | climate | 4 | No | No | Yes |
-| Clock | `jelly-clock-card` | *(none)* | 3 | No | No | No |
+| Clock | `jelly-clock-card` | *(none)* | 1 | No | No | No |
 | Weather | `jelly-weather-card` | weather | 4 | No | No | No |
 | Sensor Graph | `jelly-sensor-graph` | sensor | 4 | No | No | No |
 | Knob | `jelly-knob-card` | climate, number, input_number, fan, light | 4 | 4 max | Yes (4u→5u) | Yes |
 | Shell | `jelly-shell-card` | *(none)* | — | No | No | No |
+
+---
+
+### jelly-generic-card
+
+Minimal reference card — title and toggle only. Canonical implementation of the Jelly height-sizing contract.
+
+**Config:** `entity` (required), `name`
+**States:** `on`, `off`, `unavailable`
+**Behavior:**
+- Toggle tap → `homeassistant.toggle` with optimistic UI
+- Title: `config.name` > `friendly_name` > entity ID
 
 ---
 

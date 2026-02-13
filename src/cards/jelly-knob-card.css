@@ -3,8 +3,6 @@
   font-family: var(--font-sans);
   display: block;
   height: 100%;
-  container-type: inline-size;
-  container-name: knob-card;
 }
 
 /* ===== ha-card flex host ===== */
@@ -16,6 +14,9 @@ ha-card {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
+  overflow: hidden;
+  container-type: size;
+  container-name: knob-card;
 }
 
 /* ===== Card Shell ===== */

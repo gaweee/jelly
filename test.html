@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HVAC Control Knob Demo</title>
+  <style>
+    body {
+      background: #181a1b;
+      color: #fff;
+      font-family: 'Google Sans', Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .hvac-card {
+      background: #232526;
+      border-radius: 18px;
+      box-shadow: 0 2px 16px #0008;
+      padding: 32px 32px 24px 32px;
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hvac-knob-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin-top: 20px;
+      margin-bottom: 24px;
+      overflow: visible;
+    }
+    .hvac-knob-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .hvac-knob-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .hvac-knob-label .main-temp {
+      font-size: 2.8rem;
+      font-weight: 600;
+      letter-spacing: -1px;
+    }
+    .hvac-knob-label .desc {
+      font-size: 1.1rem;
+      color: #b0b3b8;
+      margin-bottom: 2px;
+    }
+    .hvac-knob-label .eta {
+      font-size: 1rem;
+      color: #b0b3b8;
+      margin-top: 2px;
+    }
+    .hvac-knob-btns {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 12px;
+    }
+    .hvac-knob-btn {
+      background: #232526;
+      border: none;
+      outline: none;
+      color: #fff;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px #0004;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+      z-index: 1;
+    }
+    .hvac-knob-btn:active, .hvac-knob-btn.flash {
+      background: #2196f3;
+      color: #fff;
+    }
+    .hvac-knob-btn:focus {
+      outline: 2px solid #2196f3;
+    }
+    .hvac-knob-min, .hvac-knob-max {
+      position: absolute;
+      font-size: 1.1rem;
+      color: #b0b3b8;
+      user-select: none;
+      pointer-events: none;
+    }
+    .hvac-knob-min {
+      left: 0;
+      top: 225px;
+    }
+    .hvac-knob-max {
+      right: 0;
+      top: 225px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hvac-card">
+    <div class="hvac-knob-container">
+      <svg class="hvac-knob-svg" viewBox="0 0 260 260">
+        <path id="knob-outer-arc" stroke="#555" stroke-width="1" fill="none" />
+        <g id="knob-spokes"></g>
+        <polygon id="knob-pointer" fill="#2196f3" />
+      </svg>
+      <div class="hvac-knob-label">
+        <div class="desc">COOLING TO</div>
+        <div class="main-temp" id="knob-temp">21.5°</div>
+        <div class="eta" id="knob-eta">UNDER 7 MIN</div>
+      </div>
+      <div class="hvac-knob-min"></div>
+      <div class="hvac-knob-max"></div>
+    </div>
+    <div class="hvac-knob-btns">
+      <button class="hvac-knob-btn" id="knob-decr">−</button>
+      <button class="hvac-knob-btn" id="knob-incr">+</button>
+    </div>
+  </div>
+  <script>
+    // --- Knob Arc Drawing ---
+    const minTemp = 16, maxTemp = 32;
+    let currentTemp = 21.5;
+    // Arc: 220deg (left) to 140deg (right), skipping 141-219deg (bottom)
+    const arcStart = 220, arcEnd = 140 + 360; // 280deg sweep, 220->360->140 (clockwise)
+    const arcRadius = 110;
+    const svgCenter = 130;
+    const spokesGroup = document.getElementById('knob-spokes');
+    const outerArcElem = document.getElementById('knob-outer-arc');
+    const minLabel = document.querySelector('.hvac-knob-min');
+    const maxLabel = document.querySelector('.hvac-knob-max');
+    const pointerElem = document.getElementById('knob-pointer');
+    const tempElem = document.getElementById('knob-temp');
+    const etaElem = document.getElementById('knob-eta');
+
+    function tempToAngle(temp) {
+      // Map temp to angle between arcStart and arcEnd (clockwise)
+      let sweep = (arcEnd > arcStart) ? (arcEnd - arcStart) : (arcEnd + 360 - arcStart);
+      return (arcStart + ((temp - minTemp) / (maxTemp - minTemp)) * sweep) % 360;
+    }
+    function angleToTemp(angle) {
+      let sweep = (arcEnd > arcStart) ? (arcEnd - arcStart) : (arcEnd + 360 - arcStart);
+      let normAngle = (angle < arcStart) ? angle + 360 : angle;
+      let t = (normAngle - arcStart) / sweep * (maxTemp - minTemp) + minTemp;
+      return Math.max(minTemp, Math.min(maxTemp, t));
+    }
+    function polarToXY(angle, radius) {
+      let rad = (angle - 90) * Math.PI / 180;
+      return [svgCenter + radius * Math.cos(rad), svgCenter + radius * Math.sin(rad)];
+    }
+    function drawArc(temp) {
+      // Outer arc (background)
+      const outerRadius = arcRadius + 20;
+      const sweep = (arcEnd > arcStart) ? (arcEnd - arcStart) : (arcEnd + 360 - arcStart);
+      const [ox0, oy0] = polarToXY(arcStart, outerRadius);
+      const [ox1, oy1] = polarToXY(arcEnd, outerRadius);
+      const largeArc = sweep > 180 ? 1 : 0;
+      outerArcElem.setAttribute('d', `M${ox0},${oy0} A${outerRadius},${outerRadius} 0 ${largeArc} 1 ${ox1},${oy1}`);
+
+      // Draw spokes for each 0.5 degree step between arcStart and current temp angle
+      const tempAngle = tempToAngle(temp);
+      let endAngle = (tempAngle < arcStart) ? tempAngle + 360 : tempAngle;
+      spokesGroup.innerHTML = '';
+      const spokeCount = 40; // Number of spokes for full arc
+      let maxDrawAngle = endAngle;
+      for (let i = 0; i < spokeCount; ++i) {
+        let frac = i / (spokeCount - 1);
+        let angle = (arcStart + frac * sweep) % 360;
+        let drawAngle = (angle < arcStart) ? angle + 360 : angle;
+        if (drawAngle > maxDrawAngle) break;
+        // Pulse/wave: spokes near the pointer extend inward more
+        let distFromPointer = Math.abs(drawAngle - endAngle);
+        let pulseExtra = Math.max(0, 10 - distFromPointer * 0.5) * 1.2; // up to ~12px extra near pointer
+        const innerR = arcRadius - 3 - pulseExtra; // base inner shortened by 5px (was -8, now -3)
+        const [x0, y0] = polarToXY(angle, innerR);
+        const [x1, y1] = polarToXY(angle, arcRadius + 8);
+        const spoke = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        spoke.setAttribute('x1', x0);
+        spoke.setAttribute('y1', y0);
+        spoke.setAttribute('x2', x1);
+        spoke.setAttribute('y2', y1);
+        spoke.setAttribute('stroke', '#2196f3');
+        spoke.setAttribute('stroke-width', 3.5);
+        spoke.setAttribute('stroke-linecap', 'round');
+        spokesGroup.appendChild(spoke);
+      }
+      // Draw pointer on outer arc, small triangle with 3:2 base:height ratio, facing inward
+      const pointerAngle = tempAngle;
+      const pointerRad = (pointerAngle - 90) * Math.PI / 180;
+      const pointerHeight = 8;  // height (radial depth)
+      const halfBase = 6;       // half base width (3:2 ratio => base=12, height=8)
+      const tipR = outerRadius - 2;              // tip just inside outer arc
+      const baseR = outerRadius - 2 + pointerHeight; // base outside
+      const tipX = svgCenter + tipR * Math.cos(pointerRad);
+      const tipY = svgCenter + tipR * Math.sin(pointerRad);
+      const perpRad = pointerRad + Math.PI / 2;
+      const bx1 = svgCenter + baseR * Math.cos(pointerRad) + halfBase * Math.cos(perpRad);
+      const by1 = svgCenter + baseR * Math.sin(pointerRad) + halfBase * Math.sin(perpRad);
+      const bx2 = svgCenter + baseR * Math.cos(pointerRad) - halfBase * Math.cos(perpRad);
+      const by2 = svgCenter + baseR * Math.sin(pointerRad) - halfBase * Math.sin(perpRad);
+      pointerElem.setAttribute('points', `${tipX},${tipY} ${bx1},${by1} ${bx2},${by2}`);
+
+      // Min/max labels are positioned via CSS
+      minLabel.textContent = `${minTemp}°`;
+      maxLabel.textContent = `${maxTemp}°`;
+    }
+    function updateKnob(temp) {
+      currentTemp = Math.round(temp * 2) / 2;
+      tempElem.textContent = currentTemp.toFixed(1) + '°';
+      drawArc(currentTemp);
+    }
+    updateKnob(currentTemp);
+
+    // --- Drag to set temp ---
+    const svg = document.querySelector('.hvac-knob-svg');
+    let dragging = false;
+    svg.addEventListener('pointerdown', e => {
+      dragging = true;
+      svg.setPointerCapture(e.pointerId);
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const rect = svg.getBoundingClientRect();
+      const x = e.clientX - rect.left - svgCenter;
+      const y = e.clientY - rect.top - svgCenter;
+      let angle = Math.atan2(y, x) * 180 / Math.PI + 90;
+      if (angle < 0) angle += 360;
+      // Only allow drag in arc region (210 to 150, skipping 151-209)
+      let normAngle = (angle < arcStart) ? angle + 360 : angle;
+      let arcEndNorm = (arcEnd < arcStart) ? arcEnd + 360 : arcEnd;
+      if (normAngle < arcStart || normAngle > arcEndNorm) return;
+      updateKnob(angleToTemp(angle));
+    });
+    svg.addEventListener('pointerup', e => {
+      dragging = false;
+      svg.releasePointerCapture(e.pointerId);
+    });
+
+    // --- Buttons ---
+    function flashButton(btn) {
+      btn.classList.add('flash');
+      setTimeout(() => btn.classList.remove('flash'), 120);
+    }
+    document.getElementById('knob-decr').addEventListener('click', e => {
+      flashButton(e.target);
+      updateKnob(Math.max(minTemp, currentTemp - 0.5));
+    });
+    document.getElementById('knob-incr').addEventListener('click', e => {
+      flashButton(e.target);
+      updateKnob(Math.min(maxTemp, currentTemp + 0.5));
+    });
+  </script>
+</body>
+</html>

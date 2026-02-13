@@ -1,0 +1,91 @@
+/* ===== Host ===== */
+:host {
+  font-family: var(--font-sans);
+  display: block;
+  height: 100%;
+}
+
+/*
+ * ha-card — Sizing contract
+ *
+ * HA Sections grid owns height.  Row formula: rows × 64 - 8.
+ * :host fills the grid cell (height:100%), ha-card fills :host.
+ * NO min-height — nothing competes with the grid.
+ * overflow:hidden — hard clamp; content never escapes the cell.
+ */
+ha-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: hidden;
+}
+
+/* ===== Card shell ===== */
+.card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== Header — North-bound ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  gap: 12px;
+}
+
+.title {
+  color: var(--jelly-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ===== Toggle ===== */
+.toggle {
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--jelly-off);
+  transition: background var(--jelly-fast);
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card[data-state="on"] .toggle {
+  background: var(--jelly-on);
+}
+
+.toggle-knob {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--jelly-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card[data-state="on"] .toggle-knob {
+  transform: translateX(18px);
+}
+
+/* ===== State treatments ===== */
+.card[data-state="unavailable"] {
+  opacity: 0.5;
+  pointer-events: none;
+}

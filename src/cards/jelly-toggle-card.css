@@ -1,8 +1,7 @@
 :host {
   font-family: var(--font-sans);
   display: block;
-  container-type: inline-size;
-  container-name: toggle-card;
+  height: 100%;
 }
 
 ha-card {
@@ -13,6 +12,9 @@ ha-card {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
+  overflow: hidden;
+  container-type: size;
+  container-name: toggle-card;
 }
 
 .toggle-card {
@@ -32,7 +34,7 @@ ha-card {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 20px 28px;
+  padding: 20px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;

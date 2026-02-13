@@ -39,6 +39,7 @@ import "./cards/jelly-toggle-card.js";
 import "./cards/jelly-weather-card.js";
 import "./cards/jelly-clock-card.js";
 import "./cards/jelly-knob-card.js";
+import "./cards/jelly-generic-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -77,6 +78,11 @@ import "./cards/jelly-knob-card.js";
       type: "jelly-knob-card",
       name: "Jelly Knob Card",
       description: "Circular arc knob control with spokes, pointer, +/- buttons, and optional shortcuts"
+    },
+    {
+      type: "jelly-generic-card",
+      name: "Jelly Generic Card",
+      description: "Minimal card with title and toggle — reference sizing implementation"
     }
   ];
 

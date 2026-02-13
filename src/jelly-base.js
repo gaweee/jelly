@@ -275,11 +275,12 @@ export class JellyCardBase extends HTMLElement {
    * Layout hints for HA Sections grid.
    */
   getLayoutOptions() {
+    const units = this._getCardUnits();
     const min = this.constructor.minUnits ?? 1;
     return {
       grid_columns: 4,
       grid_min_columns: 2,
-      grid_rows: min,
+      grid_rows: units,
       grid_min_rows: min,
     };
   }
