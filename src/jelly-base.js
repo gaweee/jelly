@@ -340,6 +340,14 @@ export class JellyCardBase extends HTMLElement {
     this._pendingToggles = [];
   }
 
+  connectedCallback() {
+    if (this._assetsLoaded) {
+      if (typeof this.afterLoad === "function") this.afterLoad();
+      this._applyCardDimensions();
+      this.render?.();
+    }
+  }
+
   async _ensureAssets() {
     if (this._assetsLoaded) return;
     if (!this._assetPromise) {

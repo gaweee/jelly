@@ -721,7 +721,7 @@ customElements.define(
       this._popover = { el: pop, backdrop };
 
       // Auto-dismiss after 120 s (dashboard kiosk mode)
-      this._popoverTimer = setTimeout(() => this._dismissPopover(), 120_000);
+      this._popoverTimer = setTimeout(() => this._dismissPopover(), 90_000);
 
       // Adjust if overflowing bottom
       requestAnimationFrame(() => {
