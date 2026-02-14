@@ -57,54 +57,46 @@
 /* ===== Activity row — timeline layout ===== */
 .activity-row {
   display: flex;
-  align-items: stretch;
-  gap: 12px;
+  align-items: center;
+  gap: 0;
   position: relative;
 }
 
-/* ===== Timeline rail — vertical line + dot ===== */
+/* ===== Timeline rail — vertical line only ===== */
 .timeline-rail {
   position: relative;
-  width: 12px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-/* Vertical line segment */
-.timeline-rail::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
   width: 2px;
-  transform: translateX(-50%);
+  flex-shrink: 0;
+  align-self: stretch;
   background: var(--jelly-on);
   opacity: 0.35;
 }
 
-/* First row: line starts from the dot */
-.activity-row:first-child .timeline-rail::before {
-  top: 7px;
+/* Round the top of the first rail */
+.activity-row:first-child .timeline-rail {
+  border-radius: 1px 1px 0 0;
+  margin-top: 10px;
 }
 
-/* Last row: line ends at the dot */
-.activity-row:last-child .timeline-rail::before {
-  bottom: calc(100% - 7px);
+/* Round the bottom of the last rail */
+.activity-row:last-child .timeline-rail {
+  border-radius: 0 0 1px 1px;
+  margin-bottom: 10px;
 }
 
-/* Dot on the rail */
-.timeline-dot {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--jelly-on);
+/* ===== Icon — bare, left side after rail ===== */
+.activity-icon {
   flex-shrink: 0;
-  margin-top: 12px;
-  z-index: 1;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 14px;
+}
+
+.activity-icon ha-icon {
+  --mdc-icon-size: 16px;
+  color: var(--jelly-text-2);
 }
 
 /* ===== Body — timestamp + message ===== */
@@ -115,6 +107,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 10px 0;
+  margin-left: 20px;
 }
 
 .timestamp {
@@ -137,20 +130,26 @@
   text-overflow: ellipsis;
 }
 
-/* ===== Icon pill — far right ===== */
-.activity-icon {
+/* ===== Duration — far right ===== */
+.duration {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--jelly-text) 8%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--jelly-text);
+  opacity: 0.45;
+  white-space: nowrap;
+  margin-left: 12px;
 }
 
-.activity-icon ha-icon {
-  --mdc-icon-size: 16px;
-  color: var(--jelly-text-2);
+/* ===== On-state accent treatment ===== */
+.activity-row[data-state="on"] .activity-icon ha-icon {
+  color: var(--jelly-on);
+}
+
+.activity-row[data-state="on"] .message {
+  color: var(--jelly-on);
+}
+
+.activity-row[data-state="on"] .timeline-rail {
+  opacity: 1;
 }
