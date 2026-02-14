@@ -150,6 +150,77 @@ function fetchTravelData(gridStart, gridEnd) {
   return travels;
 }
 
+/**
+ * Fetch calendar event data for the visible date range.
+ *
+ * Returns an array of event objects:
+ *   { key: "YYYY-MM-DD", title: string, color: string }
+ *
+ * Currently generates demo events across the grid.
+ * Replace with real HA calendar integration later.
+ */
+function fetchEventData(gridStart /*, gridEnd */) {
+  const events = [];
+  const titles = [
+    "Team standup", "Dentist appt", "Lunch w/ Sam",
+    "Design review", "Grocery run", "1:1 with manager",
+    "Book club", "Yoga class", "Sprint retro",
+    "Date night", "Haircut", "Oil change",
+  ];
+  const colors = [
+    "#89b4fa", // blue
+    "#f5c2e7", // pink
+    "#a6e3a1", // green
+    "#fab387", // peach
+    "#cba6f7", // mauve
+    "#f9e2af", // yellow
+  ];
+
+  // Spread events across the 35-day grid, biased toward the middle weeks
+  const offsets = [0, 2, 5, 7, 8, 10, 12, 14, 15, 16, 17, 19, 20, 21, 23, 25, 27, 30, 32];
+  for (const off of offsets) {
+    const d = addDays(gridStart, off);
+    events.push({
+      key: dateKey(d),
+      title: titles[off % titles.length],
+      color: colors[off % colors.length],
+    });
+  }
+
+  // Add extra events on certain days to create 2-3 event stacking
+  const extraOffsets = [5, 7, 14, 15, 16, 20, 21, 25];
+  for (const off of extraOffsets) {
+    const d = addDays(gridStart, off);
+    events.push({
+      key: dateKey(d),
+      title: titles[(off + 3) % titles.length],
+      color: colors[(off + 2) % colors.length],
+    });
+  }
+  // Triple-stack a couple of days
+  for (const off of [7, 16, 21]) {
+    const d = addDays(gridStart, off);
+    events.push({
+      key: dateKey(d),
+      title: titles[(off + 6) % titles.length],
+      color: colors[(off + 4) % colors.length],
+    });
+  }
+
+  return events;
+}
+
+/**
+ * Build a map: dateKey → count of events on that date.
+ */
+function buildEventMap(events) {
+  const map = new Map();
+  for (const e of events) {
+    map.set(e.key, (map.get(e.key) || 0) + 1);
+  }
+  return map;
+}
+
 /* ─── Card definition ──────────────────────────────────────────────── */
 
 customElements.define(
@@ -274,6 +345,13 @@ customElements.define(
       const travels = this._travelData;
       const travelMap = this._buildTravelMap(travels);
 
+      // Event data
+      if (!this._eventData || rangeKey !== this._lastEventKey) {
+        this._lastEventKey = rangeKey;
+        this._eventData = fetchEventData(gridStart, gridEnd);
+      }
+      const eventMap = buildEventMap(this._eventData);
+
       // Month label
       const months = [...new Set(days.map(d => d.month))];
       const year = days[17].year;
@@ -303,12 +381,24 @@ customElements.define(
           const cell = document.createElement("div");
           cell.className = "day-cell";
           if (day.isToday) cell.classList.add("today");
-          if (day.isOutside) cell.classList.add("outside");
 
           const num = document.createElement("span");
           num.className = "day-num";
           num.textContent = day.dayNum;
           cell.appendChild(num);
+
+          // Event count badge
+          const evCount = eventMap.get(day.key) || 0;
+          if (evCount > 0) {
+            const badge = document.createElement("span");
+            badge.className = "event-badge";
+            if (evCount === 1) {
+              badge.classList.add("single");
+            } else {
+              badge.textContent = evCount;
+            }
+            cell.appendChild(badge);
+          }
 
           weekRow.appendChild(cell);
         }
@@ -367,7 +457,7 @@ customElements.define(
         const barHeight = 3;
         const iconSize = 16;
         const laneSpacing = 14; // 50% overlap when icons stack
-        const laneBaseY = 26;  // clear of date-num area
+        const laneBaseY = 20;  // clear of date-num area
         const cellInset = 4;   // keep bars off cell edges
 
         for (const [lane, spans] of lanesInRow) {
@@ -379,9 +469,10 @@ customElements.define(
             const sRect = cellRects[span.startCol];
             const eRect = cellRects[span.endCol];
 
-            // Bar start/end X positions — clamp to cell edges with inset
-            const startCx = sRect.left - rowRect.left + sRect.width / 2;
-            const endCx = eRect.left - rowRect.left + eRect.width / 2;
+            // Icon X positions — takeoff near right edge, landing near left edge
+            const iconInset = 6; // px from cell edge to icon center
+            const startCx = sRect.right - rowRect.left - iconInset - iconSize / 2;
+            const endCx = eRect.left - rowRect.left + iconInset + iconSize / 2;
 
             const hasStartIcon = span.startRole === "start";
             const hasEndIcon = span.endRole === "end";
@@ -406,12 +497,12 @@ customElements.define(
               svg.appendChild(bar);
             }
 
-            // Start icon (takeoff)
+            // Start icon (takeoff) — right side of cell
             if (hasStartIcon) {
               this._addTravelIcon(weekRow, rowRect, startCx, y, "mdi:airplane-takeoff", lane);
             }
 
-            // End icon (landing)
+            // End icon (landing) — left side of cell
             if (hasEndIcon) {
               this._addTravelIcon(weekRow, rowRect, endCx, y, "mdi:airplane-landing", lane);
             }

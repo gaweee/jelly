@@ -32,11 +32,10 @@ ha-card {
 
 .month-label {
   color: var(--jelly-text);
-  font-size: 13px;
-  font-weight: var(--w-semibold, 600);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* ───────────────────────────────────────────
@@ -56,7 +55,8 @@ ha-card {
 }
 
 .day-hdr {
-  text-align: center;
+  text-align: right;
+  padding-right: 5px;
   color: var(--jelly-text);
   opacity: 0.4;
   font-size: 10px;
@@ -132,9 +132,43 @@ ha-card {
   font-weight: var(--w-semibold, 600);
 }
 
-/* Outside current month — dimmed */
+/* Outside current month — same opacity */
 .day-cell.outside {
-  opacity: 0.3;
+  /* no dimming */
+}
+
+/* ───────────────────────────────────────────
+   Event badge — centered in day cell
+   ─────────────────────────────────────────── */
+.event-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(224, 108, 117, 0.28);
+  color: #e06c75;
+  font-size: 9px;
+  font-weight: var(--w-semibold, 600);
+  line-height: 14px;
+  text-align: center;
+  padding: 0 3px;
+  box-sizing: border-box;
+}
+
+/* Single event — small dot, no text */
+.event-badge.single {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  padding: 0;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(224, 108, 117, 0.45);
 }
 
 /* ───────────────────────────────────────────
