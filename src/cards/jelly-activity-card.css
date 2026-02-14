@@ -72,14 +72,14 @@
   background: color-mix(in srgb, var(--jelly-text) 10%, transparent);
 }
 
-/* First row: start at icon center */
-.activity-row:first-child .timeline-rail {
+/* First activity row: rail starts at icon center */
+.activity-row.first-row .timeline-rail {
   top: 50%;
   border-radius: 1px 1px 0 0;
 }
 
-/* Last row: end at icon center */
-.activity-row:last-child .timeline-rail {
+/* Last activity row: rail ends at icon center */
+.activity-row.last-row .timeline-rail {
   bottom: 50%;
   border-radius: 0 0 1px 1px;
 }

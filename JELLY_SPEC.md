@@ -251,22 +251,48 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 
 ### jelly-activity-card
 
-Scrollable timeline of recent smart home activity events with timestamps and icons.
+Scrollable timeline of recent smart home activity events with timestamps, icons, and state-based coloring. Designed to work with HACS auto-entities.
 
-**Config:** `name` (optional)
+**Config:** `name`/`title` (optional), `max_items` (default 100), `max_hours` (optional)
 **No entity required** — overrides `setConfig()` to skip entity validation.
+**Entities:** Fed by auto-entities via `config.entities` array.
 **minUnits:** 4
+
+**auto-entities example:**
+```yaml
+type: custom:auto-entities
+card:
+  type: custom:jelly-activity-card
+  title: Recent Activity
+  max_items: 45
+  max_hours: 24
+filter:
+  include:
+    - domain: light
+sort:
+  method: last_changed
+  reverse: true
+```
+
 **Behavior:**
-- Title: `config.name` > "Recent Activity"
-- Scrollable vertical list of activity rows, flex-fills the card
-- Each row: timestamp line (`[Date, Time] | [Elapsed]`), activity message, MDI icon pill (32px, 8px radius, 16px icon)
-- Thin scrollbar styling; rows separated by subtle 6%-opacity borders
-- Static mockup with 30 sample entries (to be replaced with live logbook data later)
+- Title: `config.name` > `config.title` > "Recent Activity"
+- Dynamically renders entity list from auto-entities; sorted by `last_changed` descending
+- Each row: timeline rail with icon station, timestamp (`DD Mon, H:MM AM/PM | Xm ago`), message (`friendly_name + state verb + attribute detail`), duration (`Took X.Xs`)
+- Timeline rail: 2px vertical line centered through 32px circular icon pills; icons act as "train stations"
+- State classification:
+  - **on** (primary accent): light, switch, fan, input_boolean, media_player, vacuum, humidifier, remote — when state ≠ off/unavailable/idle/standby
+  - **setting** (Catppuccin blue): climate, cover, alarm_control_panel, input_number, number, input_select, select, water_heater, valve — when state ≠ unavailable
+  - **neutral**: all other states
+- Time separators: auto-computed buckets — Last 10 mins, Last hour, Last 4 hours, Last 24 hours, Yesterday & older
+- Duration: computed from `last_updated - last_changed` difference
+- Icons: entity `attributes.icon` > domain default map (30+ domains) > `mdi:help-circle`
+- Message enrichment: brightness %, temperature, cover position, fan %, media title
+- `max_items`: caps rendered rows (default 100)
+- `max_hours`: filters out entities changed more than N hours ago
 
 ---
 
 ## TODO
 - Sparkline card
-- Activity card — wire to HA logbook API for live data
 - Micro Dashboard e.g. https://dribbble.com/shots/19493855-Smart-Home-Dashboard
 - Make Agenda Card actuall use Google Calendar [!]
