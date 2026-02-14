@@ -1,0 +1,156 @@
+/* ===== Card shell ===== */
+.card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 20px 20px 12px 20px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.title {
+  color: var(--jelly-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ===== Activity list — scrollable fill ===== */
+.activity-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  /* Thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--jelly-off) transparent;
+}
+
+.activity-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+  background: var(--jelly-off);
+  border-radius: 2px;
+}
+
+/* ===== Activity row — timeline layout ===== */
+.activity-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  position: relative;
+}
+
+/* ===== Timeline rail — vertical line + dot ===== */
+.timeline-rail {
+  position: relative;
+  width: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Vertical line segment */
+.timeline-rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--jelly-on);
+  opacity: 0.35;
+}
+
+/* First row: line starts from the dot */
+.activity-row:first-child .timeline-rail::before {
+  top: 7px;
+}
+
+/* Last row: line ends at the dot */
+.activity-row:last-child .timeline-rail::before {
+  bottom: calc(100% - 7px);
+}
+
+/* Dot on the rail */
+.timeline-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jelly-on);
+  flex-shrink: 0;
+  margin-top: 12px;
+  z-index: 1;
+}
+
+/* ===== Body — timestamp + message ===== */
+.activity-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+}
+
+.timestamp {
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--jelly-text);
+  opacity: 0.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: var(--w-medium, 500);
+  color: var(--jelly-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Icon pill — far right ===== */
+.activity-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--jelly-text) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.activity-icon ha-icon {
+  --mdc-icon-size: 16px;
+  color: var(--jelly-text-2);
+}

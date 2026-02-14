@@ -91,6 +91,7 @@
 | Sensor Graph | `jelly-sensor-graph` | sensor | 4 | No | No | No |
 | Knob | `jelly-knob-card` | climate, number, input_number, fan, light | 4 | 4 max | Yes (4u→5u) | Yes |
 | Camera | `jelly-camera-card` | camera | 2 | No | No | No |
+| Activity | `jelly-activity-card` | *(none)* | 4 | No | No | No |
 | Shell | `jelly-shell-card` | *(none)* | — | No | No | No |
 
 ---
@@ -248,8 +249,24 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 
 ---
 
+### jelly-activity-card
+
+Scrollable timeline of recent smart home activity events with timestamps and icons.
+
+**Config:** `name` (optional)
+**No entity required** — overrides `setConfig()` to skip entity validation.
+**minUnits:** 4
+**Behavior:**
+- Title: `config.name` > "Recent Activity"
+- Scrollable vertical list of activity rows, flex-fills the card
+- Each row: timestamp line (`[Date, Time] | [Elapsed]`), activity message, MDI icon pill (32px, 8px radius, 16px icon)
+- Thin scrollbar styling; rows separated by subtle 6%-opacity borders
+- Static mockup with 30 sample entries (to be replaced with live logbook data later)
+
+---
+
 ## TODO
 - Sparkline card
-- Activity card e.g. https://dribbble.com/shots/23308830-Smart-Home-Dashboard
-- Calendar/Agenda widget e.g. https://dribbble.com/shots/24302475-Smart-Home-Dashboard-Design
+- Activity card — wire to HA logbook API for live data
 - Micro Dashboard e.g. https://dribbble.com/shots/19493855-Smart-Home-Dashboard
+- Make Agenda Card actuall use Google Calendar [!]
