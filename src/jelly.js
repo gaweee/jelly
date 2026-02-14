@@ -42,6 +42,7 @@ import "./cards/jelly-knob-card.js";
 import "./cards/jelly-generic-card.js";
 import "./cards/jelly-camera-card.js";
 import "./cards/jelly-group-toggle-card.js";
+import "./cards/jelly-scene-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -95,6 +96,11 @@ import "./cards/jelly-group-toggle-card.js";
       type: "jelly-group-toggle-card",
       name: "Jelly Group Toggle Card",
       description: "Group entity card with master toggle and dense member toggle list"
+    },
+    {
+      type: "jelly-scene-card",
+      name: "Jelly Scene Card",
+      description: "Horizontal scene picker with squarish icon buttons and scroll fade"
     }
   ];
 

@@ -61,6 +61,7 @@ class JellyCardEditor extends HTMLElement {
       // Rebuild schema when config changes to handle conditional fields
       this._updateSchema();
       this._form.schema = this._schema;
+      this._form.data = this._config; // refresh form data (may be normalized)
       this.dispatchEvent(
         new CustomEvent("config-changed", {
           detail: { config: this._config },
@@ -80,6 +81,11 @@ class JellyCardEditor extends HTMLElement {
       const result = this._dynamicSchemaCallback(this._config || {});
       this._schema = result.schema;
       this._labels = result.labels || {};
+      // If the schema returns a normalize function, compact/fix the config
+      if (typeof result.normalize === 'function') {
+        const normalized = result.normalize(this._config);
+        if (normalized) this._config = normalized;
+      }
     }
     // Otherwise use static schema (already set in setCardMeta)
   }

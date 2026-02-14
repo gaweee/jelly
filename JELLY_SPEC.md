@@ -256,5 +256,6 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 
 ## TODO
 - Sparkline card
-- Zone control (with multiple sub switches)
+- Activity card e.g. https://dribbble.com/shots/23308830-Smart-Home-Dashboard
 - Calendar/Agenda widget
+- Scene set https://dribbble.com/shots/23324720-SmartHub-Smart-Home-Dashboard
