@@ -289,8 +289,10 @@ customElements.define(
       this.$monthLabel = this.qs(".month-label");
       this.$weeks = this.qs(".weeks");
       this.$agenda = this.qs(".agenda");
+      this.$card = this.qs(".card");
       this._travelData = null;
       this._lastRangeKey = null;
+      this._popover = null;
       this.render();
     }
 
@@ -356,6 +358,7 @@ customElements.define(
 
     render() {
       if (!this.$weeks || !this.$monthLabel) return;
+      this._dismissPopover();
 
       const numWeeks = Math.max(3, Math.min(5, parseInt(this.config.weeks, 10) || 4));
       const totalDays = numWeeks * 7;
@@ -432,6 +435,7 @@ customElements.define(
             cell.appendChild(badge);
           }
 
+          cell.addEventListener("click", () => this._showDayPopover(cell, day));
           weekRow.appendChild(cell);
         }
 
@@ -570,6 +574,164 @@ customElements.define(
     /* ────────────────────────────────── */
     /*  Agenda list rendering            */
     /* ────────────────────────────────── */
+
+    /* ────────────────────────────────── */
+    /*  Day popover                        */
+    /* ────────────────────────────────── */
+
+    _dismissPopover() {
+      if (this._popoverTimer) {
+        clearTimeout(this._popoverTimer);
+        this._popoverTimer = null;
+      }
+      if (this._popover) {
+        this._popover.backdrop.remove();
+        this._popover.el.remove();
+        this._popover = null;
+      }
+    }
+
+    _showDayPopover(cell, day) {
+      // Dismiss existing
+      this._dismissPopover();
+
+      const calColors = JellyAgendaCard.CALENDAR_COLORS;
+      const DAYS_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      // Gather travel items that overlap this day
+      const travels = (this._travelData || []).filter(t => {
+        return day.date >= t.start && day.date <= t.end;
+      });
+
+      // Gather single-day events on this date
+      const events = (this._eventData || []).filter(e => e.key === day.key)
+        .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+
+      // Build popover
+      const pop = document.createElement("div");
+      pop.className = "day-popover";
+
+      // Header: "Saturday 14"
+      const header = document.createElement("div");
+      header.className = "day-popover-header";
+      header.textContent = `${DAYS_FULL[day.date.getDay()]} ${day.dayNum}`;
+      pop.appendChild(header);
+
+      let hasContent = false;
+
+      // Travel section
+      if (travels.length > 0) {
+        hasContent = true;
+        const sec = document.createElement("div");
+        sec.className = "agenda-section";
+        const lbl = document.createElement("div");
+        lbl.className = "agenda-section-header";
+        lbl.textContent = "Full / Multi Day Events";
+        sec.appendChild(lbl);
+        for (const t of travels) {
+          const item = document.createElement("div");
+          item.className = "agenda-item";
+          const laneIdx = typeof t.lane === "number" ? t.lane : 0;
+          item.style.borderLeftColor = calColors[laneIdx % calColors.length];
+          const info = document.createElement("div");
+          info.className = "agenda-info";
+          const label = document.createElement("span");
+          label.className = "agenda-label";
+          const sd = t.start, ed = t.end;
+          label.textContent = `${MONTHS[sd.getMonth()]} ${sd.getDate()} – ${MONTHS[ed.getMonth()]} ${ed.getDate()}`;
+          const loc = document.createElement("span");
+          loc.className = "agenda-location";
+          const dur = Math.round((ed - sd) / 86400000) + 1;
+          loc.textContent = `${dur} days`;
+          info.appendChild(label);
+          info.appendChild(loc);
+          item.appendChild(info);
+          sec.appendChild(item);
+        }
+        pop.appendChild(sec);
+      }
+
+      // Events section
+      if (events.length > 0) {
+        hasContent = true;
+        const sec = document.createElement("div");
+        sec.className = "agenda-section";
+        if (travels.length > 0) {
+          const lbl = document.createElement("div");
+          lbl.className = "agenda-section-header";
+          lbl.textContent = "Day Events";
+          sec.appendChild(lbl);
+        }
+        for (const ev of events) {
+          const item = document.createElement("div");
+          item.className = "agenda-item";
+          item.style.borderLeftColor = calColors[ev.calendar % calColors.length];
+          const info = document.createElement("div");
+          info.className = "agenda-info";
+          const label = document.createElement("span");
+          label.className = "agenda-label";
+          label.textContent = ev.title;
+          const loc = document.createElement("span");
+          loc.className = "agenda-location";
+          loc.textContent = [ev.time, ev.location].filter(Boolean).join(", ");
+          info.appendChild(label);
+          info.appendChild(loc);
+          item.appendChild(info);
+          sec.appendChild(item);
+        }
+        pop.appendChild(sec);
+      }
+
+      // Empty state
+      if (!hasContent) {
+        const empty = document.createElement("div");
+        empty.className = "agenda-empty";
+        empty.textContent = "No events";
+        pop.appendChild(empty);
+      }
+
+      // Position: relative to .card
+      const cardRect = this.$card.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+      const cellCenterX = cellRect.left + cellRect.width / 2 - cardRect.left;
+      const cellBottomY = cellRect.bottom - cardRect.top + 4;
+
+      // Horizontal: center on cell, but clamp within card
+      const popWidth = 220; // approximate; CSS clamp(180,60%,260)
+      let left = cellCenterX - popWidth / 2;
+      left = Math.max(4, Math.min(left, cardRect.width - popWidth - 4));
+      pop.style.left = `${left}px`;
+      pop.style.top = `${cellBottomY}px`;
+
+      // If popover would overflow bottom, show above instead
+      // (handled after insertion since we need measured height)
+
+      // Backdrop for dismiss
+      const backdrop = document.createElement("div");
+      backdrop.className = "day-popover-backdrop";
+      backdrop.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._dismissPopover();
+      });
+
+      this.$card.style.position = "relative";
+      this.$card.appendChild(backdrop);
+      this.$card.appendChild(pop);
+
+      this._popover = { el: pop, backdrop };
+
+      // Auto-dismiss after 120 s (dashboard kiosk mode)
+      this._popoverTimer = setTimeout(() => this._dismissPopover(), 120_000);
+
+      // Adjust if overflowing bottom
+      requestAnimationFrame(() => {
+        const popRect = pop.getBoundingClientRect();
+        if (popRect.bottom > cardRect.bottom - 4) {
+          const above = cellRect.top - cardRect.top - 4;
+          pop.style.top = `${above - popRect.height}px`;
+        }
+      });
+    }
 
     /** Calendar lane colors for left border. */
     static CALENDAR_COLORS = [
