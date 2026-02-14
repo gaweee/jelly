@@ -5,6 +5,12 @@
     </div>
     <div class="activity-list">
 
+      <!-- ── Last 10 mins ── -->
+      <div class="time-separator">
+        <span class="sep-label">Last 10 mins</span>
+        <div class="sep-line"></div>
+      </div>
+
       <div class="activity-row" data-state="on">
         <div class="timeline-rail"></div>
         <div class="activity-icon"><ha-icon icon="mdi:lightbulb"></ha-icon></div>
@@ -12,7 +18,7 @@
           <span class="timestamp">14 Feb, 09:30 AM | 2m ago</span>
           <span class="message">Living room lights turned on.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 1.2s</span>
       </div>
 
       <div class="activity-row">
@@ -22,17 +28,23 @@
           <span class="timestamp">14 Feb, 09:28 AM | 4m ago</span>
           <span class="message">Front door unlocked.</span>
         </div>
-        <span class="duration">Took 3s</span>
+        <span class="duration">Took 3.1s</span>
       </div>
 
-      <div class="activity-row">
+      <div class="activity-row" data-state="setting">
         <div class="timeline-rail"></div>
         <div class="activity-icon"><ha-icon icon="mdi:thermostat"></ha-icon></div>
         <div class="activity-body">
           <span class="timestamp">14 Feb, 09:25 AM | 7m ago</span>
           <span class="message">Thermostat set to 22°C.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 2.4s</span>
+      </div>
+
+      <!-- ── Last hour ── -->
+      <div class="time-separator">
+        <span class="sep-label">Last hour</span>
+        <div class="sep-line"></div>
       </div>
 
       <div class="activity-row">
@@ -42,7 +54,7 @@
           <span class="timestamp">14 Feb, 09:20 AM | 12m ago</span>
           <span class="message">Kitchen motion detected.</span>
         </div>
-        <span class="duration">Took 0s</span>
+        <span class="duration">Took 0.3s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -52,7 +64,7 @@
           <span class="timestamp">14 Feb, 09:15 AM | 17m ago</span>
           <span class="message">Good morning scene activated.</span>
         </div>
-        <span class="duration">Took 4s</span>
+        <span class="duration">Took 4.0s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -62,27 +74,27 @@
           <span class="timestamp">14 Feb, 09:10 AM | 22m ago</span>
           <span class="message">Coffee machine turned on.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 2.1s</span>
       </div>
 
-      <div class="activity-row" data-state="on">
+      <div class="activity-row" data-state="setting">
         <div class="timeline-rail"></div>
         <div class="activity-icon"><ha-icon icon="mdi:blinds-open"></ha-icon></div>
         <div class="activity-body">
           <span class="timestamp">14 Feb, 09:05 AM | 27m ago</span>
           <span class="message">Bedroom blinds opened to 80%.</span>
         </div>
-        <span class="duration">Took 12s</span>
+        <span class="duration">Took 12.5s</span>
       </div>
 
-      <div class="activity-row">
+      <div class="activity-row" data-state="setting">
         <div class="timeline-rail"></div>
         <div class="activity-icon"><ha-icon icon="mdi:shield-off"></ha-icon></div>
         <div class="activity-body">
           <span class="timestamp">14 Feb, 09:00 AM | 32m ago</span>
           <span class="message">Alarm system disarmed.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 1.0s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -92,7 +104,7 @@
           <span class="timestamp">14 Feb, 08:55 AM | 37m ago</span>
           <span class="message">Garage door opened.</span>
         </div>
-        <span class="duration">Took 8s</span>
+        <span class="duration">Took 8.7s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -102,7 +114,7 @@
           <span class="timestamp">14 Feb, 08:50 AM | 42m ago</span>
           <span class="message">Robot vacuum started cleaning.</span>
         </div>
-        <span class="duration">Took 3s</span>
+        <span class="duration">Took 3.4s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -112,7 +124,7 @@
           <span class="timestamp">14 Feb, 08:45 AM | 47m ago</span>
           <span class="message">Bathroom fan turned on.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 1.1s</span>
       </div>
 
       <div class="activity-row">
@@ -122,7 +134,13 @@
           <span class="timestamp">14 Feb, 08:40 AM | 52m ago</span>
           <span class="message">Hallway light turned off.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 0.9s</span>
+      </div>
+
+      <!-- ── Last 4 hours ── -->
+      <div class="time-separator">
+        <span class="sep-label">Last 4 hours</span>
+        <div class="sep-line"></div>
       </div>
 
       <div class="activity-row">
@@ -132,7 +150,7 @@
           <span class="timestamp">14 Feb, 08:30 AM | 1h ago</span>
           <span class="message">Smart lock locked front door.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 2.3s</span>
       </div>
 
       <div class="activity-row">
@@ -142,7 +160,7 @@
           <span class="timestamp">14 Feb, 08:20 AM | 1h ago</span>
           <span class="message">Washing machine cycle completed.</span>
         </div>
-        <span class="duration">Took 47m</span>
+        <span class="duration">Took 47.2m</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -152,7 +170,7 @@
           <span class="timestamp">14 Feb, 08:10 AM | 1h ago</span>
           <span class="message">Sprinkler zone 2 activated.</span>
         </div>
-        <span class="duration">Took 5s</span>
+        <span class="duration">Took 5.6s</span>
       </div>
 
       <div class="activity-row">
@@ -162,7 +180,7 @@
           <span class="timestamp">14 Feb, 08:07 AM | 1h ago</span>
           <span class="message">Samsung robot cleaner is charging.</span>
         </div>
-        <span class="duration">Took 0s</span>
+        <span class="duration">Took 0.4s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -172,7 +190,7 @@
           <span class="timestamp">14 Feb, 07:55 AM | 1h ago</span>
           <span class="message">Office desk lamp turned on.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 1.0s</span>
       </div>
 
       <div class="activity-row">
@@ -182,17 +200,17 @@
           <span class="timestamp">14 Feb, 07:45 AM | 1h ago</span>
           <span class="message">Doorbell camera detected motion.</span>
         </div>
-        <span class="duration">Took 0s</span>
+        <span class="duration">Took 0.2s</span>
       </div>
 
-      <div class="activity-row">
+      <div class="activity-row" data-state="setting">
         <div class="timeline-rail"></div>
         <div class="activity-icon"><ha-icon icon="mdi:thermostat-auto"></ha-icon></div>
         <div class="activity-body">
           <span class="timestamp">14 Feb, 07:30 AM | 2h ago</span>
           <span class="message">Temperature set automatically at sunrise.</span>
         </div>
-        <span class="duration">Took 6s</span>
+        <span class="duration">Took 6.3s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -202,7 +220,7 @@
           <span class="timestamp">14 Feb, 07:15 AM | 2h ago</span>
           <span class="message">Bedroom speaker playing morning playlist.</span>
         </div>
-        <span class="duration">Took 3s</span>
+        <span class="duration">Took 3.8s</span>
       </div>
 
       <div class="activity-row">
@@ -212,7 +230,13 @@
           <span class="timestamp">14 Feb, 07:02 AM | 2h ago</span>
           <span class="message">4 lights and switches turned off.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 1.7s</span>
+      </div>
+
+      <!-- ── Last 24 hours ── -->
+      <div class="time-separator">
+        <span class="sep-label">Last 24 hours</span>
+        <div class="sep-line"></div>
       </div>
 
       <div class="activity-row">
@@ -222,7 +246,7 @@
           <span class="timestamp">14 Feb, 06:50 AM | 2h ago</span>
           <span class="message">Water leak sensor normal.</span>
         </div>
-        <span class="duration">Took 0s</span>
+        <span class="duration">Took 0.1s</span>
       </div>
 
       <div class="activity-row">
@@ -232,7 +256,7 @@
           <span class="timestamp">14 Feb, 06:30 AM | 3h ago</span>
           <span class="message">Night mode scene deactivated.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 2.0s</span>
       </div>
 
       <div class="activity-row">
@@ -242,7 +266,13 @@
           <span class="timestamp">14 Feb, 06:00 AM | 3h ago</span>
           <span class="message">Porch light turned off at dawn.</span>
         </div>
-        <span class="duration">Took 1s</span>
+        <span class="duration">Took 0.8s</span>
+      </div>
+
+      <!-- ── Yesterday & older ── -->
+      <div class="time-separator">
+        <span class="sep-label">Yesterday &amp; older</span>
+        <div class="sep-line"></div>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -252,7 +282,7 @@
           <span class="timestamp">13 Feb, 11:16 PM | 10h ago</span>
           <span class="message">Active home wake up mode.</span>
         </div>
-        <span class="duration">Took 4s</span>
+        <span class="duration">Took 4.5s</span>
       </div>
 
       <div class="activity-row">
@@ -262,7 +292,7 @@
           <span class="timestamp">13 Feb, 11:00 PM | 10h ago</span>
           <span class="message">All downstairs lights turned off.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 1.9s</span>
       </div>
 
       <div class="activity-row" data-state="on">
@@ -272,7 +302,7 @@
           <span class="timestamp">13 Feb, 10:30 PM | 11h ago</span>
           <span class="message">Night scene activated.</span>
         </div>
-        <span class="duration">Took 3s</span>
+        <span class="duration">Took 3.2s</span>
       </div>
 
       <div class="activity-row">
@@ -282,7 +312,7 @@
           <span class="timestamp">13 Feb, 10:00 PM | 11h ago</span>
           <span class="message">Smart lock locked back door.</span>
         </div>
-        <span class="duration">Took 2s</span>
+        <span class="duration">Took 2.6s</span>
       </div>
 
       <div class="activity-row">
@@ -292,7 +322,7 @@
           <span class="timestamp">13 Feb, 09:30 PM | 12h ago</span>
           <span class="message">Dishwasher cycle completed.</span>
         </div>
-        <span class="duration">Took 52m</span>
+        <span class="duration">Took 52.1m</span>
       </div>
 
       <div class="activity-row">
@@ -302,7 +332,7 @@
           <span class="timestamp">13 Feb, 09:00 PM | 12h ago</span>
           <span class="message">Garage door closed automatically.</span>
         </div>
-        <span class="duration">Took 9s</span>
+        <span class="duration">Took 9.3s</span>
       </div>
 
     </div>
