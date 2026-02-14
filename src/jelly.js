@@ -43,6 +43,7 @@ import "./cards/jelly-generic-card.js";
 import "./cards/jelly-camera-card.js";
 import "./cards/jelly-group-toggle-card.js";
 import "./cards/jelly-scene-card.js";
+import "./cards/jelly-agenda-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -101,6 +102,11 @@ import "./cards/jelly-scene-card.js";
       type: "jelly-scene-card",
       name: "Jelly Scene Card",
       description: "Horizontal scene picker with squarish icon buttons and scroll fade"
+    },
+    {
+      type: "jelly-agenda-card",
+      name: "Jelly Agenda Card",
+      description: "5-week calendar grid with travel lane overlays and event badges"
     }
   ];
 
