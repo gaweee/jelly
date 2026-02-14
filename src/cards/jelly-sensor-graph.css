@@ -30,15 +30,7 @@ ha-card {
   flex-shrink: 0;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--jelly-text);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* .title — inherits base .title + t-h2 */
 
 /* ───────────────────────────────────────────
    Chart — flex fill
@@ -78,7 +70,5 @@ ha-card {
     padding: 16px;
   }
 
-  .title {
-    font-size: 15px;
-  }
+  /* .title — inherits t-h2 size */
 }

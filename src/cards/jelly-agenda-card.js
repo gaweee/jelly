@@ -456,7 +456,7 @@ customElements.define(
         // Lane layout constants
         const barHeight = 3;
         const iconSize = 16;
-        const laneSpacing = 14; // 50% overlap when icons stack
+        const laneSpacing = 11; // tighter stacking
         const laneBaseY = 20;  // clear of date-num area
         const cellInset = 4;   // keep bars off cell edges
 
