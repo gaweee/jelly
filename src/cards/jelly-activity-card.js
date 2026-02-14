@@ -17,6 +17,14 @@ import JellyCardBase from "../jelly-base.js";
  *   sort:
  *     method: last_changed
  *     reverse: true
+ *
+ * Config options:
+ *   title / name        — card heading (default "Recent Activity")
+ *   max_items            — cap on rendered rows (default 100)
+ *   max_hours            — filter out entities older than N hours
+ *   refresh_interval     — seconds between UI refreshes for "ago" text (default 30)
+ *   time_buckets         — array of { title, seconds } overriding default separators
+ *     e.g. [{title: "Just now", seconds: 300}, {title: "Earlier", seconds: 3600}]
  */
 customElements.define(
   "jelly-activity-card",
@@ -92,13 +100,13 @@ customElements.define(
       "number", "input_select", "select", "water_heater", "valve",
     ]);
 
-    // Time bucket thresholds in minutes
-    static TIME_BUCKETS = [
-      { max: 10,    label: "Last 10 mins" },
-      { max: 60,    label: "Last hour" },
-      { max: 240,   label: "Last 4 hours" },
-      { max: 1440,  label: "Last 24 hours" },
-      { max: Infinity, label: "Yesterday & older" },
+    // Default time bucket thresholds in seconds
+    static DEFAULT_TIME_BUCKETS = [
+      { title: "Last 10 mins",    seconds: 600 },
+      { title: "Last hour",       seconds: 3600 },
+      { title: "Last 4 hours",    seconds: 14400 },
+      { title: "Last 24 hours",   seconds: 86400 },
+      { title: "Yesterday & older", seconds: Infinity },
     ];
 
     /**
@@ -107,9 +115,50 @@ customElements.define(
      */
     async setConfig(config) {
       this.config = { ...config };
+      this._resolveTimeBuckets();
       await this._ensureAssets();
       this._applyCardDimensions();
+      this._startRefreshTimer();
       this.render?.();
+    }
+
+    /** Merge user-supplied time_buckets with defaults */
+    _resolveTimeBuckets() {
+      const custom = this.config?.time_buckets;
+      if (Array.isArray(custom) && custom.length > 0) {
+        // Validate and normalise; ensure last bucket is Infinity
+        this._timeBuckets = custom.map(b => ({
+          title: b.title || "Other",
+          seconds: b.seconds ?? Infinity,
+        }));
+        const last = this._timeBuckets[this._timeBuckets.length - 1];
+        if (last.seconds !== Infinity) {
+          this._timeBuckets.push({ title: "Older", seconds: Infinity });
+        }
+      } else {
+        this._timeBuckets = JellyActivityCard.DEFAULT_TIME_BUCKETS;
+      }
+    }
+
+    /** Start/restart the refresh timer for updating "ago" text */
+    _startRefreshTimer() {
+      this._stopRefreshTimer();
+      const interval = (this.config?.refresh_interval ?? 30) * 1000;
+      if (interval > 0) {
+        this._refreshTimer = setInterval(() => this.render?.(), interval);
+      }
+    }
+
+    _stopRefreshTimer() {
+      if (this._refreshTimer) {
+        clearInterval(this._refreshTimer);
+        this._refreshTimer = null;
+      }
+    }
+
+    disconnectedCallback() {
+      this._stopRefreshTimer();
+      super.disconnectedCallback();
     }
 
     afterLoad() {
@@ -157,13 +206,14 @@ customElements.define(
 
       for (let i = 0; i < items.length; i++) {
         const { entityId, stateObj, changed, agoMs } = items[i];
-        const agoMins = agoMs / 60_000;
+        const agoSecs = agoMs / 1000;
 
         // Time separator
-        const bucket = JellyActivityCard.TIME_BUCKETS.findIndex(b => agoMins <= b.max);
+        const buckets = this._timeBuckets;
+        const bucket = buckets.findIndex(b => agoSecs <= b.seconds);
         if (bucket !== currentBucket) {
           currentBucket = bucket;
-          const label = JellyActivityCard.TIME_BUCKETS[bucket]?.label || "Older";
+          const label = buckets[bucket]?.title || "Older";
           fragments.push(
             `<div class="time-separator">` +
             `<span class="sep-label">${label}</span>` +
@@ -250,7 +300,7 @@ customElements.define(
       const mins = secs / 60;
       if (mins < 60) return `${Math.round(mins)}m ago`;
       const hours = mins / 60;
-      if (hours < 24) return `${hours.toFixed(1)}h ago`;
+      if (hours < 24) return `${Math.round(hours)}h ago`;
       const days = hours / 24;
       return `${Math.round(days)}d ago`;
     }

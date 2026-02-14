@@ -1,6 +1,6 @@
 # Jelly Dashboard — Installation & Setup Guide
 
-A step-by-step guide to installing the Jelly custom dashboard for Home Assistant, configuring HVAC, Weather, and Camera cards, adding custom images, setting up AI-powered quirky messages on the Clock card, and applying the Catppuccin theme.
+A step-by-step guide to installing the Jelly custom dashboard for Home Assistant, configuring HVAC, Weather, Camera, and Activity cards, adding custom images, setting up AI-powered quirky messages on the Clock card, and applying the Catppuccin theme.
 
 ---
 
@@ -13,9 +13,10 @@ A step-by-step guide to installing the Jelly custom dashboard for Home Assistant
 5. [Card Setup: HVAC](#card-setup-hvac)
 6. [Card Setup: Weather](#card-setup-weather)
 7. [Card Setup: Camera](#card-setup-camera)
-8. [Adding Custom Images](#adding-custom-images)
-9. [AI Quirky Messages on the Clock Card](#ai-quirky-messages-on-the-clock-card)
-10. [Pushing Updates (Development)](#pushing-updates-development)
+8. [Card Setup: Activity](#card-setup-activity)
+9. [Adding Custom Images](#adding-custom-images)
+10. [AI Quirky Messages on the Clock Card](#ai-quirky-messages-on-the-clock-card)
+11. [Pushing Updates (Development)](#pushing-updates-development)
 
 ---
 
@@ -267,6 +268,117 @@ The Camera card has a minimum of **2 grid units**. The image fills the entire ca
 | **Frigate** | Install Frigate via add-on; camera entities appear automatically. |
 | **UniFi Protect** | Install the UniFi Protect integration; cameras are auto-discovered. |
 | **Reolink** | Install the Reolink integration from HACS or built-in (HA 2023.11+). |
+
+---
+
+## Card Setup: Activity
+
+The Activity card shows a scrollable timeline of recent smart home activity events — state changes, device actions, and setting adjustments — with timestamps, domain icons, duration indicators, and color-coded state accents.
+
+### Prerequisites
+
+- **auto-entities** card installed from [HACS](https://github.com/thomasloven/lovelace-auto-entities) — this card feeds entity data to the Activity card
+
+Install via HACS: **HACS → Frontend → Search "auto-entities" → Install** → restart HA.
+
+### Add via YAML
+
+The Activity card is always wrapped in an `auto-entities` card, which handles entity filtering and sorting:
+
+```yaml
+type: custom:auto-entities
+card:
+  type: custom:jelly-activity-card
+  title: Recent Activity
+  max_items: 45
+  max_hours: 24
+filter:
+  include:
+    - domain: light
+    - domain: switch
+    - domain: climate
+    - domain: cover
+    - domain: fan
+    - domain: lock
+    - domain: media_player
+    - domain: alarm_control_panel
+sort:
+  method: last_changed
+  reverse: true
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| **title** / **name** | string | `"Recent Activity"` | Card heading text |
+| **max_items** | number | `100` | Maximum number of rows to render |
+| **max_hours** | number | *(none)* | Filter out entities that changed more than N hours ago |
+| **refresh_interval** | number | `30` | Seconds between UI refreshes for live "ago" text. Set to `0` to disable auto-refresh |
+| **time_buckets** | array | *(see defaults)* | Custom time separator thresholds — array of `{ title, seconds }` objects |
+
+### Time Buckets
+
+By default, events are grouped under these time separators:
+
+| Separator | Threshold |
+|---|---|
+| Last 10 mins | ≤ 600 seconds |
+| Last hour | ≤ 3 600 seconds |
+| Last 4 hours | ≤ 14 400 seconds |
+| Last 24 hours | ≤ 86 400 seconds |
+| Yesterday & older | Everything else |
+
+Override with custom buckets in the card config:
+
+```yaml
+card:
+  type: custom:jelly-activity-card
+  title: House Log
+  time_buckets:
+    - title: Just now
+      seconds: 300
+    - title: This hour
+      seconds: 3600
+    - title: Earlier today
+      seconds: 86400
+```
+
+If the last custom bucket is not `Infinity`, an "Older" catch-all is appended automatically.
+
+### Sizing
+
+The Activity card occupies **4 grid units** minimum. It scrolls internally — drag or scroll the list to see older events. The timeline rail and icons remain fixed to the left.
+
+### State Color Coding
+
+Rows are color-coded based on entity domain and state:
+
+| Color | Domains | Condition |
+|---|---|---|
+| **Primary accent** (green/accent) | light, switch, fan, input_boolean, media_player, vacuum, humidifier, remote | State is not off/unavailable/idle/standby |
+| **Blue** (Catppuccin blue) | climate, cover, alarm_control_panel, input_number, number, input_select, select, water_heater, valve | State is not unavailable |
+| **Neutral** (default text) | All other domains/states | — |
+
+### Features
+
+- **Timeline rail** — vertical line with circular icon "stations" for each event
+- **Timestamps** — `DD Mon, H:MM AM/PM` plus relative "Xm ago" / "Xh ago" text
+- **Live refresh** — "ago" text auto-updates every `refresh_interval` seconds (default 30)
+- **Duration** — shows `Took X.Xs` based on difference between `last_updated` and `last_changed`
+- **Smart messages** — `friendly_name` + human-readable state + attribute enrichment (brightness %, temperature, cover position, fan %, media title)
+- **Domain icons** — uses entity icon if set, falls back to a 30+ domain icon map, then `mdi:help-circle`
+- **No entity required** — card config needs no `entity` field; all data comes from auto-entities
+
+### auto-entities Filter Tips
+
+| Goal | Filter |
+|---|---|
+| All lights and switches | `- domain: light` + `- domain: switch` |
+| Specific area | `- area: Living Room` |
+| Exclude stale entities | Use `max_hours: 12` in the card config |
+| Only active entities | Add `state: "on"` or exclude `state: "unavailable"` |
+| Multiple domains | Add one `- domain: X` line per domain under `include:` |
 
 ---
 

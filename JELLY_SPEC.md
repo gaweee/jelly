@@ -253,10 +253,31 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 
 Scrollable timeline of recent smart home activity events with timestamps, icons, and state-based coloring. Designed to work with HACS auto-entities.
 
-**Config:** `name`/`title` (optional), `max_items` (default 100), `max_hours` (optional)
 **No entity required** — overrides `setConfig()` to skip entity validation.
 **Entities:** Fed by auto-entities via `config.entities` array.
 **minUnits:** 4
+
+**Config:**
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `name` / `title` | string | `"Recent Activity"` | Card heading |
+| `max_items` | number | `100` | Maximum rows rendered |
+| `max_hours` | number | *(none)* | Filter out entities changed more than N hours ago |
+| `refresh_interval` | number | `30` | Seconds between UI refreshes for live "ago" text. Set `0` to disable |
+| `time_buckets` | array | *(see below)* | Custom time separator thresholds — array of `{ title, seconds }` objects |
+
+**Default time buckets:**
+
+| Bucket | Seconds |
+|---|---|
+| Last 10 mins | 600 |
+| Last hour | 3 600 |
+| Last 4 hours | 14 400 |
+| Last 24 hours | 86 400 |
+| Yesterday & older | ∞ |
+
+If custom `time_buckets` are provided and the last entry is not `Infinity`, an "Older" catch-all bucket is appended automatically.
 
 **auto-entities example:**
 ```yaml
@@ -266,9 +287,21 @@ card:
   title: Recent Activity
   max_items: 45
   max_hours: 24
+  refresh_interval: 30
+  time_buckets:
+    - title: Just now
+      seconds: 300
+    - title: This hour
+      seconds: 3600
+    - title: Earlier today
+      seconds: 86400
 filter:
   include:
     - domain: light
+    - domain: switch
+    - domain: climate
+    - domain: cover
+    - domain: media_player
 sort:
   method: last_changed
   reverse: true
@@ -281,10 +314,12 @@ sort:
 - Timeline rail: 2px vertical line centered through 32px circular icon pills; icons act as "train stations"
 - State classification:
   - **on** (primary accent): light, switch, fan, input_boolean, media_player, vacuum, humidifier, remote — when state ≠ off/unavailable/idle/standby
-  - **setting** (Catppuccin blue): climate, cover, alarm_control_panel, input_number, number, input_select, select, water_heater, valve — when state ≠ unavailable
+  - **setting** (Catppuccin blue `rgb(137, 180, 250)`): climate, cover, alarm_control_panel, input_number, number, input_select, select, water_heater, valve — when state ≠ unavailable
   - **neutral**: all other states
-- Time separators: auto-computed buckets — Last 10 mins, Last hour, Last 4 hours, Last 24 hours, Yesterday & older
-- Duration: computed from `last_updated - last_changed` difference
+- Time separators: auto-computed from configurable buckets (default: Last 10 mins / Last hour / Last 4 hours / Last 24 hours / Yesterday & older); override via `time_buckets` config
+- Live refresh: "ago" text auto-updates at `refresh_interval` seconds (default 30s); timer cleaned up on disconnect
+- Duration: computed from `last_updated - last_changed` difference; displayed with 1 decimal precision
+- "Ago" text: displayed as rounded integers (`3m ago`, `2h ago`) — no decimals
 - Icons: entity `attributes.icon` > domain default map (30+ domains) > `mdi:help-circle`
 - Message enrichment: brightness %, temperature, cover position, fan %, media title
 - `max_items`: caps rendered rows (default 100)
