@@ -251,10 +251,10 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 
 ### jelly-activity-card
 
-Scrollable timeline of recent smart home activity events with timestamps, icons, and state-based coloring. Designed to work with HACS auto-entities.
+Scrollable timeline of recent smart home activity events with timestamps, icons, and state-based coloring. Subscribes to HA WebSocket events in real time; persists log to `localStorage`.
 
 **No entity required** — overrides `setConfig()` to skip entity validation.
-**Entities:** Fed by auto-entities via `config.entities` array.
+**Data source:** WebSocket `state_changed` events, stored in memory + `localStorage`.
 **minUnits:** 4
 
 **Config:**
@@ -262,8 +262,9 @@ Scrollable timeline of recent smart home activity events with timestamps, icons,
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `name` / `title` | string | `"Recent Activity"` | Card heading |
-| `max_items` | number | `100` | Maximum rows rendered |
-| `max_hours` | number | *(none)* | Filter out entities changed more than N hours ago |
+| `domains` | string[] | `["light","switch","lock","cover","climate","fan","automation","scene"]` | Domains to track |
+| `max_items` | number | `200` | Maximum events stored (oldest trimmed first) |
+| `max_hours` | number | *(none)* | Drop events older than N hours |
 | `refresh_interval` | number | `30` | Seconds between UI refreshes for live "ago" text. Set `0` to disable |
 | `time_buckets` | array | *(see below)* | Custom time separator thresholds — array of `{ title, seconds }` objects |
 
@@ -279,51 +280,55 @@ Scrollable timeline of recent smart home activity events with timestamps, icons,
 
 If custom `time_buckets` are provided and the last entry is not `Infinity`, an "Older" catch-all bucket is appended automatically.
 
-**auto-entities example:**
+**YAML example:**
 ```yaml
-type: custom:auto-entities
-card:
-  type: custom:jelly-activity-card
-  title: Recent Activity
-  max_items: 45
-  max_hours: 24
-  refresh_interval: 30
-  time_buckets:
-    - title: Just now
-      seconds: 300
-    - title: This hour
-      seconds: 3600
-    - title: Earlier today
-      seconds: 86400
-filter:
-  include:
-    - domain: light
-    - domain: switch
-    - domain: climate
-    - domain: cover
-    - domain: media_player
-sort:
-  method: last_changed
-  reverse: true
+type: custom:jelly-activity-card
+title: Recent Activity
+max_items: 100
+max_hours: 24
+refresh_interval: 30
+domains:
+  - light
+  - switch
+  - climate
+  - cover
+  - fan
+  - lock
+  - automation
+  - scene
+time_buckets:
+  - title: Just now
+    seconds: 300
+  - title: This hour
+    seconds: 3600
+  - title: Earlier today
+    seconds: 86400
 ```
 
 **Behavior:**
+- Subscribes to HA WebSocket `state_changed` events in real time — no polling, no auto-entities dependency
+- Domain filter: only tracks events from `config.domains` (default: light, switch, lock, cover, climate, fan, automation, scene)
+- Each event stored in memory and persisted to `localStorage` (`jelly-activity-log`); survives page reloads
+- Same entity repeats as many rows as it changes — true event log, not a deduplicated entity list
 - Title: `config.name` > `config.title` > "Recent Activity"
-- Dynamically renders entity list from auto-entities; sorted by `last_changed` descending
-- Each row: timeline rail with icon station, timestamp (`DD Mon, H:MM AM/PM | Xm ago`), message (`friendly_name + state verb + attribute detail`), duration (`Took X.Xs`)
+- Each row: timeline rail with icon station, timestamp (`DD Mon, H:MM AM/PM | Xm ago`), message with diff detail
 - Timeline rail: 2px vertical line centered through 32px circular icon pills; icons act as "train stations"
-- State classification:
+- **Message format with diffs:**
+  - Attribute changes: `"Living Room AC <span class="param">temp</span> changed from <span class="val">18°</span> to <span class="val">22°</span>"`
+  - State changes: `"Desk Lamp <span class="param">state</span> changed from <span class="val">off</span> to <span class="val">on</span>"`
+  - Simple state: `"Front Door locked"` (when no old state to diff)
+  - `.param` and `.val` spans carry `data-state` for accent coloring
+- Tracked attribute diffs: `temperature`, `hvac_mode`, `fan_mode`, `preset_mode` (climate); `brightness`, `color_temp` (light); `percentage` (fan); `current_position` (cover); `media_title`, `volume_level` (media_player)
+- State classification (applied to row, icon, and inline spans):
   - **on** (primary accent): light, switch, fan, input_boolean, media_player, vacuum, humidifier, remote — when state ≠ off/unavailable/idle/standby
   - **setting** (Catppuccin blue `rgb(137, 180, 250)`): climate, cover, alarm_control_panel, input_number, number, input_select, select, water_heater, valve — when state ≠ unavailable
   - **neutral**: all other states
-- Time separators: auto-computed from configurable buckets (default: Last 10 mins / Last hour / Last 4 hours / Last 24 hours / Yesterday & older); override via `time_buckets` config
+- Time separators: auto-computed from configurable buckets; override via `time_buckets` config
 - Live refresh: "ago" text auto-updates at `refresh_interval` seconds (default 30s); timer cleaned up on disconnect
-- Duration: computed from `last_updated - last_changed` difference; displayed with 1 decimal precision
-- "Ago" text: displayed as rounded integers (`3m ago`, `2h ago`) — no decimals
+- Empty state: shows "Listening since {timestamp}" + hint message on first load (before any events arrive)
 - Icons: entity `attributes.icon` > domain default map (30+ domains) > `mdi:help-circle`
-- Message enrichment: brightness %, temperature, cover position, fan %, media title
-- `max_items`: caps rendered rows (default 100)
-- `max_hours`: filters out entities changed more than N hours ago
+- `max_items`: caps stored events (default 200); oldest trimmed first
+- `max_hours`: drops events older than N hours on each render cycle
 
 ---
 

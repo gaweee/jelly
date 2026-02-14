@@ -273,38 +273,30 @@ The Camera card has a minimum of **2 grid units**. The image fills the entire ca
 
 ## Card Setup: Activity
 
-The Activity card shows a scrollable timeline of recent smart home activity events — state changes, device actions, and setting adjustments — with timestamps, domain icons, duration indicators, and color-coded state accents.
+The Activity card shows a scrollable timeline of recent smart home activity events — state changes, device actions, and setting adjustments — with timestamps, domain icons, and color-coded state accents.
 
-### Prerequisites
+It subscribes directly to Home Assistant's WebSocket for real-time `state_changed` events and persists the event log to `localStorage`, so events survive page reloads.
 
-- **auto-entities** card installed from [HACS](https://github.com/thomasloven/lovelace-auto-entities) — this card feeds entity data to the Activity card
+### No Prerequisites Required
 
-Install via HACS: **HACS → Frontend → Search "auto-entities" → Install** → restart HA.
+Unlike polling-based approaches, this card requires no additional HACS frontends — it subscribes to HA events natively.
 
 ### Add via YAML
 
-The Activity card is always wrapped in an `auto-entities` card, which handles entity filtering and sorting:
-
 ```yaml
-type: custom:auto-entities
-card:
-  type: custom:jelly-activity-card
-  title: Recent Activity
-  max_items: 45
-  max_hours: 24
-filter:
-  include:
-    - domain: light
-    - domain: switch
-    - domain: climate
-    - domain: cover
-    - domain: fan
-    - domain: lock
-    - domain: media_player
-    - domain: alarm_control_panel
-sort:
-  method: last_changed
-  reverse: true
+type: custom:jelly-activity-card
+title: Recent Activity
+max_items: 100
+max_hours: 24
+domains:
+  - light
+  - switch
+  - climate
+  - cover
+  - fan
+  - lock
+  - automation
+  - scene
 ```
 
 ### Configuration Options
@@ -312,9 +304,10 @@ sort:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | **title** / **name** | string | `"Recent Activity"` | Card heading text |
-| **max_items** | number | `100` | Maximum number of rows to render |
-| **max_hours** | number | *(none)* | Filter out entities that changed more than N hours ago |
-| **refresh_interval** | number | `30` | Seconds between UI refreshes for live "ago" text. Set to `0` to disable auto-refresh |
+| **domains** | string[] | `["light","switch","lock","cover","climate","fan","automation","scene"]` | Which entity domains to track. Only `state_changed` events from these domains are logged |
+| **max_items** | number | `200` | Maximum number of events stored. Oldest events are trimmed first |
+| **max_hours** | number | *(none)* | Drop events older than N hours (checked on every render) |
+| **refresh_interval** | number | `30` | Seconds between UI refreshes for live "ago" text. Set to `0` to disable |
 | **time_buckets** | array | *(see defaults)* | Custom time separator thresholds — array of `{ title, seconds }` objects |
 
 ### Time Buckets
@@ -362,23 +355,25 @@ Rows are color-coded based on entity domain and state:
 
 ### Features
 
+- **Real-time WebSocket** — subscribes to `state_changed` events; new rows appear instantly
+- **Persistent log** — events stored in `localStorage` (`jelly-activity-log`); survives page reloads
+- **Repeating entities** — the same entity appears as many rows as it changes (true event log)
+- **Diff messages** — shows what changed: `"Living Room AC temp changed from 18° to 22°"` with highlighted param/value spans
 - **Timeline rail** — vertical line with circular icon "stations" for each event
-- **Timestamps** — `DD Mon, H:MM AM/PM` plus relative "Xm ago" / "Xh ago" text
-- **Live refresh** — "ago" text auto-updates every `refresh_interval` seconds (default 30)
-- **Duration** — shows `Took X.Xs` based on difference between `last_updated` and `last_changed`
-- **Smart messages** — `friendly_name` + human-readable state + attribute enrichment (brightness %, temperature, cover position, fan %, media title)
-- **Domain icons** — uses entity icon if set, falls back to a 30+ domain icon map, then `mdi:help-circle`
-- **No entity required** — card config needs no `entity` field; all data comes from auto-entities
+- **State color coding** — primary accent for on-domains, Catppuccin blue for setting-domains
+- **Live refresh** — "ago" text auto-updates every `refresh_interval` seconds
+- **Domain filtering** — only tracks events from configured `domains`
+- **Empty state** — shows "Listening since {time}" message on first load before events arrive
+- **Smart icons** — uses entity icon if set, falls back to a 30+ domain icon map
 
-### auto-entities Filter Tips
+### Domain Tips
 
-| Goal | Filter |
+| Goal | Config |
 |---|---|
-| All lights and switches | `- domain: light` + `- domain: switch` |
-| Specific area | `- area: Living Room` |
-| Exclude stale entities | Use `max_hours: 12` in the card config |
-| Only active entities | Add `state: "on"` or exclude `state: "unavailable"` |
-| Multiple domains | Add one `- domain: X` line per domain under `include:` |
+| Track everything | `domains: ["light","switch","climate","cover","fan","lock","automation","scene","media_player","vacuum"]` |
+| Lights only | `domains: ["light"]` |
+| Security focused | `domains: ["lock","alarm_control_panel","binary_sensor"]` |
+| Quick overview | Set `max_hours: 4` + `max_items: 30` |
 
 ---
 

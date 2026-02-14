@@ -36,34 +36,29 @@ See [INSTALL.md](INSTALL.md) for detailed setup instructions including HVAC, Wea
 
 ## Activity Card
 
-The Activity card shows a scrollable timeline of recent smart home events — state changes, settings adjustments, and device activity — with timestamps, domain icons, and color-coded state accents.
-
-**Requires [auto-entities](https://github.com/thomasloven/lovelace-auto-entities) from HACS** to feed entities into the card.
+The Activity card shows a scrollable timeline of recent smart home events — state changes, settings adjustments, and device activity — with timestamps, domain icons, and color-coded state accents. It subscribes to HA's WebSocket for real-time `state_changed` events and persists the log to `localStorage`.
 
 ```yaml
-type: custom:auto-entities
-card:
-  type: custom:jelly-activity-card
-  title: Recent Activity
-  max_items: 45
-  max_hours: 24
-  refresh_interval: 30
-filter:
-  include:
-    - domain: light
-    - domain: switch
-    - domain: climate
-    - domain: cover
-sort:
-  method: last_changed
-  reverse: true
+type: custom:jelly-activity-card
+title: Recent Activity
+max_items: 100
+max_hours: 24
+refresh_interval: 30
+domains:
+  - light
+  - switch
+  - climate
+  - cover
+  - fan
+  - lock
 ```
 
 | Option | Default | Description |
 |---|---|---|
 | `title` / `name` | `"Recent Activity"` | Card heading |
-| `max_items` | `100` | Maximum rows to render |
-| `max_hours` | *(none)* | Filter out entities older than N hours |
+| `domains` | 8 defaults (light, switch, lock, cover, climate, fan, automation, scene) | Domains to track |
+| `max_items` | `200` | Max stored events (oldest trimmed) |
+| `max_hours` | *(none)* | Drop events older than N hours |
 | `refresh_interval` | `30` | Seconds between "ago" text refreshes (0 = disabled) |
 | `time_buckets` | *(5 defaults)* | Custom time separators — array of `{ title, seconds }` |
 

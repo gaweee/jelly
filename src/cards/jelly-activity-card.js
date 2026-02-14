@@ -2,162 +2,167 @@ import JellyCardBase from "../jelly-base.js";
 
 /**
  * Activity Card — scrollable timeline of recent smart home events.
- * Designed to work with auto-entities which feeds sorted entities.
+ * Subscribes to HA WebSocket events and stores an in-memory + localStorage log.
  *
- * auto-entities config example:
- *   type: custom:auto-entities
- *   card:
- *     type: custom:jelly-activity-card
- *     title: Recent Activity
- *     max_items: 45
- *     max_hours: 24
- *   filter:
- *     include:
- *       - domain: light
- *   sort:
- *     method: last_changed
- *     reverse: true
- *
- * Config options:
+ * Config:
  *   title / name        — card heading (default "Recent Activity")
- *   max_items            — cap on rendered rows (default 100)
- *   max_hours            — filter out entities older than N hours
- *   refresh_interval     — seconds between UI refreshes for "ago" text (default 30)
- *   time_buckets         — array of { title, seconds } overriding default separators
- *     e.g. [{title: "Just now", seconds: 300}, {title: "Earlier", seconds: 3600}]
+ *   max_items            — cap on stored events (default 200)
+ *   max_hours            — drop events older than N hours
+ *   refresh_interval     — seconds between "ago" text refreshes (default 30, 0 = off)
+ *   domains              — array of domains to track (default: light, switch, lock, cover, climate, fan, automation, scene)
+ *   time_buckets         — array of { title, seconds } for separator overrides
  */
+
+const STORAGE_KEY = "jelly-activity-log";
+
+const DEFAULT_DOMAINS = ["light", "switch", "lock", "cover", "climate", "fan", "automation", "scene"];
+
+const DEFAULT_BUCKETS = [
+  { title: "Last 10 mins",      seconds: 600 },
+  { title: "Last hour",         seconds: 3600 },
+  { title: "Last 4 hours",      seconds: 14400 },
+  { title: "Last 24 hours",     seconds: 86400 },
+  { title: "Yesterday & older", seconds: Infinity },
+];
+
+const DOMAIN_ICONS = {
+  light: "mdi:lightbulb", switch: "mdi:toggle-switch", fan: "mdi:fan",
+  climate: "mdi:thermostat", cover: "mdi:blinds", lock: "mdi:lock",
+  alarm_control_panel: "mdi:shield-home", binary_sensor: "mdi:motion-sensor",
+  sensor: "mdi:chart-line", camera: "mdi:cctv", media_player: "mdi:speaker",
+  vacuum: "mdi:robot-vacuum", automation: "mdi:robot", script: "mdi:script-text",
+  scene: "mdi:palette", input_boolean: "mdi:toggle-switch-outline",
+  input_number: "mdi:numeric", input_select: "mdi:form-dropdown",
+  water_heater: "mdi:water-boiler", humidifier: "mdi:air-humidifier",
+  remote: "mdi:remote", button: "mdi:gesture-tap-button", number: "mdi:numeric",
+  select: "mdi:form-dropdown", person: "mdi:account", device_tracker: "mdi:crosshairs-gps",
+  weather: "mdi:weather-partly-cloudy", update: "mdi:package-up", valve: "mdi:valve",
+};
+
+const ON_DOMAINS = new Set([
+  "light", "switch", "fan", "input_boolean", "media_player",
+  "vacuum", "humidifier", "remote",
+]);
+
+const SETTING_DOMAINS = new Set([
+  "climate", "cover", "alarm_control_panel", "input_number",
+  "number", "input_select", "select", "water_heater", "valve",
+]);
+
+const STATE_LABELS = {
+  on: "on", off: "off", unavailable: "unavailable", unknown: "unknown",
+  home: "home", not_home: "away", locked: "locked", unlocked: "unlocked",
+  open: "open", closed: "closed", opening: "opening", closing: "closing",
+  idle: "idle", cleaning: "cleaning", docked: "docked", returning: "returning",
+  paused: "paused", playing: "playing", standby: "standby",
+  armed_home: "armed (home)", armed_away: "armed (away)", armed_night: "armed (night)",
+  disarmed: "disarmed", triggered: "triggered",
+  heat: "heating", cool: "cooling", heat_cool: "auto heat/cool",
+  auto: "auto", dry: "drying", fan_only: "fan mode",
+};
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+// ─── Formatting helpers (pure) ──────────────────────
+
+function fmtTimestamp(d) {
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const h = d.getHours(), h12 = h % 12 || 12, ap = h >= 12 ? "PM" : "AM";
+  return `${d.getDate()} ${M[d.getMonth()]}, ${h12}:${String(d.getMinutes()).padStart(2,"0")} ${ap}`;
+}
+
+function fmtAgo(ms) {
+  const s = ms / 1000;
+  if (s < 60) return `${Math.round(s)}s ago`;
+  const m = s / 60;
+  if (m < 60) return `${Math.round(m)}m ago`;
+  const h = m / 60;
+  if (h < 24) return `${Math.round(h)}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
+// ─── Diff helpers — extract what changed ────────────
+
+function diffState(oldS, newS) {
+  if (!oldS || oldS.state === newS.state) return null;
+  return { param: "state", from: oldS.state, to: newS.state };
+}
+
+function diffAttrs(oldS, newS, domain) {
+  // Returns first meaningful attribute change as { param, from, to }
+  const keys = {
+    climate:      ["temperature", "hvac_mode", "fan_mode", "preset_mode"],
+    light:        ["brightness", "color_temp"],
+    fan:          ["percentage"],
+    cover:        ["current_position"],
+    media_player: ["media_title", "volume_level"],
+    input_number: ["state"], number: ["state"],
+    input_select: ["state"], select: ["state"],
+  };
+  const check = keys[domain];
+  if (!check || !oldS) return null;
+  const oA = oldS.attributes || {}, nA = newS.attributes || {};
+  for (const k of check) {
+    const ov = k === "state" ? oldS.state : oA[k];
+    const nv = k === "state" ? newS.state : nA[k];
+    if (ov !== undefined && nv !== undefined && ov !== nv) {
+      // Humanise brightness to %
+      let label = k, from = ov, to = nv;
+      if (k === "brightness") { label = "brightness"; from = Math.round(ov/255*100)+"%"; to = Math.round(nv/255*100)+"%"; }
+      else if (k === "temperature") { label = "temp"; from = ov+"°"; to = nv+"°"; }
+      else if (k === "current_position") { label = "position"; from = ov+"%"; to = nv+"%"; }
+      else if (k === "percentage") { label = "power"; from = ov+"%"; to = nv+"%"; }
+      else if (k === "volume_level") { label = "volume"; from = Math.round(ov*100)+"%"; to = Math.round(nv*100)+"%"; }
+      return { param: label, from, to };
+    }
+  }
+  return null;
+}
+
+// ─── Card ───────────────────────────────────────────
+
 customElements.define(
   "jelly-activity-card",
   class JellyActivityCard extends JellyCardBase {
 
     static minUnits = 4;
-
     static get cardTag() { return "jelly-activity-card"; }
-
     static get cardDomains() { return []; }
 
     static get editorSchema() {
       return {
-        schema: [
-          { name: "name", selector: { text: {} } },
-        ],
-        labels: {
-          name: "Card Title (optional)",
-        }
+        schema: [{ name: "name", selector: { text: {} } }],
+        labels: { name: "Card Title (optional)" },
       };
     }
+    static async getConfigElement() { return await JellyCardBase.getConfigElement.call(this); }
+    static getStubConfig() { return { type: "custom:jelly-activity-card" }; }
 
-    static async getConfigElement() {
-      return await JellyCardBase.getConfigElement.call(this);
-    }
+    // ─── Lifecycle ──────────────────────────────────────
 
-    static getStubConfig() {
-      return { type: "custom:jelly-activity-card" };
-    }
-
-    // ─── Domain → icon map ──────────────────────────────
-    static DOMAIN_ICONS = {
-      light: "mdi:lightbulb",
-      switch: "mdi:toggle-switch",
-      fan: "mdi:fan",
-      climate: "mdi:thermostat",
-      cover: "mdi:blinds",
-      lock: "mdi:lock",
-      alarm_control_panel: "mdi:shield-home",
-      binary_sensor: "mdi:motion-sensor",
-      sensor: "mdi:chart-line",
-      camera: "mdi:cctv",
-      media_player: "mdi:speaker",
-      vacuum: "mdi:robot-vacuum",
-      automation: "mdi:robot",
-      script: "mdi:script-text",
-      scene: "mdi:palette",
-      input_boolean: "mdi:toggle-switch-outline",
-      input_number: "mdi:numeric",
-      input_select: "mdi:form-dropdown",
-      water_heater: "mdi:water-boiler",
-      humidifier: "mdi:air-humidifier",
-      remote: "mdi:remote",
-      button: "mdi:gesture-tap-button",
-      number: "mdi:numeric",
-      select: "mdi:form-dropdown",
-      person: "mdi:account",
-      device_tracker: "mdi:crosshairs-gps",
-      weather: "mdi:weather-partly-cloudy",
-      update: "mdi:package-up",
-      valve: "mdi:valve",
-    };
-
-    // Domains whose non-off state means "on" (green accent)
-    static ON_DOMAINS = new Set([
-      "light", "switch", "fan", "input_boolean", "media_player",
-      "vacuum", "humidifier", "remote",
-    ]);
-
-    // Domains whose state changes are "settings" (blue accent)
-    static SETTING_DOMAINS = new Set([
-      "climate", "cover", "alarm_control_panel", "input_number",
-      "number", "input_select", "select", "water_heater", "valve",
-    ]);
-
-    // Default time bucket thresholds in seconds
-    static DEFAULT_TIME_BUCKETS = [
-      { title: "Last 10 mins",    seconds: 600 },
-      { title: "Last hour",       seconds: 3600 },
-      { title: "Last 4 hours",    seconds: 14400 },
-      { title: "Last 24 hours",   seconds: 86400 },
-      { title: "Yesterday & older", seconds: Infinity },
-    ];
-
-    /**
-     * No entity required — load assets without entity validation.
-     * auto-entities calls setConfig with { entities: [...] }.
-     */
     async setConfig(config) {
       this.config = { ...config };
-      this._resolveTimeBuckets();
+      this._domains = new Set(config.domains || DEFAULT_DOMAINS);
+      this._buckets = this._resolveBuckets(config.time_buckets);
+      this._maxItems = config.max_items || 200;
+      this._maxHoursMs = (config.max_hours || Infinity) * 3_600_000;
+      this._events = this._loadStorage();
+      this._startedAt = this._events.length ? null : Date.now(); // show "listening since" if empty
       await this._ensureAssets();
       this._applyCardDimensions();
-      this._startRefreshTimer();
+      this._startRefresh(config.refresh_interval);
       this.render?.();
     }
 
-    /** Merge user-supplied time_buckets with defaults */
-    _resolveTimeBuckets() {
-      const custom = this.config?.time_buckets;
-      if (Array.isArray(custom) && custom.length > 0) {
-        // Validate and normalise; ensure last bucket is Infinity
-        this._timeBuckets = custom.map(b => ({
-          title: b.title || "Other",
-          seconds: b.seconds ?? Infinity,
-        }));
-        const last = this._timeBuckets[this._timeBuckets.length - 1];
-        if (last.seconds !== Infinity) {
-          this._timeBuckets.push({ title: "Older", seconds: Infinity });
-        }
-      } else {
-        this._timeBuckets = JellyActivityCard.DEFAULT_TIME_BUCKETS;
-      }
-    }
-
-    /** Start/restart the refresh timer for updating "ago" text */
-    _startRefreshTimer() {
-      this._stopRefreshTimer();
-      const interval = (this.config?.refresh_interval ?? 30) * 1000;
-      if (interval > 0) {
-        this._refreshTimer = setInterval(() => this.render?.(), interval);
-      }
-    }
-
-    _stopRefreshTimer() {
-      if (this._refreshTimer) {
-        clearInterval(this._refreshTimer);
-        this._refreshTimer = null;
-      }
+    set hass(hass) {
+      const first = !this._hass;
+      super.hass = hass;
+      if (first && hass) this._subscribe(hass);
     }
 
     disconnectedCallback() {
-      this._stopRefreshTimer();
+      this._stopRefresh();
+      this._unsubscribe();
       super.disconnectedCallback();
     }
 
@@ -166,209 +171,175 @@ customElements.define(
       this.$list = this.qs(".activity-list");
     }
 
-    render() {
-      if (!this.$title || !this.$list) return;
-      const hass = this._hass;
-      if (!hass) return;
+    // ─── WebSocket subscription ─────────────────────────
 
-      this.$title.textContent = this.config?.name || this.config?.title || "Recent Activity";
+    _subscribe(hass) {
+      if (this._unsub) return;
+      try {
+        this._unsub = hass.connection.subscribeEvents(
+          e => this._handleEvent(e), "state_changed"
+        );
+      } catch (_) { /* connection not ready yet — hass setter will retry */ }
+    }
 
-      // Gather entities from auto-entities or config
-      const entityConfigs = this.config?.entities || [];
-      const now = Date.now();
-      const maxItems = this.config?.max_items || 100;
-      const maxHoursMs = (this.config?.max_hours || Infinity) * 3600_000;
+    _unsubscribe() {
+      if (this._unsub) {
+        // subscribeEvents returns a promise that resolves to an unsubscribe fn
+        Promise.resolve(this._unsub).then(fn => fn?.());
+        this._unsub = null;
+      }
+    }
 
-      // Build items: resolve state, compute time data, filter
-      const items = [];
-      for (const ec of entityConfigs) {
-        const entityId = typeof ec === "string" ? ec : ec?.entity;
-        if (!entityId) continue;
-        const stateObj = hass.states[entityId];
-        if (!stateObj) continue;
+    _handleEvent(evt) {
+      const d = evt.data;
+      if (!d?.entity_id) return;
+      const domain = d.entity_id.split(".")[0];
+      if (!this._domains.has(domain)) return;
 
-        const changed = new Date(stateObj.last_changed);
-        const agoMs = now - changed.getTime();
+      const newS = d.new_state;
+      const oldS = d.old_state;
+      if (!newS) return; // entity removed
 
-        // max_hours filter
-        if (agoMs > maxHoursMs) continue;
+      const name = newS.attributes?.friendly_name || d.entity_id;
+      const icon = newS.attributes?.icon || DOMAIN_ICONS[domain] || "mdi:help-circle";
+      const state = newS.state;
+      const ts = Date.now();
 
-        items.push({ entityId, stateObj, changed, agoMs });
-        if (items.length >= maxItems) break;
+      // Classify row state
+      let dataState = "";
+      if (ON_DOMAINS.has(domain) && !["off","unavailable","idle","standby"].includes(state)) dataState = "on";
+      else if (SETTING_DOMAINS.has(domain) && state !== "unavailable") dataState = "setting";
+
+      // Build message parts: { text, param?, from?, to?, dataState }
+      const stateD = diffState(oldS, newS);
+      const attrD  = diffAttrs(oldS, newS, domain);
+      const verb   = STATE_LABELS[state] || state;
+
+      let msg;
+      if (attrD) {
+        // e.g. "Living Room AC  temp  changed from 18° to 22°"
+        msg = { name, verb, param: attrD.param, from: attrD.from, to: attrD.to, dataState };
+      } else if (stateD) {
+        msg = { name, verb, param: "state", from: STATE_LABELS[stateD.from] || stateD.from, to: STATE_LABELS[stateD.to] || stateD.to, dataState };
+      } else {
+        msg = { name, verb, dataState };
       }
 
-      // Sort by last_changed descending (auto-entities usually pre-sorts, but be safe)
-      items.sort((a, b) => b.changed - a.changed);
+      this._events.unshift({ ts, entityId: d.entity_id, icon, domain, state, msg });
+      this._trim();
+      this._saveStorage();
+      this._startedAt = null; // we have events now
+      this.render?.();
+    }
 
-      // Build HTML
-      const fragments = [];
-      let currentBucket = -1;
+    // ─── Storage ────────────────────────────────────────
 
-      for (let i = 0; i < items.length; i++) {
-        const { entityId, stateObj, changed, agoMs } = items[i];
-        const agoSecs = agoMs / 1000;
+    _loadStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch { return []; }
+    }
 
-        // Time separator
-        const buckets = this._timeBuckets;
-        const bucket = buckets.findIndex(b => agoSecs <= b.seconds);
-        if (bucket !== currentBucket) {
-          currentBucket = bucket;
-          const label = buckets[bucket]?.title || "Older";
-          fragments.push(
-            `<div class="time-separator">` +
-            `<span class="sep-label">${label}</span>` +
-            `<div class="sep-line"></div></div>`
-          );
+    _saveStorage() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this._events)); } catch {}
+    }
+
+    _trim() {
+      const now = Date.now();
+      if (this._maxHoursMs < Infinity) {
+        this._events = this._events.filter(e => now - e.ts <= this._maxHoursMs);
+      }
+      if (this._events.length > this._maxItems) {
+        this._events.length = this._maxItems;
+      }
+    }
+
+    // ─── Refresh timer ──────────────────────────────────
+
+    _startRefresh(interval) {
+      this._stopRefresh();
+      const ms = ((interval ?? 30) || 0) * 1000;
+      if (ms > 0) this._refreshTimer = setInterval(() => this.render?.(), ms);
+    }
+
+    _stopRefresh() {
+      if (this._refreshTimer) { clearInterval(this._refreshTimer); this._refreshTimer = null; }
+    }
+
+    // ─── Buckets ────────────────────────────────────────
+
+    _resolveBuckets(custom) {
+      if (!Array.isArray(custom) || !custom.length) return DEFAULT_BUCKETS;
+      const b = custom.map(x => ({ title: x.title || "Other", seconds: x.seconds ?? Infinity }));
+      if (b[b.length - 1].seconds !== Infinity) b.push({ title: "Older", seconds: Infinity });
+      return b;
+    }
+
+    // ─── Render ─────────────────────────────────────────
+
+    render() {
+      if (!this.$title || !this.$list) return;
+      this.$title.textContent = this.config?.name || this.config?.title || "Recent Activity";
+
+      const now = Date.now();
+      this._trim(); // prune stale before render
+
+      if (!this._events.length) {
+        const since = this._startedAt ? fmtTimestamp(new Date(this._startedAt)) : "now";
+        this.$list.innerHTML =
+          `<div class="time-separator"><span class="sep-label">Listening since ${since}</span>` +
+          `<div class="sep-line"></div></div>` +
+          `<div class="empty-hint">Events will appear here as they happen</div>`;
+        return;
+      }
+
+      const html = [];
+      let curBucket = -1;
+
+      for (const ev of this._events) {
+        const agoS = (now - ev.ts) / 1000;
+
+        // Bucket separator
+        const bi = this._buckets.findIndex(b => agoS <= b.seconds);
+        if (bi !== curBucket) {
+          curBucket = bi;
+          html.push(`<div class="time-separator"><span class="sep-label">${esc(this._buckets[bi]?.title || "Older")}</span><div class="sep-line"></div></div>`);
         }
 
-        const domain = entityId.split(".")[0];
-        const attrs = stateObj.attributes || {};
-        const state = stateObj.state;
-        const name = attrs.friendly_name || entityId;
-        const icon = attrs.icon || JellyActivityCard.DOMAIN_ICONS[domain] || "mdi:help-circle";
+        const m = ev.msg;
+        const ds = m.dataState ? ` data-state="${m.dataState}"` : "";
 
-        // State classification
-        let dataState = "";
-        if (JellyActivityCard.ON_DOMAINS.has(domain) && state !== "off" && state !== "unavailable" && state !== "idle" && state !== "standby") {
-          dataState = "on";
-        } else if (JellyActivityCard.SETTING_DOMAINS.has(domain) && state !== "unavailable") {
-          dataState = "setting";
+        // Build message HTML — wrap param/from/to in <span data-state> for accent coloring
+        let msgHtml;
+        if (m.param && m.from !== undefined) {
+          msgHtml = `${esc(m.name)} <span class="param"${ds}>${esc(m.param)}</span> changed from <span class="val"${ds}>${esc(m.from)}</span> to <span class="val"${ds}>${esc(m.to)}</span>`;
+        } else {
+          msgHtml = `${esc(m.name)} ${esc(m.verb)}`;
         }
 
-        // Timestamp text
-        const tsText = JellyActivityCard._formatTimestamp(changed);
-        const agoText = JellyActivityCard._formatAgo(agoMs);
-
-        // Message — friendly name + state description
-        const message = JellyActivityCard._buildMessage(name, state, domain, attrs);
-
-        // Duration — time between last_updated and last_changed
-        const updatedAt = new Date(stateObj.last_updated);
-        const durationMs = Math.abs(updatedAt - changed);
-        const durationText = JellyActivityCard._formatDuration(durationMs);
-
-        const stateAttr = dataState ? ` data-state="${dataState}"` : "";
-
-        // Track row index for first/last class
-        const rowIndex = fragments.filter(f => f.includes("activity-row")).length;
-
-        fragments.push(
-          `<div class="activity-row"${stateAttr}>` +
-          `<div class="timeline-rail"></div>` +
-          `<div class="activity-icon"><ha-icon icon="${icon}"></ha-icon></div>` +
-          `<div class="activity-body">` +
-          `<span class="timestamp">${tsText} | ${agoText}</span>` +
-          `<span class="message">${message}</span>` +
-          `</div>` +
-          `<span class="duration">${durationText}</span>` +
+        html.push(
+          `<div class="activity-row"${ds}>` +
+            `<div class="timeline-rail"></div>` +
+            `<div class="activity-icon"><ha-icon icon="${ev.icon}"></ha-icon></div>` +
+            `<div class="activity-body">` +
+              `<span class="timestamp">${fmtTimestamp(new Date(ev.ts))} | ${fmtAgo(now - ev.ts)}</span>` +
+              `<span class="message">${msgHtml}</span>` +
+            `</div>` +
           `</div>`
         );
       }
 
-      if (fragments.length === 0) {
-        this.$list.innerHTML = `<div class="time-separator"><span class="sep-label">No recent activity</span><div class="sep-line"></div></div>`;
-        return;
-      }
+      this.$list.innerHTML = html.join("");
 
-      this.$list.innerHTML = fragments.join("");
-
-      // Apply first/last rail-cap classes
+      // Rail caps
       const rows = this.$list.querySelectorAll(".activity-row");
-      if (rows.length > 0) {
+      if (rows.length) {
         rows[0].classList.add("first-row");
         rows[rows.length - 1].classList.add("last-row");
       }
-    }
-
-    // ─── Formatting helpers ─────────────────────────────
-
-    static _formatTimestamp(date) {
-      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      const d = date.getDate();
-      const mon = months[date.getMonth()];
-      const h = date.getHours();
-      const m = date.getMinutes();
-      const ampm = h >= 12 ? "PM" : "AM";
-      const h12 = h % 12 || 12;
-      const mPad = String(m).padStart(2, "0");
-      return `${d} ${mon}, ${h12}:${mPad} ${ampm}`;
-    }
-
-    static _formatAgo(ms) {
-      const secs = ms / 1000;
-      if (secs < 60) return `${Math.round(secs)}s ago`;
-      const mins = secs / 60;
-      if (mins < 60) return `${Math.round(mins)}m ago`;
-      const hours = mins / 60;
-      if (hours < 24) return `${Math.round(hours)}h ago`;
-      const days = hours / 24;
-      return `${Math.round(days)}d ago`;
-    }
-
-    static _formatDuration(ms) {
-      const secs = ms / 1000;
-      if (secs < 60) return `Took ${secs.toFixed(1)}s`;
-      const mins = secs / 60;
-      if (mins < 60) return `Took ${mins.toFixed(1)}m`;
-      const hours = mins / 60;
-      return `Took ${hours.toFixed(1)}h`;
-    }
-
-    static _buildMessage(name, state, domain, attrs) {
-      // Human-readable state descriptions
-      const stateMap = {
-        on: "is on",
-        off: "turned off",
-        unavailable: "is unavailable",
-        unknown: "state unknown",
-        home: "is home",
-        not_home: "is away",
-        locked: "locked",
-        unlocked: "unlocked",
-        open: "opened",
-        closed: "closed",
-        opening: "is opening",
-        closing: "is closing",
-        idle: "is idle",
-        cleaning: "is cleaning",
-        docked: "is docked",
-        returning: "is returning",
-        paused: "is paused",
-        playing: "is playing",
-        standby: "is on standby",
-        armed_home: "armed (home)",
-        armed_away: "armed (away)",
-        armed_night: "armed (night)",
-        disarmed: "disarmed",
-        triggered: "triggered",
-        heat: "heating",
-        cool: "cooling",
-        heat_cool: "auto heat/cool",
-        auto: "auto mode",
-        dry: "drying",
-        fan_only: "fan mode",
-      };
-
-      let verb = stateMap[state] || state;
-
-      // Enrich with attributes
-      if (domain === "climate" && attrs.current_temperature !== undefined) {
-        verb += ` · ${attrs.current_temperature}°`;
-        if (attrs.temperature !== undefined) verb += ` → ${attrs.temperature}°`;
-      } else if (domain === "light" && attrs.brightness !== undefined && state === "on") {
-        const pct = Math.round((attrs.brightness / 255) * 100);
-        verb += ` · ${pct}%`;
-      } else if (domain === "cover" && attrs.current_position !== undefined) {
-        verb += ` · ${attrs.current_position}%`;
-      } else if (domain === "fan" && attrs.percentage !== undefined && state === "on") {
-        verb += ` · ${attrs.percentage}%`;
-      } else if (domain === "media_player" && attrs.media_title) {
-        verb += ` · ${attrs.media_title}`;
-      }
-
-      // Escape HTML
-      const escaped = (name + " " + verb).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-      return escaped;
     }
   }
 );

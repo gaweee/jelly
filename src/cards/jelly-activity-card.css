@@ -136,17 +136,6 @@
   text-overflow: ellipsis;
 }
 
-/* ===== Duration — far right ===== */
-.duration {
-  flex-shrink: 0;
-  font-size: 10px;
-  line-height: 12px;
-  color: var(--jelly-text);
-  opacity: 0.45;
-  white-space: nowrap;
-  margin-left: 12px;
-}
-
 /* ===== On-state accent — primary ===== */
 .activity-row[data-state="on"] .activity-icon ha-icon {
   color: var(--jelly-on);
@@ -163,6 +152,31 @@
 
 .activity-row[data-state="setting"] .message {
   color: rgb(137, 180, 250);
+}
+
+/* ===== Inline param/val accent spans ===== */
+.message .param,
+.message .val {
+  font-weight: var(--w-semibold, 600);
+}
+
+.message .param[data-state="on"],
+.message .val[data-state="on"] {
+  color: var(--jelly-on);
+}
+
+.message .param[data-state="setting"],
+.message .val[data-state="setting"] {
+  color: rgb(137, 180, 250);
+}
+
+/* ===== Empty state hint ===== */
+.empty-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--jelly-text);
+  opacity: 0.3;
+  padding: 8px 0 0 9px;
 }
 
 /* ===== Time separator ===== */
@@ -189,4 +203,9 @@
   flex: 1;
   height: 1px;
   background: color-mix(in srgb, var(--jelly-text) 8%, transparent);
+}
+
+/* ===== First separator top padding ===== */
+.time-separator:first-child {
+  padding-top: 0;
 }
