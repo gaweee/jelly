@@ -181,7 +181,7 @@ Weather card with inline SVG icons and forecast strip.
 
 Sensor history chart with Chart.js and latest-value pill.
 
-**Config:** `entity` (required, sensor), `title`, `range` (24h/3d/5d/7d, default "3d")
+**Config:** `entity` (required, sensor), `name`, `range` (24h/3d/5d/7d, default "3d")
 **Range presets:** 24h=24 buckets, 3d=24 buckets, 5d=20 buckets, 7d=21 buckets
 **Behavior:**
 - Chart.js v4 loaded lazily from CDN
@@ -219,12 +219,6 @@ Circular arc knob control with spokes, pointer, +/- buttons, toggle, and shortcu
 
 ---
 
-### jelly-shell-card
-
-Minimal placeholder card. Does **not** extend JellyCardBase. Renders static "Jelly is alive 🪼" text.
-
----
-
 ### jelly-camera-card
 
 Live camera still-image card with periodic refresh and full-screen live view.
@@ -257,5 +251,5 @@ Full-viewport live stream overlay, appended to `document.body` to escape Shadow 
 ## TODO
 - Sparkline card
 - Activity card e.g. https://dribbble.com/shots/23308830-Smart-Home-Dashboard
-- Calendar/Agenda widget
-- Scene set https://dribbble.com/shots/23324720-SmartHub-Smart-Home-Dashboard
+- Calendar/Agenda widget e.g. https://dribbble.com/shots/24302475-Smart-Home-Dashboard-Design
+- Micro Dashboard e.g. https://dribbble.com/shots/19493855-Smart-Home-Dashboard

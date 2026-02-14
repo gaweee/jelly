@@ -6,7 +6,7 @@ import JellyCardBase from "../jelly-base.js";
  *
  * Config:
  *   entity           — (optional) input_text / input_select entity tracking the active scene
- *   name             — (optional) card title override
+ *   name             — (optional) display name override
  *   scene_1 … scene_N — scene.* entity IDs (slots appear dynamically)
  */
 
@@ -95,7 +95,7 @@ customElements.define(
         ];
 
         const labels = {
-          name: "Card Title (optional)",
+          name: "Display Name (optional)",
           entity: "Active Scene Tracker (input_text / input_select — optional)"
         };
 

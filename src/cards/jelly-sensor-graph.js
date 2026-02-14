@@ -132,7 +132,7 @@ customElements.define(
     }
 
     /**
-     * Editor schema – entity, title, default range.
+     * Editor schema – entity, name, default range.
      */
     static get editorSchema() {
       return {
@@ -141,7 +141,7 @@ customElements.define(
             name: "entity",
             selector: { entity: { domain: ["sensor"] } },
           },
-          { name: "title", selector: { text: {} } },
+          { name: "name", selector: { text: {} } },
           {
             name: "range",
             selector: {
@@ -159,7 +159,7 @@ customElements.define(
         ],
         labels: {
           entity: "Sensor Entity",
-          title: "Card Title (optional)",
+          name: "Display Name (optional)",
           range: "Default Range",
         },
       };
@@ -216,7 +216,7 @@ customElements.define(
 
       const ent = this.stateObj();
       this.$title.textContent =
-        this.config.title ||
+        this.config.name ||
         ent?.attributes?.friendly_name ||
         this.config.entity;
 
