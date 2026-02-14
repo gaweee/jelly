@@ -154,18 +154,30 @@ function fetchTravelData(gridStart, gridEnd) {
  * Fetch calendar event data for the visible date range.
  *
  * Returns an array of event objects:
- *   { key: "YYYY-MM-DD", title: string, color: string }
+ *   { key: "YYYY-MM-DD", date: Date, title: string, location: string,
+ *     time: string, color: string, calendar: number }
  *
  * Currently generates demo events across the grid.
  * Replace with real HA calendar integration later.
  */
-function fetchEventData(gridStart /*, gridEnd */) {
+function fetchEventData(gridStart, gridEnd) {
   const events = [];
+  const totalDays = Math.round((gridEnd - gridStart) / 86400000) + 1;
   const titles = [
     "Team standup", "Dentist appt", "Lunch w/ Sam",
     "Design review", "Grocery run", "1:1 with manager",
     "Book club", "Yoga class", "Sprint retro",
     "Date night", "Haircut", "Oil change",
+  ];
+  const locations = [
+    "Google Meet", "Clinic on Main St", "Cafe Nero",
+    "Zoom", "Whole Foods", "Office 3B",
+    "Library", "Downtown Studio", "Conf Room A",
+    "Osteria Roma", "Hair Lab", "AutoZone",
+  ];
+  const times = [
+    "9:00", "9:30", "10:00", "10:30", "11:00", "11:30",
+    "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
   ];
   const colors = [
     "#89b4fa", // blue
@@ -176,34 +188,38 @@ function fetchEventData(gridStart /*, gridEnd */) {
     "#f9e2af", // yellow
   ];
 
-  // Spread events across the 35-day grid, biased toward the middle weeks
-  const offsets = [0, 2, 5, 7, 8, 10, 12, 14, 15, 16, 17, 19, 20, 21, 23, 25, 27, 30, 32];
-  for (const off of offsets) {
+  // Realistic spread: 8–12 events scattered across the grid
+  const count = randInt(8, 12);
+  const usedDays = new Set();
+  for (let i = 0; i < count; i++) {
+    let off;
+    do { off = randInt(0, totalDays - 1); } while (usedDays.has(off) && usedDays.size < totalDays - 5);
+    usedDays.add(off);
     const d = addDays(gridStart, off);
     events.push({
       key: dateKey(d),
-      title: titles[off % titles.length],
-      color: colors[off % colors.length],
+      date: d,
+      title: titles[i % titles.length],
+      location: locations[i % locations.length],
+      time: times[randInt(0, times.length - 1)],
+      color: colors[i % colors.length],
+      calendar: i % 3,
     });
   }
 
-  // Add extra events on certain days to create 2-3 event stacking
-  const extraOffsets = [5, 7, 14, 15, 16, 20, 21, 25];
-  for (const off of extraOffsets) {
+  // Add 1–2 extra events on 2 existing days to create mild stacking
+  const occupied = [...usedDays];
+  for (let i = 0; i < 2 && occupied.length > 0; i++) {
+    const off = occupied[randInt(0, occupied.length - 1)];
     const d = addDays(gridStart, off);
     events.push({
       key: dateKey(d),
-      title: titles[(off + 3) % titles.length],
-      color: colors[(off + 2) % colors.length],
-    });
-  }
-  // Triple-stack a couple of days
-  for (const off of [7, 16, 21]) {
-    const d = addDays(gridStart, off);
-    events.push({
-      key: dateKey(d),
-      title: titles[(off + 6) % titles.length],
-      color: colors[(off + 4) % colors.length],
+      date: d,
+      title: titles[randInt(0, titles.length - 1)],
+      location: locations[randInt(0, locations.length - 1)],
+      time: times[randInt(0, times.length - 1)],
+      color: colors[randInt(0, colors.length - 1)],
+      calendar: randInt(0, 2),
     });
   }
 
@@ -236,9 +252,17 @@ customElements.define(
       return {
         schema: [
           { name: "name", selector: { text: {} } },
+          { name: "weeks", selector: { select: { mode: "dropdown", options: [
+            { value: "3", label: "3 weeks" },
+            { value: "4", label: "4 weeks" },
+            { value: "5", label: "5 weeks" },
+          ] } } },
+          { name: "show_agenda", selector: { boolean: {} } },
         ],
         labels: {
-          name: "Display Name (optional)",
+          name: "Title Prefix (optional)",
+          weeks: "Weeks to display",
+          show_agenda: "Show Agenda List",
         },
       };
     }
@@ -248,7 +272,7 @@ customElements.define(
     }
 
     static getStubConfig() {
-      return { type: "custom:jelly-agenda-card" };
+      return { type: "custom:jelly-agenda-card", weeks: "4", show_agenda: true };
     }
 
     /** Entity is NOT required. */
@@ -264,6 +288,7 @@ customElements.define(
     afterLoad() {
       this.$monthLabel = this.qs(".month-label");
       this.$weeks = this.qs(".weeks");
+      this.$agenda = this.qs(".agenda");
       this._travelData = null;
       this._lastRangeKey = null;
       this.render();
@@ -282,14 +307,14 @@ customElements.define(
       return isoDay >= 3 ? thisMon : addDays(thisMon, -7);
     }
 
-    _buildDays(gridStart) {
+    _buildDays(gridStart, totalDays) {
       const todayK = dateKey(new Date());
-      const midDate = addDays(gridStart, 17);
+      const midDate = addDays(gridStart, Math.floor(totalDays / 2));
       const primaryMonth = midDate.getMonth();
       const primaryYear = midDate.getFullYear();
 
       const days = [];
-      for (let i = 0; i < 35; i++) {
+      for (let i = 0; i < totalDays; i++) {
         const d = addDays(gridStart, i);
         days.push({
           date: d,
@@ -332,9 +357,12 @@ customElements.define(
     render() {
       if (!this.$weeks || !this.$monthLabel) return;
 
+      const numWeeks = Math.max(3, Math.min(5, parseInt(this.config.weeks, 10) || 4));
+      const totalDays = numWeeks * 7;
+
       const gridStart = this._computeGridStart();
-      const gridEnd = addDays(gridStart, 34);
-      const days = this._buildDays(gridStart);
+      const gridEnd = addDays(gridStart, totalDays - 1);
+      const days = this._buildDays(gridStart, totalDays);
 
       // Fetch / regenerate travel data when range changes
       const rangeKey = dateKey(gridStart);
@@ -352,19 +380,23 @@ customElements.define(
       }
       const eventMap = buildEventMap(this._eventData);
 
-      // Month label
+      // Month label — optional prefix
       const months = [...new Set(days.map(d => d.month))];
-      const year = days[17].year;
+      const midIdx = Math.floor(totalDays / 2);
+      const year = days[midIdx].year;
+      let monthStr;
       if (months.length <= 2) {
-        this.$monthLabel.textContent = months.map(m => MONTHS[m]).join(" / ") + ` ${year}`;
+        monthStr = months.map(m => MONTHS[m]).join(" / ") + ` ${year}`;
       } else {
-        this.$monthLabel.textContent = `${MONTHS[months[0]]} – ${MONTHS[months[months.length - 1]]} ${year}`;
+        monthStr = `${MONTHS[months[0]]} – ${MONTHS[months[months.length - 1]]} ${year}`;
       }
+      const prefix = this.config.name?.trim();
+      this.$monthLabel.textContent = prefix ? `${prefix} — ${monthStr}` : monthStr;
 
       // Clear & rebuild
       this.$weeks.innerHTML = "";
 
-      for (let w = 0; w < 5; w++) {
+      for (let w = 0; w < numWeeks; w++) {
         const weekDays = days.slice(w * 7, w * 7 + 7);
         const weekRow = document.createElement("div");
         weekRow.className = "week-row";
@@ -408,6 +440,9 @@ customElements.define(
         // Draw travel lines after layout settles
         this._drawTravelLines(weekRow, svg, weekDays, travelMap);
       }
+
+      // Render agenda list
+      this._renderAgenda(this._eventData);
     }
 
     /* ────────────────────────────────── */
@@ -530,6 +565,102 @@ customElements.define(
 
     disconnectedCallback() {
       super.disconnectedCallback();
+    }
+
+    /* ────────────────────────────────── */
+    /*  Agenda list rendering            */
+    /* ────────────────────────────────── */
+
+    /** Calendar lane colors for left border. */
+    static CALENDAR_COLORS = [
+      "rgb(137,180,250)",  // blue  (lane 0)
+      "rgb(245,194,231)",  // pink  (lane 1)
+      "rgb(166,227,161)",  // green (lane 2)
+    ];
+
+    _renderAgenda(events) {
+      if (!this.$agenda) return;
+      this.$agenda.innerHTML = "";
+
+      const showAgenda = this.config.show_agenda !== false;
+      this.$agenda.style.display = showAgenda ? "" : "none";
+      if (!showAgenda) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const weekEnd = addDays(today, 7);   // today + 6 more days
+      const twoWeeksEnd = addDays(today, 14);
+
+      // Filter & sort events from today onward
+      const upcoming = events
+        .filter(e => e.date >= today && e.date < twoWeeksEnd)
+        .sort((a, b) => a.date - b.date || (a.time || "").localeCompare(b.time || ""));
+
+      const thisWeek = upcoming.filter(e => e.date < weekEnd);
+      const nextWeek = upcoming.filter(e => e.date >= weekEnd);
+
+      const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+      const buildItem = (ev) => {
+        const item = document.createElement("div");
+        item.className = "agenda-item";
+        const calColors = JellyAgendaCard.CALENDAR_COLORS;
+        item.style.borderLeftColor = calColors[ev.calendar % calColors.length];
+
+        const info = document.createElement("div");
+        info.className = "agenda-info";
+
+        const label = document.createElement("span");
+        label.className = "agenda-label";
+        label.textContent = ev.title;
+
+        const loc = document.createElement("span");
+        loc.className = "agenda-location";
+        loc.textContent = [ev.time, ev.location].filter(Boolean).join(", ");
+
+        info.appendChild(label);
+        info.appendChild(loc);
+
+        const dateEl = document.createElement("span");
+        dateEl.className = "agenda-date";
+        const dayStr = DAYS_SHORT[ev.date.getDay()];
+        dateEl.textContent = `${dayStr} ${ev.date.getDate()}`;
+
+        item.appendChild(info);
+        item.appendChild(dateEl);
+        return item;
+      };
+
+      // "This week" section
+      if (thisWeek.length > 0) {
+        const sec = document.createElement("div");
+        sec.className = "agenda-section";
+        const h = document.createElement("div");
+        h.className = "agenda-section-header";
+        h.textContent = "Upcoming this week";
+        sec.appendChild(h);
+        for (const ev of thisWeek) sec.appendChild(buildItem(ev));
+        this.$agenda.appendChild(sec);
+      }
+
+      // "Next 2 weeks" section
+      if (nextWeek.length > 0) {
+        const sec = document.createElement("div");
+        sec.className = "agenda-section";
+        const h = document.createElement("div");
+        h.className = "agenda-section-header";
+        h.textContent = "In the next 2 weeks";
+        sec.appendChild(h);
+        for (const ev of nextWeek) sec.appendChild(buildItem(ev));
+        this.$agenda.appendChild(sec);
+      }
+
+      if (thisWeek.length === 0 && nextWeek.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "agenda-empty";
+        empty.textContent = "No upcoming events";
+        this.$agenda.appendChild(empty);
+      }
     }
   }
 );
