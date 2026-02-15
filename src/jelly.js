@@ -45,6 +45,7 @@ import "./cards/jelly-group-toggle-card.js";
 import "./cards/jelly-scene-card.js";
 import "./cards/jelly-agenda-card.js";
 import "./cards/jelly-activity-card.js";
+import "./cards/jelly-image-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -113,6 +114,11 @@ import "./cards/jelly-activity-card.js";
       type: "jelly-activity-card",
       name: "Jelly Activity Card",
       description: "Scrollable timeline of recent smart home activity events"
+    },
+    {
+      type: "jelly-image-card",
+      name: "Jelly Image Card",
+      description: "Static image display with configurable fit and optional borderless mode"
     }
   ];
 
