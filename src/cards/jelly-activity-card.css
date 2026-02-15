@@ -141,32 +141,33 @@
   color: var(--jelly-on);
 }
 
-.activity-row[data-state="on"] .message {
-  color: var(--jelly-on);
-}
-
 /* ===== Setting-state accent — Catppuccin blue ===== */
 .activity-row[data-state="setting"] .activity-icon ha-icon {
   color: rgb(137, 180, 250);
 }
 
-.activity-row[data-state="setting"] .message {
-  color: rgb(137, 180, 250);
+/* ===== Entity name — bold ===== */
+.message .entity-name {
+  font-weight: 700;
+  color: inherit;
 }
 
 /* ===== Inline param/val accent spans ===== */
-.message .param,
+.message .param {
+  font-weight: var(--w-medium, 500);
+}
+
 .message .val {
   font-weight: var(--w-semibold, 600);
 }
 
-.message .param[data-state="on"],
-.message .val[data-state="on"] {
+.message .val[data-state="on"],
+.message .param[data-state="on"] {
   color: var(--jelly-on);
 }
 
-.message .param[data-state="setting"],
-.message .val[data-state="setting"] {
+.message .val[data-state="setting"],
+.message .param[data-state="setting"] {
   color: rgb(137, 180, 250);
 }
 

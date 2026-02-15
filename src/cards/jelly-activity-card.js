@@ -131,12 +131,69 @@ customElements.define(
 
     static get editorSchema() {
       return {
-        schema: [{ name: "name", selector: { text: {} } }],
-        labels: { name: "Card Title (optional)" },
+        schema: [
+          { name: "name", selector: { text: {} } },
+          {
+            name: "domains",
+            selector: {
+              select: {
+                multiple: true,
+                custom_value: true,
+                options: [
+                  { value: "light",       label: "Lights" },
+                  { value: "switch",      label: "Switches" },
+                  { value: "climate",     label: "Climate" },
+                  { value: "cover",       label: "Covers" },
+                  { value: "fan",         label: "Fans" },
+                  { value: "lock",        label: "Locks" },
+                  { value: "automation",  label: "Automations" },
+                  { value: "scene",       label: "Scenes" },
+                  { value: "media_player", label: "Media Players" },
+                  { value: "vacuum",      label: "Vacuums" },
+                  { value: "alarm_control_panel", label: "Alarms" },
+                  { value: "input_boolean", label: "Input Booleans" },
+                ],
+                mode: "list",
+              }
+            }
+          },
+          { name: "max_items", selector: { number: { min: 0, max: 1000, step: 10, mode: "box" } } },
+          { name: "max_hours", selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } },
+          {
+            name: "refresh_interval",
+            selector: {
+              select: {
+                options: [
+                  { value: "0",   label: "Off" },
+                  { value: "10",  label: "10 seconds" },
+                  { value: "30",  label: "30 seconds" },
+                  { value: "60",  label: "1 minute" },
+                  { value: "300", label: "5 minutes" },
+                ],
+                mode: "dropdown",
+              }
+            }
+          },
+        ],
+        labels: {
+          name: "Card Title",
+          domains: "Tracked Domains",
+          max_items: "Max Entries (0 = unlimited)",
+          max_hours: "Max Age (hours)",
+          refresh_interval: "Refresh Interval",
+        },
       };
     }
     static async getConfigElement() { return await JellyCardBase.getConfigElement.call(this); }
-    static getStubConfig() { return { type: "custom:jelly-activity-card" }; }
+    static getStubConfig() {
+      return {
+        type: "custom:jelly-activity-card",
+        domains: [...DEFAULT_DOMAINS],
+        max_items: 0,
+        max_hours: 48,
+        refresh_interval: "30",
+      };
+    }
 
     // ─── Lifecycle ──────────────────────────────────────
 
@@ -144,13 +201,14 @@ customElements.define(
       this.config = { ...config };
       this._domains = new Set(config.domains || DEFAULT_DOMAINS);
       this._buckets = this._resolveBuckets(config.time_buckets);
-      this._maxItems = config.max_items || 200;
-      this._maxHoursMs = (config.max_hours || Infinity) * 3_600_000;
+      const maxItems = Number(config.max_items) || 0;
+      this._maxItems = maxItems > 0 ? maxItems : Infinity;
+      this._maxHoursMs = (Number(config.max_hours) || 48) * 3_600_000;
       this._events = this._loadStorage();
-      this._startedAt = this._events.length ? null : Date.now(); // show "listening since" if empty
+      this._startedAt = this._events.length ? null : Date.now();
       await this._ensureAssets();
       this._applyCardDimensions();
-      this._startRefresh(config.refresh_interval);
+      this._startRefresh(Number(config.refresh_interval) || 30);
       this.render?.();
     }
 
@@ -205,27 +263,34 @@ customElements.define(
       const state = newS.state;
       const ts = Date.now();
 
-      // Classify row state
-      let dataState = "";
-      if (ON_DOMAINS.has(domain) && !["off","unavailable","idle","standby"].includes(state)) dataState = "on";
-      else if (SETTING_DOMAINS.has(domain) && state !== "unavailable") dataState = "setting";
+      // Classify row icon state
+      let iconState = "";
+      if (ON_DOMAINS.has(domain) && !["off","unavailable","idle","standby"].includes(state)) iconState = "on";
+      else if (SETTING_DOMAINS.has(domain) && state !== "unavailable") iconState = "setting";
 
-      // Build message parts: { text, param?, from?, to?, dataState }
+      // Build message parts
+      // msgAccent: "on" for toggle on/off, "setting" for parameter changes
       const stateD = diffState(oldS, newS);
       const attrD  = diffAttrs(oldS, newS, domain);
       const verb   = STATE_LABELS[state] || state;
 
+      // Domains that just "activate" — no meaningful from/to diff
+      const ACTIVATE_DOMAINS = new Set(["scene", "automation", "script", "button"]);
+
       let msg;
-      if (attrD) {
-        // e.g. "Living Room AC  temp  changed from 18° to 22°"
-        msg = { name, verb, param: attrD.param, from: attrD.from, to: attrD.to, dataState };
+      if (ACTIVATE_DOMAINS.has(domain)) {
+        msg = { name, verb: "activated", accent: "on" };
+      } else if (attrD) {
+        msg = { name, verb, param: attrD.param, from: attrD.from, to: attrD.to, accent: "setting" };
+      } else if (stateD && (stateD.to === "on" || stateD.to === "off")) {
+        msg = { name, verb, toggle: stateD.to, accent: "on" };
       } else if (stateD) {
-        msg = { name, verb, param: "state", from: STATE_LABELS[stateD.from] || stateD.from, to: STATE_LABELS[stateD.to] || stateD.to, dataState };
+        msg = { name, verb, param: "state", from: STATE_LABELS[stateD.from] || stateD.from, to: STATE_LABELS[stateD.to] || stateD.to, accent: "setting" };
       } else {
-        msg = { name, verb, dataState };
+        msg = { name, verb, accent: iconState || "" };
       }
 
-      this._events.unshift({ ts, entityId: d.entity_id, icon, domain, state, msg });
+      this._events.unshift({ ts, entityId: d.entity_id, icon, domain, state, iconState, msg });
       this._trim();
       this._saveStorage();
       this._startedAt = null; // we have events now
@@ -252,7 +317,7 @@ customElements.define(
       if (this._maxHoursMs < Infinity) {
         this._events = this._events.filter(e => now - e.ts <= this._maxHoursMs);
       }
-      if (this._events.length > this._maxItems) {
+      if (this._maxItems < Infinity && this._events.length > this._maxItems) {
         this._events.length = this._maxItems;
       }
     }
@@ -310,18 +375,25 @@ customElements.define(
         }
 
         const m = ev.msg;
-        const ds = m.dataState ? ` data-state="${m.dataState}"` : "";
+        const iconDs = ev.iconState ? ` data-state="${ev.iconState}"` : "";
+        const ds = m.accent ? ` data-state="${m.accent}"` : "";
 
-        // Build message HTML — wrap param/from/to in <span data-state> for accent coloring
+        // Build message HTML
+        // - entity name: <strong> wrapped
+        // - toggle on/off: "turned on/off" with .val accent=on
+        // - attr diffs: "param from › to" with .param + .val accent=setting
+        // - plain: "entity verb"
         let msgHtml;
-        if (m.param && m.from !== undefined) {
-          msgHtml = `${esc(m.name)} <span class="param"${ds}>${esc(m.param)}</span> changed from <span class="val"${ds}>${esc(m.from)}</span> to <span class="val"${ds}>${esc(m.to)}</span>`;
+        if (m.toggle) {
+          msgHtml = `<strong class="entity-name">${esc(m.name)}</strong> turned <span class="val"${ds}>${esc(m.toggle)}</span>`;
+        } else if (m.param && m.from !== undefined) {
+          msgHtml = `<strong class="entity-name">${esc(m.name)}</strong> <span class="param"${ds}>${esc(m.param)}</span> <span class="val"${ds}>${esc(m.from)} › ${esc(m.to)}</span>`;
         } else {
-          msgHtml = `${esc(m.name)} ${esc(m.verb)}`;
+          msgHtml = `<strong class="entity-name">${esc(m.name)}</strong> ${esc(m.verb)}`;
         }
 
         html.push(
-          `<div class="activity-row"${ds}>` +
+          `<div class="activity-row"${iconDs}>` +
             `<div class="timeline-rail"></div>` +
             `<div class="activity-icon"><ha-icon icon="${ev.icon}"></ha-icon></div>` +
             `<div class="activity-body">` +
