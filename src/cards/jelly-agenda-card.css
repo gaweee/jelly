@@ -278,7 +278,24 @@ ha-card {
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 8px;
+
+    /* Thin scrollbar — matches Activity card */
+    scrollbar-width: thin;
+    scrollbar-color: var(--jelly-off) transparent;
   }
+}
+
+.agenda::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agenda::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agenda::-webkit-scrollbar-thumb {
+  background: var(--jelly-off);
+  border-radius: 2px;
 }
 
 .agenda-section {
