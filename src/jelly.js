@@ -46,6 +46,7 @@ import "./cards/jelly-scene-card.js";
 import "./cards/jelly-agenda-card.js";
 import "./cards/jelly-activity-card.js";
 import "./cards/jelly-image-card.js";
+import "./cards/jelly-sip-card.js";
 
 // Register cards so they appear in Lovelace card picker
 (function registerJellyCards() {
@@ -119,6 +120,11 @@ import "./cards/jelly-image-card.js";
       type: "jelly-image-card",
       name: "Jelly Image Card",
       description: "Static image display with configurable fit and optional borderless mode"
+    },
+    {
+      type: "jelly-sip-card",
+      name: "Jelly SIP Card",
+      description: "Swipe-to-dial intercom card with configurable entries"
     }
   ];
 

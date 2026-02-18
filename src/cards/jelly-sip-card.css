@@ -1,0 +1,324 @@
+/* ── Catppuccin Mocha palette ── */
+:host {
+  --ctp-crust:    #11111b;
+  --ctp-mantle:   #181825;
+  --ctp-surface0: #313244;
+  --ctp-surface1: #45475a;
+  --ctp-surface2: #585b70;
+  --ctp-overlay0: #6c7086;
+  --ctp-overlay1: #7f849c;
+  --ctp-text:     #cdd6f4;
+  --ctp-lavender: #b4befe;
+  --ctp-blue:     #89b4fa;
+  --ctp-red:      #f38ba8;
+  --ctp-green:    #a6e3a1;
+}
+
+/* ===== Card shell — follows base/generic format ===== */
+.card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.title {
+  color: var(--jelly-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ===== Body — horizontal 60/40 split ===== */
+.body {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  padding: 0 12px 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ===== Left: iOS drum picker ===== */
+.picker-panel {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+.picker-wheel {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  cursor: grab;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    black 15%,
+    black 85%,
+    rgba(0,0,0,0.4) 95%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    black 15%,
+    black 85%,
+    rgba(0,0,0,0.4) 95%,
+    transparent 100%
+  );
+}
+
+.picker-wheel.grabbing { cursor: grabbing; }
+
+/* Selection highlight band */
+.picker-highlight {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 40px;
+  transform: translateY(-50%);
+  border: 1.5px solid var(--ctp-surface2);
+  border-left: none;
+  border-right: none;
+  border-radius: 8px;
+  background: var(--ctp-surface0);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Track that moves up/down */
+.picker-track {
+  position: absolute;
+  left: 0; right: 0;
+  will-change: transform;
+  z-index: 2;
+}
+
+.picker-item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ctp-overlay0);
+  white-space: nowrap;
+  transition: color 0.15s, font-weight 0.15s;
+  pointer-events: none;
+}
+
+.picker-item.selected {
+  color: var(--ctp-text);
+  font-weight: 500;
+}
+
+.picker-item ha-icon {
+  --mdc-icon-size: 20px;
+  flex-shrink: 0;
+  color: var(--ctp-blue);
+  opacity: 0.6;
+}
+
+.picker-item.selected ha-icon {
+  color: var(--ctp-lavender);
+  opacity: 1;
+}
+
+/* ===== Right: Swipe to dial ===== */
+.right-panel {
+  width: 40%;
+  /* padding-top:10px; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.swipe-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ctp-overlay1);
+}
+
+/* Swipe track (horizontal, left → right) */
+.swipe-track {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--ctp-surface0);
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Destination bell (right end) */
+.swipe-dest {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ctp-surface1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.2s, background 0.3s;
+}
+
+.swipe-dest.active {
+  opacity: 1;
+  background: var(--ctp-green);
+}
+
+.swipe-dest ha-icon {
+  --mdc-icon-size: 18px;
+  color: #fff;
+}
+
+/* Chevrons */
+.swipe-chevrons {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.swipe-chevrons .chev {
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--ctp-overlay0);
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.swipe-chevrons .chev:nth-child(1) { opacity: 0.8; }
+.swipe-chevrons .chev:nth-child(2) { opacity: 0.5; }
+.swipe-chevrons .chev:nth-child(3) { opacity: 0.25; }
+
+@keyframes chev-pulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.7; }
+}
+
+.swipe-chevrons.idle .chev:nth-child(1) { animation: chev-pulse 1.6s ease-in-out 0s infinite; }
+.swipe-chevrons.idle .chev:nth-child(2) { animation: chev-pulse 1.6s ease-in-out 0.25s infinite; }
+.swipe-chevrons.idle .chev:nth-child(3) { animation: chev-pulse 1.6s ease-in-out 0.5s infinite; }
+
+.swipe-chevrons .chev.lit {
+  color: var(--ctp-lavender);
+  opacity: 1 !important;
+}
+
+/* Draggable knob */
+.swipe-knob {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ctp-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 3;
+  box-shadow: 0 4px 16px #f38ba840;
+  transition: box-shadow 0.2s;
+  will-change: left;
+}
+
+.swipe-knob.grabbing { cursor: grabbing; box-shadow: 0 6px 24px #f38ba860; }
+
+.swipe-knob ha-icon {
+  --mdc-icon-size: 20px;
+  color: #fff;
+}
+
+.swipe-knob.success {
+  background: var(--ctp-green);
+  box-shadow: 0 4px 16px #a6e3a140;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ctp-overlay0);
+  font-size: 13px;
+}
+
+/* ===== Compact: height < 184px (rows 1-2) ===== */
+@container (max-height: 183px) {
+  /* Right panel — hide label, shrink knob & dest */
+  .swipe-label { display: none; }
+
+  .swipe-track { height: 32px; border-radius: 16px; }
+
+  .swipe-knob {
+    width: 28px; height: 28px;
+    left: 2px;
+    box-shadow: 0 2px 8px #f38ba830;
+  }
+  .swipe-knob ha-icon { --mdc-icon-size: 16px; }
+
+  .swipe-dest {
+    width: 28px; height: 28px;
+    right: 2px;
+  }
+  .swipe-dest ha-icon { --mdc-icon-size: 14px; }
+
+  .swipe-chevrons .chev { font-size: 0.7rem; }
+
+  /* Picker — smaller items */
+  .picker-item {
+    height: 30px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .picker-item ha-icon { --mdc-icon-size: 16px; }
+
+  .picker-highlight {
+    height: 30px;
+  }
+}
