@@ -68,12 +68,13 @@ const EDITOR_CSS = `
     border-radius: 10px;
     border: 1px solid var(--divider-color, rgba(255,255,255,0.08));
   }
-  .entry-index {
-    width: 22px; text-align: center;
-    font-size: 11px; font-weight: 700;
+  .handle {
+    cursor: grab; flex-shrink: 0; padding: 4px 2px;
     color: var(--primary-text-color); opacity: 0.25;
-    flex-shrink: 0;
+    display: flex; align-items: center;
   }
+  .handle:active { cursor: grabbing; }
+  .handle svg { width: 18px; height: 18px; fill: currentColor; }
   .entry-fields {
     flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
   }
@@ -83,22 +84,18 @@ const EDITOR_CSS = `
   .entry-fields ha-entity-picker { width: 100%; }
 
   .entry-actions {
-    display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;
+    display: flex; align-items: center; flex-shrink: 0;
   }
   .entry-actions button {
-    background: none;
-    border: 1px solid var(--divider-color, rgba(255,255,255,0.1));
-    border-radius: 4px;
-    color: var(--primary-text-color);
-    cursor: pointer;
+    background: none; border: none;
+    color: #f38ba8; cursor: pointer;
     width: 28px; height: 28px;
-    font-size: 14px; line-height: 1;
+    font-size: 16px; line-height: 1;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0.5; transition: opacity 0.12s;
+    opacity: 0.4; transition: opacity 0.12s;
+    padding: 0;
   }
   .entry-actions button:hover { opacity: 1; }
-  .entry-actions button.delete { color: #f38ba8; }
-  .entry-actions button:disabled { opacity: 0.15; cursor: default; }
 
   .add-btn {
     width: 100%; padding: 10px; margin-top: 4px;
@@ -166,12 +163,12 @@ export class JellyManagedEntriesEditor extends HTMLElement {
 
   /* ── Entry CRUD ── */
 
-  _moveEntry(idx, dir) {
+  _onSort(e) {
+    const { oldIndex, newIndex } = e.detail;
     const key = this.constructor.entriesKey;
     const arr = [...this._config[key]];
-    const tgt = idx + dir;
-    if (tgt < 0 || tgt >= arr.length) return;
-    [arr[idx], arr[tgt]] = [arr[tgt], arr[idx]];
+    const [moved] = arr.splice(oldIndex, 1);
+    arr.splice(newIndex, 0, moved);
     this._config[key] = arr;
     this._fire();
     this._render();
@@ -217,12 +214,19 @@ export class JellyManagedEntriesEditor extends HTMLElement {
     hdr.innerHTML = `<span>${this.constructor.editorTitle}</span>`;
     wrap.appendChild(hdr);
 
-    // Entry rows
+    // Entry rows wrapped in ha-sortable
+    const sortable = document.createElement('ha-sortable');
+    sortable.setAttribute('handle-selector', '.handle');
+    sortable.addEventListener('item-moved', (e) => this._onSort(e));
+
+    const rowContainer = document.createElement('div');
     const key = this.constructor.entriesKey;
     const entries = this._config[key] || [];
     entries.forEach((entry, idx) => {
-      wrap.appendChild(this._buildRow(entry, idx, entries.length));
+      rowContainer.appendChild(this._buildRow(entry, idx, entries.length));
     });
+    sortable.appendChild(rowContainer);
+    wrap.appendChild(sortable);
 
     // Add button
     const addBtn = document.createElement('button');
@@ -271,11 +275,11 @@ export class JellyManagedEntriesEditor extends HTMLElement {
     const row = document.createElement('div');
     row.className = 'entry-row';
 
-    // Index badge
-    const num = document.createElement('div');
-    num.className = 'entry-index';
-    num.textContent = idx + 1;
-    row.appendChild(num);
+    // Drag handle
+    const handle = document.createElement('div');
+    handle.className = 'handle';
+    handle.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z"/></svg>`;
+    row.appendChild(handle);
 
     // Fields
     const fields = document.createElement('div');
@@ -292,8 +296,8 @@ export class JellyManagedEntriesEditor extends HTMLElement {
     }
     row.appendChild(fields);
 
-    // Action buttons
-    row.appendChild(this._buildActions(idx, total));
+    // Delete button
+    row.appendChild(this._buildActions(idx));
     return row;
   }
 
@@ -367,25 +371,15 @@ export class JellyManagedEntriesEditor extends HTMLElement {
     }
   }
 
-  /** Build the move-up / move-down / delete button column */
-  _buildActions(idx, total) {
+  /** Build the delete button for a row */
+  _buildActions(idx) {
     const actions = document.createElement('div');
     actions.className = 'entry-actions';
-
-    const btn = (text, title, disabled, cls, handler) => {
-      const b = document.createElement('button');
-      b.textContent = text;
-      b.title = title;
-      b.disabled = disabled;
-      if (cls) b.className = cls;
-      b.addEventListener('click', handler);
-      actions.appendChild(b);
-    };
-
-    btn('↑', 'Move up',   idx === 0,         null,     () => this._moveEntry(idx, -1));
-    btn('↓', 'Move down', idx === total - 1,  null,     () => this._moveEntry(idx,  1));
-    btn('×', 'Remove',    false,              'delete', () => this._removeEntry(idx));
-
+    const b = document.createElement('button');
+    b.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
+    b.title = 'Remove';
+    b.addEventListener('click', () => this._removeEntry(idx));
+    actions.appendChild(b);
     return actions;
   }
 }
