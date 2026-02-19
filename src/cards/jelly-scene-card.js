@@ -5,46 +5,10 @@ import JellyCardBase from "../jelly-base.js";
  * Each scene is a squarish icon button; the active scene is highlighted.
  *
  * Config:
- *   entity           — (optional) input_text / input_select entity tracking the active scene
- *   name             — (optional) display name override
- *   scene_1 … scene_N — scene.* entity IDs (slots appear dynamically)
+ *   entity  — (optional) input_text / input_select entity tracking the active scene
+ *   name    — (optional) display name override
+ *   entries — [{ entity: "scene.movie_night" }, …]
  */
-
-const MAX_SCENES = 20;
-
-/**
- * Compact scene config: collapse gaps so scenes are always contiguous.
- * E.g. if scene_1 + scene_3 are set, scene_3 becomes scene_2.
- */
-function _compactSceneConfig(config) {
-  const filled = [];
-  for (let i = 1; i <= MAX_SCENES; i++) {
-    const id = config[`scene_${i}`];
-    if (id) filled.push(id);
-  }
-
-  // Check if already compact
-  let alreadyCompact = true;
-  for (let i = 0; i < filled.length; i++) {
-    if (config[`scene_${i + 1}`] !== filled[i]) {
-      alreadyCompact = false;
-      break;
-    }
-  }
-  if (alreadyCompact) return null; // no change needed
-
-  // Build compacted config
-  const result = { ...config };
-  // Clear all old scene keys
-  for (let i = 1; i <= MAX_SCENES; i++) {
-    delete result[`scene_${i}`];
-  }
-  // Write compacted
-  filled.forEach((entityId, idx) => {
-    result[`scene_${idx + 1}`] = entityId;
-  });
-  return result;
-}
 
 customElements.define(
   "jelly-scene-card",
@@ -56,86 +20,38 @@ customElements.define(
 
     static get cardDomains() { return ["input_text", "input_select"]; }
 
-    /**
-     * Override setConfig to allow entity to be optional.
-     * The scene card can work without an active-scene tracker.
-     */
-    async setConfig(config) {
-      if (!config) throw new Error("Jelly: config is required");
-
-      // Bypass base entity requirement — entity is optional for scene card
-      this.config = config;
-      if (typeof this.validateConfig === "function") {
-        this.validateConfig(config);
-      }
-
-      await this._ensureAssets();
-      this._applyCardDimensions();
-      this.render?.();
-    }
-
-    /**
-     * Dynamic editor schema — scene slots + optional icon/name per scene.
-     */
-    static get editorSchema() {
-      return (config) => {
-        const schema = [
-          {
-            name: "name",
-            selector: { text: {} }
-          },
-          {
-            name: "entity",
-            selector: {
-              entity: {
-                domain: ["input_text", "input_select"]
-              }
-            }
-          }
-        ];
-
-        const labels = {
-          name: "Display Name (optional)",
-          entity: "Active Scene Tracker (input_text / input_select — optional)"
-        };
-
-        // Find how many scene slots are filled, then show those + 1 empty
-        let filledCount = 0;
-        for (let i = 1; i <= MAX_SCENES; i++) {
-          if (config[`scene_${i}`]) filledCount = i;
-        }
-        const slotsToShow = Math.min(filledCount + 1, MAX_SCENES);
-
-        for (let i = 1; i <= slotsToShow; i++) {
-          schema.push({
-            name: `scene_${i}`,
-            selector: {
-              entity: {
-                domain: ["scene"]
-              }
-            }
-          });
-
-          labels[`scene_${i}`] = `Scene ${i}`;
-        }
-
-        return {
-          schema,
-          labels,
-          normalize: _compactSceneConfig
-        };
-      };
-    }
+    /* ── Editor: managed entries list ── */
 
     static async getConfigElement() {
-      return await JellyCardBase.getConfigElement.call(this);
+      if (!customElements.get("jelly-scene-editor")) {
+        await import("./jelly-scene-editor.js");
+      }
+      return document.createElement("jelly-scene-editor");
     }
 
     static getStubConfig(hass) {
       const tag = this.cardTag;
       const entity = JellyCardBase._pickEntity(hass, ["input_text", "input_select"]) || "";
       const scene = JellyCardBase._pickEntity(hass, ["scene"]) || "";
-      return { type: `custom:${tag}`, entity, scene_1: scene };
+      return {
+        type: `custom:${tag}`,
+        entity,
+        entries: scene ? [{ entity: scene }] : [],
+      };
+    }
+
+    /**
+     * Override setConfig — entity is optional for scene card.
+     */
+    async setConfig(config) {
+      if (!config) throw new Error("Jelly: config is required");
+
+      if (!Array.isArray(config.entries)) config = { ...config, entries: [] };
+
+      this.config = config;
+      await this._ensureAssets();
+      this._applyCardDimensions();
+      this.render?.();
     }
 
     /** No-op height — rely on grid rows only */
@@ -201,16 +117,13 @@ customElements.define(
     }
 
     /**
-     * Collect scene configs into an array.
+     * Collect scene entity IDs from entries array.
      */
     _getScenes() {
-      const scenes = [];
-      for (let i = 1; i <= MAX_SCENES; i++) {
-        const entityId = this.config[`scene_${i}`];
-        if (!entityId) continue;
-        scenes.push({ entityId });
-      }
-      return scenes;
+      const entries = Array.isArray(this.config.entries) ? this.config.entries : [];
+      return entries
+        .filter(e => e.entity)
+        .map(e => ({ entityId: e.entity }));
     }
 
     /**

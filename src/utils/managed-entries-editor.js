@@ -1,5 +1,5 @@
 /**
- * JellyEntriesEditor — Shared base class for card editors with
+ * JellyManagedEntriesEditor — Shared base class for card editors with
  * dynamic, reorderable entry lists and config echo-protection.
  *
  * Subclass contract (static getters + methods):
@@ -13,14 +13,17 @@
  * Supported field types:
  *   "text"   → <ha-textfield>     (fires "change")
  *   "icon"   → <ha-icon-picker>   (fires "value-changed", needs hass)
- *   "entity" → <ha-entity-picker> (fires "value-changed", needs hass)
+ *   "entity" → <ha-form> with entity selector (handles lazy-loading, needs hass)
+ *
+ * Schema field options:
+ *   { key, label, type, domain }  — domain: string[] to filter entity picker
  *
  * Config shape:  { ...configFields, [entriesKey]: [{ ...entryFields }, …] }
  *
  * Usage:
- *   import { JellyEntriesEditor } from "../utils/entries-editor.js";
+ *   import { JellyManagedEntriesEditor } from "../utils/managed-entries-editor.js";
  *
- *   class MySipEditor extends JellyEntriesEditor {
+ *   class MySipEditor extends JellyManagedEntriesEditor {
  *     static get entriesKey()   { return "entries"; }
  *     static get editorTitle()  { return "Dial Entries"; }
  *     static get configSchema() {
@@ -47,6 +50,7 @@ const EDITOR_CSS = `
     color: var(--primary-text-color); margin-bottom: 4px; opacity: 0.6;
   }
   .jelly-field ha-textfield,
+  .jelly-field ha-form,
   .jelly-field ha-entity-picker { width: 100%; }
 
   .entries-header {
@@ -75,6 +79,7 @@ const EDITOR_CSS = `
   }
   .entry-fields ha-textfield,
   .entry-fields ha-icon-picker,
+  .entry-fields ha-form,
   .entry-fields ha-entity-picker { width: 100%; }
 
   .entry-actions {
@@ -107,7 +112,7 @@ const EDITOR_CSS = `
   .add-btn:hover { opacity: 1; }
 `;
 
-export class JellyEntriesEditor extends HTMLElement {
+export class JellyManagedEntriesEditor extends HTMLElement {
 
   /* ── Subclass API (override these) ── */
 
@@ -140,7 +145,7 @@ export class JellyEntriesEditor extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    this.querySelectorAll('ha-icon-picker, ha-entity-picker')
+    this.querySelectorAll('ha-icon-picker, ha-form')
       .forEach(el => { el.hass = hass; });
   }
 
@@ -228,10 +233,14 @@ export class JellyEntriesEditor extends HTMLElement {
 
     this.appendChild(wrap);
 
-    // Hydrate components that need hass
+    // Hydrate components that need hass (immediate + deferred for lazy-upgraded elements)
     if (this._hass) {
-      this.querySelectorAll('ha-icon-picker, ha-entity-picker')
-        .forEach(el => { el.hass = this._hass; });
+      const hydrate = () => {
+        this.querySelectorAll('ha-icon-picker, ha-form')
+          .forEach(el => { el.hass = this._hass; });
+      };
+      hydrate();
+      requestAnimationFrame(hydrate);
     }
   }
 
@@ -330,18 +339,28 @@ export class JellyEntriesEditor extends HTMLElement {
         return picker;
       }
       case 'entity': {
-        const picker = document.createElement('ha-entity-picker');
-        picker.label = schema.label;
-        picker.value = entryKey ? (target[prop]?.[entryKey] || '') : (target[prop] || '');
-        picker.addEventListener('value-changed', (e) => {
+        const name = entryKey || String(prop);
+        const form = document.createElement('ha-form');
+        const domainFilter = schema.domain
+          ? (Array.isArray(schema.domain) ? schema.domain : [schema.domain])
+          : undefined;
+        form.schema = [{
+          name,
+          selector: { entity: domainFilter ? { domain: domainFilter } : {} },
+        }];
+        form.data = { [name]: entryKey ? (target[prop]?.[entryKey] || '') : (target[prop] || '') };
+        form.computeLabel = () => schema.label;
+        if (this._hass) form.hass = this._hass;
+        form.addEventListener('value-changed', (e) => {
+          const val = e.detail.value?.[name] ?? '';
           if (entryKey) {
-            target[prop] = { ...target[prop], [entryKey]: e.detail.value };
+            target[prop] = { ...target[prop], [entryKey]: val };
           } else {
-            target[prop] = e.detail.value;
+            target[prop] = val;
           }
           onChange();
         });
-        return picker;
+        return form;
       }
       default:
         return document.createElement('div');
@@ -371,4 +390,4 @@ export class JellyEntriesEditor extends HTMLElement {
   }
 }
 
-export default JellyEntriesEditor;
+export default JellyManagedEntriesEditor;

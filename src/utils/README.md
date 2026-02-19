@@ -110,7 +110,7 @@ class MyCard extends JellyCardBase {
 }
 ```
 
-## entries-editor.js
+## managed-entries-editor.js
 
 Shared base class for card editors with dynamic, reorderable entry lists.
 Provides config echo-protection, entry CRUD, and declarative field schemas.
@@ -134,9 +134,9 @@ Provides config echo-protection, entry CRUD, and declarative field schemas.
 ### Example: SIP Card Editor
 
 ```javascript
-import { JellyEntriesEditor } from "../utils/entries-editor.js";
+import { JellyManagedEntriesEditor } from "../utils/managed-entries-editor.js";
 
-class JellySipEditor extends JellyEntriesEditor {
+class JellySipEditor extends JellyManagedEntriesEditor {
   static get editorTitle()  { return "Dial Entries"; }
   static get configSchema() {
     return [{ key: "name", label: "Card Title", type: "text" }];

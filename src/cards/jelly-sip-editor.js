@@ -8,9 +8,9 @@
  * Config shape:
  *   { name: "Intercom", entries: [{ name, icon }, …] }
  */
-import { JellyEntriesEditor } from "../utils/entries-editor.js";
+import { JellyManagedEntriesEditor } from "../utils/managed-entries-editor.js";
 
-class JellySipEditor extends JellyEntriesEditor {
+class JellySipEditor extends JellyManagedEntriesEditor {
 
   static get editorTitle()  { return 'Dial Entries'; }
 
