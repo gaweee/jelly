@@ -1,3 +1,12 @@
+/*
+ * Jelly SIP Card — Styles
+ *
+ * Catppuccin Mocha palette for intercom-specific UI.
+ * Card shell follows base format (.card > .header + .body).
+ * Body: 60/40 horizontal split (picker-panel + right-panel).
+ * Responsive: @container (max-height: 183px) compact mode.
+ */
+
 /* ── Catppuccin Mocha palette ── */
 :host {
   --ctp-crust:    #11111b;
@@ -14,7 +23,7 @@
   --ctp-green:    #a6e3a1;
 }
 
-/* ===== Card shell — follows base/generic format ===== */
+/* ===== Card shell ===== */
 .card {
   background: var(--jelly-surface);
   border-radius: var(--jelly-radius);
@@ -150,10 +159,9 @@
   opacity: 1;
 }
 
-/* ===== Right: Swipe to dial ===== */
+/* ===== Right panel: swipe to dial ===== */
 .right-panel {
   width: 40%;
-  /* padding-top:10px; */
   display: flex;
   flex-direction: column;
   align-items: center;
