@@ -107,3 +107,28 @@ ha-card {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* ===== Card shell — shared defaults ===== */
+.card {
+  background: var(--jelly-surface);
+  border-radius: var(--jelly-radius);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== Scrollbar utilities ===== */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--jelly-off) transparent;
+}
+.scroll-thin::-webkit-scrollbar { width: 4px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--jelly-off); border-radius: 2px; }
+
+.scroll-hidden {
+  scrollbar-width: none;
+}
+.scroll-hidden::-webkit-scrollbar { display: none; }

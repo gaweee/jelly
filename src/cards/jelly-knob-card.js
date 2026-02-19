@@ -1,5 +1,6 @@
 import JellyCardBase from "../jelly-base.js";
 import { executeShortcut } from "../utils/automation-utils.js";
+import { getClimateStatusText } from "../utils/status-utils.js";
 
 /**
  * Knob Card — circular arc knob control with spokes, pointer, +/- buttons,
@@ -451,7 +452,7 @@ customElements.define(
 
       // Name + status inside knob
       this.$title.textContent = name;
-      this.$status.textContent = this._getStatusText(state, domain);
+      this.$status.textContent = getClimateStatusText(state, domain);
 
       // Knob
       this._currentValue = value;
@@ -459,14 +460,6 @@ customElements.define(
 
       // Shortcuts
       this._renderShortcuts();
-    }
-
-    _getStatusText(state, domain) {
-      if (domain === "climate") {
-        const map = { heat: "Heating", cool: "Cooling", auto: "Auto", heat_cool: "Auto", dry: "Dry", fan_only: "Fan", off: "Off", unavailable: "Unavailable" };
-        return map[state] || state;
-      }
-      return state === "off" ? "Off" : state === "unavailable" ? "Unavailable" : "On";
     }
 
     // ─── Dynamic Height ─────────────────────────────────────────

@@ -5,10 +5,6 @@ ha-card {
 /* ===== Card shell ===== */
 .card {
   position: relative;
-  border-radius: var(--jelly-radius);
-  overflow: hidden;
-  flex: 1;
-  display: flex;
   background: #111;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;

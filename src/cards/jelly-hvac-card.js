@@ -1,4 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
+import { getClimateStatusText } from "../utils/status-utils.js";
 
 /**
  * HVAC Card — temperature control with scrollable rail, SVG notch overlay,
@@ -351,7 +352,7 @@ customElements.define(
 
       // device info
       this.$title.textContent = name;
-      this.$status.textContent = this._getStatusText(state);
+      this.$status.textContent = getClimateStatusText(state);
 
       // icon — configurable or pulled from entity
       const icon = this.config.icon || entity.attributes.icon || "mdi:thermostat";
@@ -378,24 +379,6 @@ customElements.define(
 
       // centre rail on current target temperature
       this._scrollToTemp(temp);
-    }
-
-    /**
-     * Human-readable HVAC status text.
-     * @private
-     */
-    _getStatusText(state) {
-      const stateMap = {
-        heat: "Heating",
-        cool: "Cooling",
-        heat_cool: "Auto",
-        auto: "Auto",
-        dry: "Dry",
-        fan_only: "Fan",
-        off: "Off",
-        unavailable: "Unavailable"
-      };
-      return stateMap[state] || state;
     }
 
     /**

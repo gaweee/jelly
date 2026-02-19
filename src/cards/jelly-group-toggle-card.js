@@ -1,5 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
-import { computeStatus } from "../utils/status-utils.js";
+import { computeStatus, domainIcon } from "../utils/status-utils.js";
 
 /**
  * Group Toggle Card — shows a group entity with master toggle and
@@ -239,7 +239,7 @@ customElements.define(
 
       // Set icon from entity attributes or domain default
       const icon =
-        entity.attributes.icon || this._domainIcon(entityId);
+        entity.attributes.icon || domainIcon(entityId);
       row.querySelector(".member-icon ha-icon").setAttribute("icon", icon);
     }
 
@@ -295,25 +295,6 @@ customElements.define(
           return nextIsOn === (desiredState === "on");
         }
       });
-    }
-
-    /**
-     * Default icon by domain.
-     * @param {string} entityId
-     * @returns {string}
-     */
-    _domainIcon(entityId) {
-      const domain = entityId?.split(".")?.[0];
-      const icons = {
-        switch: "mdi:toggle-switch",
-        light: "mdi:lightbulb",
-        fan: "mdi:fan",
-        input_boolean: "mdi:toggle-switch-outline",
-        cover: "mdi:blinds",
-        lock: "mdi:lock",
-        climate: "mdi:thermostat"
-      };
-      return icons[domain] || "mdi:toggle-switch";
     }
 
     disconnectedCallback() {

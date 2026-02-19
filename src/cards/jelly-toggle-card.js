@@ -1,5 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
-import { computeStatus } from "../utils/status-utils.js";
+import { computeStatus, domainIcon } from "../utils/status-utils.js";
 
 /**
  * Toggle Card - 1x1 compact toggle with optional image, name, and status
@@ -121,26 +121,9 @@ customElements.define(
         // Use custom icon, entity icon, or domain default
         const icon = this.config.icon
           || entity.attributes.icon
-          || this._domainIcon(entity.entity_id);
+          || domainIcon(entity.entity_id);
         this.$icon.setAttribute("icon", icon);
       }
-    }
-
-    /**
-     * Returns a default icon based on entity domain
-     * @param {string} entityId - Entity ID
-     * @returns {string} MDI icon string
-     * @private
-     */
-    _domainIcon(entityId) {
-      const domain = entityId?.split(".")?.[0];
-      const icons = {
-        switch: "mdi:toggle-switch",
-        light: "mdi:lightbulb",
-        fan: "mdi:fan",
-        input_boolean: "mdi:toggle-switch-outline"
-      };
-      return icons[domain] || "mdi:toggle-switch";
     }
 
     /**

@@ -9,14 +9,8 @@ ha-card {
    Card shell
    ─────────────────────────────────────────── */
 .card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
-  overflow: hidden;
-  flex: 1;
-  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
   position: relative;
 }
 

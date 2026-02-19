@@ -9,16 +9,9 @@ ha-card {
    Layout
    ─────────────────────────────────────────── */
 .card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
   contain: layout style;
-  overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .content {
@@ -68,8 +61,8 @@ ha-card {
   width: 42px;
   height: 42px;
   opacity: .85;
-  color: rgba(205, 214, 244, .85);
-  filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
+  color: color-mix(in srgb, var(--ctp-text) 85%, transparent);
+  filter: drop-shadow(0 10px 20px color-mix(in srgb, var(--ctp-blue) 10%, transparent));
   flex-shrink: 0;
 }
 
@@ -90,7 +83,7 @@ ha-card {
 .unit {
   font-size: 32px;
   font-weight: 200;
-  color: rgba(205, 214, 244, .55);
+  color: color-mix(in srgb, var(--ctp-text) 55%, transparent);
 }
 
 /* ───────────────────────────────────────────
@@ -130,14 +123,12 @@ ha-card {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
   touch-action: pan-x;
   cursor: grab;
   mask: radial-gradient(ellipse 70% 200% at 50% 100%, #000 40%, transparent 72%);
   -webkit-mask: radial-gradient(ellipse 70% 200% at 50% 100%, #000 40%, transparent 72%);
 }
 .rail-scroller:active { cursor: grabbing; }
-.rail-scroller::-webkit-scrollbar { display: none; }
 
 /* Rail container — width set dynamically in JS */
 .rail-container {
@@ -184,8 +175,8 @@ ha-card {
   background:
     repeating-linear-gradient(
       to right,
-      rgba(205, 214, 244, .12) 0px,
-      rgba(205, 214, 244, .12) 3px,
+      color-mix(in srgb, var(--ctp-text) 12%, transparent) 0px,
+      color-mix(in srgb, var(--ctp-text) 12%, transparent) 3px,
       transparent 3px,
       transparent 54px
     );
@@ -246,15 +237,15 @@ ha-card {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(205, 214, 244, .40);
+  background: color-mix(in srgb, var(--ctp-text) 40%, transparent);
   grid-column: 1;
   grid-row: 1;
   box-shadow:
-    8px 0 0 rgba(205, 214, 244, .40),
-   16px 0 0 rgba(205, 214, 244, .40),
-    0  8px 0 rgba(205, 214, 244, .40),
-    8px 8px 0 rgba(205, 214, 244, .40),
-   16px 8px 0 rgba(205, 214, 244, .40);
+    8px 0 0 color-mix(in srgb, var(--ctp-text) 40%, transparent),
+   16px 0 0 color-mix(in srgb, var(--ctp-text) 40%, transparent),
+    0  8px 0 color-mix(in srgb, var(--ctp-text) 40%, transparent),
+    8px 8px 0 color-mix(in srgb, var(--ctp-text) 40%, transparent),
+   16px 8px 0 color-mix(in srgb, var(--ctp-text) 40%, transparent);
 }
 
 .thumb-dots::after {

@@ -94,9 +94,5 @@ customElements.define(
         }
       });
     }
-
-    disconnectedCallback() {
-      super.disconnectedCallback();
-    }
   }
 );

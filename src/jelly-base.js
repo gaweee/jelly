@@ -175,33 +175,6 @@ export class JellyCardBase extends HTMLElement {
     return cleanup;
   }
 
-  /**
-   * Set animation state class on host (anim--STATE) and data-anim attribute.
-   */
-  setAnimState(state) {
-    const host = this.shadowRoot?.host || this;
-    if (this._animState) {
-      host.classList.remove(`anim--${this._animState}`);
-    }
-    this._animState = state || null;
-    if (this._animState) {
-      host.classList.add(`anim--${this._animState}`);
-      host.dataset.anim = this._animState;
-    } else {
-      delete host.dataset.anim;
-    }
-  }
-
-  /**
-   * Write debug text if a `.debug` element exists; always log to console.
-   */
-  setDebugText(text) {
-    const debugEl = this.qs(".debug");
-    if (debugEl) {
-      debugEl.textContent = text;
-    }
-  }
-
   optimisticToggle(options = {}) {
     const {
       entityId = this.config?.entity,

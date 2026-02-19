@@ -3,18 +3,12 @@
    ─────────────────────────────────────────── */
 ha-card {
   container-name: agenda-card;
-  container-type: size;
 }
 
 /* ───────────────────────────────────────────
    Card shell
    ─────────────────────────────────────────── */
 .card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
   height: 100%;
   padding: 16px;
   box-sizing: border-box;
@@ -123,11 +117,11 @@ ha-card {
 
 /* Today — entire cell highlighted */
 .day-cell.today {
-  background: rgba(137, 180, 250, 0.12);
+  background: color-mix(in srgb, var(--ctp-blue) 12%, transparent);
 }
 
 .day-cell.today .day-num {
-  color: #89b4fa;
+  color: var(--ctp-blue);
   opacity: 1;
   font-weight: var(--w-semibold, 600);
 }
@@ -148,8 +142,8 @@ ha-card {
   min-width: 14px;
   height: 14px;
   border-radius: 7px;
-  background: rgba(224, 108, 117, 0.28);
-  color: #e06c75;
+  background: color-mix(in srgb, var(--ctp-red) 28%, transparent);
+  color: var(--ctp-red);
   font-size: 9px;
   font-weight: var(--w-semibold, 600);
   line-height: 14px;
@@ -168,7 +162,7 @@ ha-card {
   bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(224, 108, 117, 0.45);
+  background: color-mix(in srgb, var(--ctp-red) 45%, transparent);
 }
 
 /* ───────────────────────────────────────────
@@ -185,14 +179,14 @@ ha-card {
 }
 
 /* Catppuccin Mocha accent fills */
-.travel-bar-0 { fill: rgba(137, 180, 250, 0.30); }  /* blue */
-.travel-bar-1 { fill: rgba(245, 194, 231, 0.30); }  /* pink */
-.travel-bar-2 { fill: rgba(166, 227, 161, 0.30); }  /* green */
+.travel-bar-0 { fill: color-mix(in srgb, var(--ctp-blue) 30%, transparent); }
+.travel-bar-1 { fill: color-mix(in srgb, var(--ctp-pink) 30%, transparent); }
+.travel-bar-2 { fill: color-mix(in srgb, var(--ctp-green) 30%, transparent); }
 
 /* Catppuccin Mocha accent strokes for icons */
-.travel-stroke-0 { color: rgb(137, 180, 250); }  /* blue */
-.travel-stroke-1 { color: rgb(245, 194, 231); }  /* pink */
-.travel-stroke-2 { color: rgb(166, 227, 161); }  /* green */
+.travel-stroke-0 { color: var(--ctp-blue); }
+.travel-stroke-1 { color: var(--ctp-pink); }
+.travel-stroke-2 { color: var(--ctp-green); }
 
 /* Travel endpoint icons — positioned absolutely by JS */
 .travel-icon {
@@ -213,19 +207,19 @@ ha-card {
 
 /* Icon background circles per lane */
 .travel-icon.lane-0 {
-  background: rgba(137, 180, 250, 0.25);
+  background: color-mix(in srgb, var(--ctp-blue) 25%, transparent);
 }
-.travel-icon.lane-0 ha-icon { color: rgb(137, 180, 250); }
+.travel-icon.lane-0 ha-icon { color: var(--ctp-blue); }
 
 .travel-icon.lane-1 {
-  background: rgba(245, 194, 231, 0.25);
+  background: color-mix(in srgb, var(--ctp-pink) 25%, transparent);
 }
-.travel-icon.lane-1 ha-icon { color: rgb(245, 194, 231); }
+.travel-icon.lane-1 ha-icon { color: var(--ctp-pink); }
 
 .travel-icon.lane-2 {
-  background: rgba(166, 227, 161, 0.25);
+  background: color-mix(in srgb, var(--ctp-green) 25%, transparent);
 }
-.travel-icon.lane-2 ha-icon { color: rgb(166, 227, 161); }
+.travel-icon.lane-2 ha-icon { color: var(--ctp-green); }
 
 /* ───────────────────────────────────────────
    Responsive — compact at small sizes
@@ -278,24 +272,7 @@ ha-card {
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 8px;
-
-    /* Thin scrollbar — matches Activity card */
-    scrollbar-width: thin;
-    scrollbar-color: var(--jelly-off) transparent;
   }
-}
-
-.agenda::-webkit-scrollbar {
-  width: 4px;
-}
-
-.agenda::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.agenda::-webkit-scrollbar-thumb {
-  background: var(--jelly-off);
-  border-radius: 2px;
 }
 
 .agenda-section {

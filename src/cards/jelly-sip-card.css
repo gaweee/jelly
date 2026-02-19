@@ -7,32 +7,13 @@
  * Responsive: @container (max-height: 183px) compact mode.
  */
 
-/* ── Catppuccin Mocha palette ── */
-:host {
-  --ctp-crust:    #11111b;
-  --ctp-mantle:   #181825;
-  --ctp-surface0: #313244;
-  --ctp-surface1: #45475a;
-  --ctp-surface2: #585b70;
-  --ctp-overlay0: #6c7086;
-  --ctp-overlay1: #7f849c;
-  --ctp-text:     #cdd6f4;
-  --ctp-lavender: #b4befe;
-  --ctp-blue:     #89b4fa;
-  --ctp-red:      #f38ba8;
-  --ctp-green:    #a6e3a1;
+/* ── Catppuccin Mocha palette — see jelly-theme.css ── */
+
+ha-card {
+  container-name: sip-card;
 }
 
-/* ===== Card shell ===== */
-.card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
-  overflow: hidden;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
+/* .card shell — inherited from jelly-base-card.css */
 
 .header {
   display: flex;
@@ -171,7 +152,7 @@
 }
 
 .swipe-label {
-  font-size: 0.6rem;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -229,7 +210,7 @@
 }
 
 .swipe-chevrons .chev {
-  font-size: 0.85rem;
+  font-size: 14px;
   line-height: 1;
   color: var(--ctp-overlay0);
   transition: color 0.15s, opacity 0.15s;
@@ -268,12 +249,12 @@
   justify-content: center;
   cursor: grab;
   z-index: 3;
-  box-shadow: 0 4px 16px #f38ba840;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ctp-red) 25%, transparent);
   transition: box-shadow 0.2s;
   will-change: left;
 }
 
-.swipe-knob.grabbing { cursor: grabbing; box-shadow: 0 6px 24px #f38ba860; }
+.swipe-knob.grabbing { cursor: grabbing; box-shadow: 0 6px 24px color-mix(in srgb, var(--ctp-red) 38%, transparent); }
 
 .swipe-knob ha-icon {
   --mdc-icon-size: 20px;
@@ -282,7 +263,7 @@
 
 .swipe-knob.success {
   background: var(--ctp-green);
-  box-shadow: 0 4px 16px #a6e3a140;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ctp-green) 25%, transparent);
 }
 
 /* Empty state */
@@ -297,7 +278,7 @@
 }
 
 /* ===== Compact: height < 184px (rows 1-2) ===== */
-@container (max-height: 183px) {
+@container sip-card (max-height: 183px) {
   /* Right panel — hide label, shrink knob & dest */
   .swipe-label { display: none; }
 
@@ -306,7 +287,7 @@
   .swipe-knob {
     width: 28px; height: 28px;
     left: 2px;
-    box-shadow: 0 2px 8px #f38ba830;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ctp-red) 19%, transparent);
   }
   .swipe-knob ha-icon { --mdc-icon-size: 16px; }
 
@@ -316,7 +297,7 @@
   }
   .swipe-dest ha-icon { --mdc-icon-size: 14px; }
 
-  .swipe-chevrons .chev { font-size: 0.7rem; }
+  .swipe-chevrons .chev { font-size: 11px; }
 
   /* Picker — smaller items */
   .picker-item {

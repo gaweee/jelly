@@ -14,4 +14,24 @@
 
   --jelly-radius: var(--ha-card-border-radius, 12px);
   --jelly-fast: 120ms ease;
+
+  /* ── Catppuccin Mocha palette ── */
+  --ctp-crust:    #11111b;
+  --ctp-mantle:   #181825;
+  --ctp-base:     #1e1e2e;
+  --ctp-surface0: #313244;
+  --ctp-surface1: #45475a;
+  --ctp-surface2: #585b70;
+  --ctp-overlay0: #6c7086;
+  --ctp-overlay1: #7f849c;
+  --ctp-subtext0: #a6adc8;
+  --ctp-text:     #cdd6f4;
+  --ctp-lavender: #b4befe;
+  --ctp-blue:     #89b4fa;
+  --ctp-red:      #f38ba8;
+  --ctp-green:    #a6e3a1;
+  --ctp-pink:     #f5c2e7;
+  --ctp-peach:    #fab387;
+  --ctp-mauve:    #cba6f7;
+  --ctp-yellow:   #f9e2af;
 }

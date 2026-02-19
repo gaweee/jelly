@@ -9,17 +9,10 @@ ha-card {
    Layout
    ─────────────────────────────────────────── */
 .card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
   contain: layout style;
-  overflow: hidden;
   transition: background var(--jelly-fast);
   position: relative;
   padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 /* ───────────────────────────────────────────
@@ -49,8 +42,8 @@ ha-card {
   width: 42px;
   height: 42px;
   opacity: .85;
-  color: rgba(205, 214, 244, .85);
-  filter: drop-shadow(0 10px 20px rgba(137, 180, 250, .10));
+  color: color-mix(in srgb, var(--ctp-text) 85%, transparent);
+  filter: drop-shadow(0 10px 20px color-mix(in srgb, var(--ctp-blue) 10%, transparent));
   position: absolute;
   top: 0;
   left: 0;
@@ -93,7 +86,7 @@ ha-card {
 }
 
 .knob-outer-arc {
-  stroke: rgba(205, 214, 244, .18);
+  stroke: color-mix(in srgb, var(--ctp-text) 18%, transparent);
 }
 
 .knob-spokes line {
@@ -143,7 +136,7 @@ ha-card {
 .unit {
   font-size: clamp(14px, 10cqw, 28px);
   font-weight: 200;
-  color: rgba(205, 214, 244, .55);
+  color: color-mix(in srgb, var(--ctp-text) 55%, transparent);
 }
 
 .status {

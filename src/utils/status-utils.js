@@ -9,6 +9,48 @@ export const STATUS_MAX_LENGTH = 40;
 export const STATUS_SEPARATOR = " · ";
 
 /**
+ * Default MDI icon for an entity's domain.
+ * @param {string} entityId - e.g. "light.kitchen"
+ * @returns {string} MDI icon string
+ */
+export function domainIcon(entityId) {
+  const domain = entityId?.split(".")?.[0];
+  const icons = {
+    switch: "mdi:toggle-switch",
+    light: "mdi:lightbulb",
+    fan: "mdi:fan",
+    input_boolean: "mdi:toggle-switch-outline",
+    cover: "mdi:blinds",
+    lock: "mdi:lock",
+    climate: "mdi:thermostat",
+  };
+  return icons[domain] || "mdi:toggle-switch";
+}
+
+/**
+ * Human-readable climate/HVAC status text.
+ * @param {string} state - e.g. "heat", "cool", "off"
+ * @param {string} [domain] - entity domain; non-climate falls back to On/Off
+ * @returns {string}
+ */
+export function getClimateStatusText(state, domain) {
+  if (!domain || domain === "climate") {
+    const map = {
+      heat: "Heating",
+      cool: "Cooling",
+      heat_cool: "Auto",
+      auto: "Auto",
+      dry: "Dry",
+      fan_only: "Fan",
+      off: "Off",
+      unavailable: "Unavailable",
+    };
+    return map[state] || state;
+  }
+  return state === "off" ? "Off" : state === "unavailable" ? "Unavailable" : "On";
+}
+
+/**
  * Extracts intensity/level status (brightness, percentage, volume, position)
  * @param {Object} attrs - Entity attributes
  * @returns {string|null} Formatted intensity string or null

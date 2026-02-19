@@ -567,10 +567,6 @@ customElements.define(
       weekRow.appendChild(el);
     }
 
-    disconnectedCallback() {
-      super.disconnectedCallback();
-    }
-
     /* ────────────────────────────────── */
     /*  Agenda list rendering            */
     /* ────────────────────────────────── */

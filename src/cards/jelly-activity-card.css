@@ -1,14 +1,3 @@
-/* ===== Card shell ===== */
-.card {
-  background: var(--jelly-surface);
-  border-radius: var(--jelly-radius);
-  overflow: hidden;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
 /* ===== Header ===== */
 .header {
   display: flex;
@@ -35,23 +24,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-
-  /* Thin scrollbar */
-  scrollbar-width: thin;
-  scrollbar-color: var(--jelly-off) transparent;
-}
-
-.activity-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.activity-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.activity-list::-webkit-scrollbar-thumb {
-  background: var(--jelly-off);
-  border-radius: 2px;
 }
 
 /* ===== Activity row — timeline layout ===== */
@@ -143,7 +115,7 @@
 
 /* ===== Setting-state accent — Catppuccin blue ===== */
 .activity-row[data-state="setting"] .activity-icon ha-icon {
-  color: rgb(137, 180, 250);
+  color: var(--ctp-blue);
 }
 
 /* ===== Entity name — bold ===== */
@@ -168,7 +140,7 @@
 
 .message .val[data-state="setting"],
 .message .param[data-state="setting"] {
-  color: rgb(137, 180, 250);
+  color: var(--ctp-blue);
 }
 
 /* ===== Empty state hint ===== */

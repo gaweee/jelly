@@ -173,10 +173,6 @@ customElements.define(
       return JellyCardBase.getStubConfig.call(this, hass);
     }
 
-    validateConfig() {
-      // sensor entity validated by base class
-    }
-
     /* ---- lifecycle ---- */
 
     afterLoad() {
