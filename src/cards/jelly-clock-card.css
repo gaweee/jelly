@@ -103,6 +103,10 @@ ha-card {
   --card-text-muted: color-mix(in srgb, var(--jelly-surface) 65%, transparent);
 }
 
+.card.invert .date {
+  color: var(--card-text);
+}
+
 /* ───────────────────────────────────────────
    Responsive — @container clock
    Row formula: rows × 64 − 8

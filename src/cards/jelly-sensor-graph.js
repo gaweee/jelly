@@ -311,9 +311,43 @@ customElements.define(
           `history/period/${start}?filter_entity_id=${eid}&end_time=${end}&minimal_response&no_attributes`
         );
         const entries = r?.[0] || [];
-        return entries;
+        if (entries.length) return entries;
       } catch (e) {
         console.warn("Jelly sensor-graph: REST history failed", e);
+      }
+
+      // Last resort: long-term statistics (sensors not stored in state history)
+      return this._fetchStatistics();
+    }
+
+    async _fetchStatistics() {
+      const h = this._range.hours;
+      const start = new Date(Date.now() - h * 36e5).toISOString();
+      const end = new Date().toISOString();
+      const eid = this.config.entity;
+      // 5minute resolution for 24h, hourly for longer ranges
+      const period = h <= 24 ? "5minute" : "hour";
+
+      try {
+        const result = await this._hass.callWS({
+          type: "recorder/statistics_during_period",
+          start_time: start,
+          end_time: end,
+          statistic_ids: [eid],
+          period,
+          types: ["mean", "state"],
+        });
+        const entries = result?.[eid] || [];
+        return entries.map((e) => {
+          const t =
+            typeof e.start === "number"
+              ? e.start < 1e11 ? e.start * 1000 : e.start
+              : new Date(e.start).getTime();
+          const v = e.mean ?? e.state;
+          return { last_changed: t, state: v != null ? String(v) : "unavailable" };
+        });
+      } catch (err) {
+        console.warn("Jelly sensor-graph: statistics fallback failed", err);
         return [];
       }
     }
@@ -383,37 +417,37 @@ customElements.define(
 
       const numBuckets = this._range.buckets;
 
-      // few enough points → use directly
-      if (pts.length <= numBuckets) {
-        return {
-          labels: pts.map((p) => this._fmt(p.t)),
-          data: pts.map((p) => p.v),
-        };
-      }
+      // Always bucket over the full requested window so that sparse or
+      // infrequently-changing sensors forward-fill their last known value
+      // across the entire chart (matching HA History behaviour).
+      const winEnd = Date.now();
+      const winStart = winEnd - this._range.hours * 36e5;
+      const span = (winEnd - winStart) / numBuckets;
 
-      const t0 = pts[0].t;
-      const t1 = pts[pts.length - 1].t;
-      if (t1 === t0) return { labels: [this._fmt(t0)], data: [pts[0].v] };
-
-      const span = (t1 - t0) / numBuckets;
       const sums = new Float64Array(numBuckets);
       const counts = new Uint32Array(numBuckets);
 
+      // Seed carry-forward with the most recent point before the window start
+      // so a value that hasn't changed since before the range still shows.
+      let last = null;
       for (const p of pts) {
-        let i = Math.floor((p.t - t0) / span);
-        if (i >= numBuckets) i = numBuckets - 1;
+        if (p.t < winStart) last = Math.round(p.v * 10) / 10;
+      }
+
+      for (const p of pts) {
+        const i = Math.floor((p.t - winStart) / span);
+        if (i < 0 || i >= numBuckets) continue;
         sums[i] += p.v;
         counts[i]++;
       }
 
       const labels = [];
       const data = [];
-      let last = null;
 
       for (let i = 0; i < numBuckets; i++) {
         if (counts[i]) last = Math.round((sums[i] / counts[i]) * 10) / 10;
         data.push(last);
-        labels.push(this._fmt(t0 + (i + 0.5) * span));
+        labels.push(this._fmt(winStart + (i + 0.5) * span));
       }
 
       return { labels, data };
