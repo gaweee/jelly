@@ -91,11 +91,11 @@ ha-card {
   right: 4px;
   height: 40px;
   transform: translateY(-50%);
-  border: 1.5px solid var(--ctp-surface2);
+  border: 1.5px solid color-mix(in srgb, var(--jelly-text) 16%, var(--jelly-surface));
   border-left: none;
   border-right: none;
   border-radius: 8px;
-  background: var(--ctp-surface0);
+  background: color-mix(in srgb, var(--jelly-text) 8%, var(--jelly-surface));
   pointer-events: none;
   z-index: 1;
 }
@@ -117,14 +117,14 @@ ha-card {
   gap: 8px;
   font-size: 14px;
   font-weight: 400;
-  color: var(--ctp-overlay0);
+  color: var(--jelly-text-2);
   white-space: nowrap;
   transition: color 0.15s, font-weight 0.15s;
   pointer-events: none;
 }
 
 .picker-item.selected {
-  color: var(--ctp-text);
+  color: var(--jelly-text);
   font-weight: 500;
 }
 
@@ -156,7 +156,7 @@ ha-card {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ctp-overlay1);
+  color: var(--jelly-text-2);
 }
 
 /* Swipe track (horizontal, left → right) */
@@ -165,7 +165,7 @@ ha-card {
   width: 100%;
   height: 48px;
   border-radius: 24px;
-  background: var(--ctp-surface0);
+  background: color-mix(in srgb, var(--jelly-text) 8%, var(--jelly-surface));
   overflow: hidden;
   touch-action: none;
 }
@@ -179,7 +179,7 @@ ha-card {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--ctp-surface1);
+  background: color-mix(in srgb, var(--jelly-text) 12%, var(--jelly-surface));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,7 +212,7 @@ ha-card {
 .swipe-chevrons .chev {
   font-size: 14px;
   line-height: 1;
-  color: var(--ctp-overlay0);
+  color: var(--jelly-text-2);
   transition: color 0.15s, opacity 0.15s;
 }
 
@@ -273,7 +273,7 @@ ha-card {
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: var(--ctp-overlay0);
+  color: var(--jelly-text-2);
   font-size: 13px;
 }
 
