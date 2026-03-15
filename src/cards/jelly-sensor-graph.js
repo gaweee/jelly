@@ -287,7 +287,7 @@ customElements.define(
       const end = new Date().toISOString();
       const eid = this.config.entity;
 
-      // Try WebSocket API first (most reliable from HA frontend)
+      // Try WebSocket history first
       try {
         const result = await this._hass.callWS({
           type: "history/history_during_period",
@@ -299,24 +299,30 @@ customElements.define(
           significant_changes_only: false,
         });
         const entries = result?.[eid] || [];
-        if (entries.length) return this._normalizeWS(entries);
+        if (entries.length) {
+          const normalized = this._normalizeWS(entries);
+          // Only use if there are actual numeric values; sensors that record
+          // only unavailable/unknown states still fall through to statistics.
+          if (normalized.some((e) => isFinite(parseFloat(e.state)))) return normalized;
+        }
       } catch (_wsErr) {
         console.warn("Jelly sensor-graph: WS history failed", _wsErr);
       }
 
-      // Fallback: REST API
+      // Fallback: REST history API
       try {
         const r = await this._hass.callApi(
           "GET",
           `history/period/${start}?filter_entity_id=${eid}&end_time=${end}&minimal_response&no_attributes`
         );
         const entries = r?.[0] || [];
-        if (entries.length) return entries;
+        if (entries.some((e) => isFinite(parseFloat(e.state ?? e.s)))) return entries;
       } catch (e) {
         console.warn("Jelly sensor-graph: REST history failed", e);
       }
 
-      // Last resort: long-term statistics (sensors not stored in state history)
+      // Last resort: long-term statistics (sensors not stored in state history,
+      // e.g. soil monitors, energy meters from certain integrations)
       return this._fetchStatistics();
     }
 
@@ -475,7 +481,8 @@ customElements.define(
 
       const { labels, data } = this._data || { labels: [], data: [] };
 
-      if (!data.length) {
+      const hasValues = data.some((v) => v != null);
+      if (!data.length || !hasValues) {
         if (this.$empty) this.$empty.style.display = "flex";
         this.$canvas.style.display = "none";
         return;
