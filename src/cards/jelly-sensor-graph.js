@@ -189,7 +189,13 @@ customElements.define(
     }
 
     async _boot() {
-      await this._ensureChartJs();
+      try {
+        await this._ensureChartJs();
+        console.log(`[Jelly:sensor-graph] Chart.js loaded OK — window.Chart=${typeof window.Chart}`);
+      } catch (err) {
+        console.error(`[Jelly:sensor-graph] Chart.js failed to load (CDN blocked?):`, err);
+        return; // can't render without Chart.js
+      }
       this._setRange(this.config.range || DEFAULT_RANGE);
       this._timer = setInterval(() => this._fetchAndDraw(), REFRESH_MS);
     }
@@ -276,8 +282,11 @@ customElements.define(
       this._fetchAt = now;
       this._prevEntity = this.config.entity;
 
+      console.log(`[Jelly:sensor-graph] fetchAndDraw — entity=${this.config.entity} range=${this._activeRange}`);
       const raw = await this._fetchHistory();
+      console.log(`[Jelly:sensor-graph] raw entries returned: ${raw.length}`, raw.slice(0, 3));
       this._data = this._bucket(raw);
+      console.log(`[Jelly:sensor-graph] bucketed — labels=${this._data.labels.length} hasValues=${this._data.data.some(v => v != null)}`, this._data);
       this._draw();
     }
 
@@ -286,6 +295,8 @@ customElements.define(
       const start = new Date(Date.now() - h * 36e5).toISOString();
       const end = new Date().toISOString();
       const eid = this.config.entity;
+
+      console.log(`[Jelly:sensor-graph] _fetchHistory — entity=${eid} start=${start}`);
 
       // Try WebSocket history first
       try {
@@ -299,14 +310,16 @@ customElements.define(
           significant_changes_only: false,
         });
         const entries = result?.[eid] || [];
+        console.log(`[Jelly:sensor-graph] WS history entries: ${entries.length}`, entries.slice(0, 3));
         if (entries.length) {
           const normalized = this._normalizeWS(entries);
-          // Only use if there are actual numeric values; sensors that record
-          // only unavailable/unknown states still fall through to statistics.
-          if (normalized.some((e) => isFinite(parseFloat(e.state)))) return normalized;
+          const hasNumeric = normalized.some((e) => isFinite(parseFloat(e.state)));
+          console.log(`[Jelly:sensor-graph] WS normalized: ${normalized.length} entries, hasNumeric=${hasNumeric}`);
+          if (hasNumeric) return normalized;
+          console.log(`[Jelly:sensor-graph] WS history has no numeric values, falling through to statistics`);
         }
       } catch (_wsErr) {
-        console.warn("Jelly sensor-graph: WS history failed", _wsErr);
+        console.warn("[Jelly:sensor-graph] WS history failed", _wsErr);
       }
 
       // Fallback: REST history API
@@ -316,13 +329,16 @@ customElements.define(
           `history/period/${start}?filter_entity_id=${eid}&end_time=${end}&minimal_response&no_attributes`
         );
         const entries = r?.[0] || [];
+        console.log(`[Jelly:sensor-graph] REST history entries: ${entries.length}`, entries.slice(0, 3));
         if (entries.some((e) => isFinite(parseFloat(e.state ?? e.s)))) return entries;
+        console.log(`[Jelly:sensor-graph] REST history has no numeric values, falling through to statistics`);
       } catch (e) {
-        console.warn("Jelly sensor-graph: REST history failed", e);
+        console.warn("[Jelly:sensor-graph] REST history failed", e);
       }
 
       // Last resort: long-term statistics (sensors not stored in state history,
       // e.g. soil monitors, energy meters from certain integrations)
+      console.log(`[Jelly:sensor-graph] trying statistics fallback`);
       return this._fetchStatistics();
     }
 
@@ -334,6 +350,7 @@ customElements.define(
       // 5minute resolution for 24h, hourly for longer ranges
       const period = h <= 24 ? "5minute" : "hour";
 
+      console.log(`[Jelly:sensor-graph] _fetchStatistics — period=${period}`);
       try {
         const result = await this._hass.callWS({
           type: "recorder/statistics_during_period",
@@ -344,6 +361,7 @@ customElements.define(
           types: ["mean", "state"],
         });
         const entries = result?.[eid] || [];
+        console.log(`[Jelly:sensor-graph] statistics entries: ${entries.length}`, entries.slice(0, 3));
         return entries.map((e) => {
           const t =
             typeof e.start === "number"
@@ -353,7 +371,7 @@ customElements.define(
           return { last_changed: t, state: v != null ? String(v) : "unavailable" };
         });
       } catch (err) {
-        console.warn("Jelly sensor-graph: statistics fallback failed", err);
+        console.warn("[Jelly:sensor-graph] statistics fallback failed", err);
         return [];
       }
     }
@@ -477,11 +495,16 @@ customElements.define(
     /* ---- chart rendering ---- */
 
     _draw() {
-      if (!this.$canvas || !window.Chart) return;
+      console.log(`[Jelly:sensor-graph] _draw called — canvas=${!!this.$canvas} Chart=${typeof window.Chart}`);
+      if (!this.$canvas || !window.Chart) {
+        console.warn(`[Jelly:sensor-graph] _draw bailed — canvas=${!!this.$canvas} Chart=${typeof window.Chart}`);
+        return;
+      }
 
       const { labels, data } = this._data || { labels: [], data: [] };
 
       const hasValues = data.some((v) => v != null);
+      console.log(`[Jelly:sensor-graph] _draw — data.length=${data.length} hasValues=${hasValues}`);
       if (!data.length || !hasValues) {
         if (this.$empty) this.$empty.style.display = "flex";
         this.$canvas.style.display = "none";
