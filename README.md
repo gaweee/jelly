@@ -31,7 +31,7 @@ A collection of handcrafted custom cards for Home Assistant, built with clean HT
 2. Add this repo as type **Dashboard**
 3. Install **Jelly Dashboard**
 4. Add resource URL:
-   - `/hacsfiles/jelly/dist/jelly.js` (if repo name is `jelly`)
+   - `/hacsfiles/jelly/jelly.js` (if repo name is `jelly`)
 5. Hard-refresh your browser
 
 ## Quick Start (Manual)

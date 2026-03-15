@@ -37,7 +37,7 @@ A step-by-step guide to installing the Jelly custom dashboard for Home Assistant
 2. Add this repository as type **Dashboard**
 3. Install **Jelly Dashboard**
 4. Add resource URL:
-   - `/hacsfiles/jelly/dist/jelly.js` (if repo name is `jelly`)
+   - `/hacsfiles/jelly/jelly.js` (if repo name is `jelly`)
 5. Hard-refresh your browser
 
 ---
@@ -81,7 +81,7 @@ Copy the entire `jelly` folder into your Home Assistant `www` directory so the p
 2. Click **Add Resource**
 3. Enter:
    - **URL:** `/local/jelly/dist/jelly.js` (manual install)
-   - **URL:** `/hacsfiles/jelly/dist/jelly.js` (HACS install with repo name `jelly`)
+   - **URL:** `/hacsfiles/jelly/jelly.js` (HACS install with repo name `jelly`)
    - **Resource type:** JavaScript Module
 4. Click **Create**
 5. **Hard-refresh** your browser (`Cmd+Shift+R` / `Ctrl+Shift+R`)
@@ -575,7 +575,7 @@ After pushing, hard-refresh your browser (`Cmd+Shift+R`) to pick up the changes.
 | Problem | Fix |
 |---|---|
 | Cards don't appear in the picker | Ensure the resource is registered as a **JavaScript Module** and hard-refresh |
-| "Custom element doesn't exist" | Check resource URL path (`/local/jelly/dist/jelly.js` for manual, `/hacsfiles/jelly/dist/jelly.js` for HACS repo `jelly`) |
+| "Custom element doesn't exist" | Check resource URL path (`/local/jelly/dist/jelly.js` for manual, `/hacsfiles/jelly/jelly.js` for HACS repo `jelly`) |
 | Theme colors look wrong | Verify Catppuccin is the active theme in your user profile |
 | Weather icons missing | Confirm SVG files exist at `/config/www/jelly/src/cards/weather-icons/` |
 | Camera shows "Not found" | Check that the camera entity exists and is not `unavailable` |
