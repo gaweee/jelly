@@ -80,7 +80,7 @@ Copy the entire `jelly` folder into your Home Assistant `www` directory so the p
 1. Go to **Settings → Dashboards → ⋮ (top-right) → Resources**
 2. Click **Add Resource**
 3. Enter:
-   - **URL:** `/local/jelly/dist/jelly.js` (manual install)
+   - **URL:** `/local/jelly/jelly.js` (manual install)
    - **URL:** `/hacsfiles/jelly/jelly.js` (HACS install with repo name `jelly`)
    - **Resource type:** JavaScript Module
 4. Click **Create**
@@ -557,6 +557,9 @@ If you're developing Jelly locally and have SSH access to your HA instance:
 ```bash
 # From the jelly project root
 npm run deploy
+
+# Quick local push to default dev target (root@192.168.64.2:/config/www/jelly)
+npm run pushlocal
 ```
 
 This runs:
@@ -575,7 +578,7 @@ After pushing, hard-refresh your browser (`Cmd+Shift+R`) to pick up the changes.
 | Problem | Fix |
 |---|---|
 | Cards don't appear in the picker | Ensure the resource is registered as a **JavaScript Module** and hard-refresh |
-| "Custom element doesn't exist" | Check resource URL path (`/local/jelly/dist/jelly.js` for manual, `/hacsfiles/jelly/jelly.js` for HACS repo `jelly`) |
+| "Custom element doesn't exist" | Check resource URL path (`/local/jelly/jelly.js` for manual, `/hacsfiles/jelly/jelly.js` for HACS repo `jelly`) |
 | Theme colors look wrong | Verify Catppuccin is the active theme in your user profile |
 | Weather icons missing | Confirm SVG files exist at `/config/www/jelly/src/cards/weather-icons/` |
 | Camera shows "Not found" | Check that the camera entity exists and is not `unavailable` |

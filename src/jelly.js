@@ -1,18 +1,15 @@
-(function loadJellyTheme() {
-  // Resolve root from module URL so both /local/<dir> and /hacsfiles/<repo> work.
-  const moduleUrl = new URL(import.meta.url);
-  const srcBasePath = moduleUrl.pathname.replace(/\/[^/]+$/, "");
-  const rootBasePath = srcBasePath.replace(/\/src$/, "");
+import { JELLY_FONT_DATA_URL, JELLY_THEME_CSS } from "./generated/inline-assets.js";
 
-  // Inject @font-face with dynamic path
+(function loadJellyTheme() {
+  // Inject @font-face inline so HACS single-file installs do not require external assets.
   const fontId = "jelly-font";
-  if (!document.getElementById(fontId)) {
+  if (!document.getElementById(fontId) && JELLY_FONT_DATA_URL) {
     const fontStyle = document.createElement("style");
     fontStyle.id = fontId;
     fontStyle.textContent = `
       @font-face {
         font-family: "Inter";
-        src: url("${rootBasePath}/assets/fonts/Inter.var.woff2") format("woff2-variations");
+        src: url("${JELLY_FONT_DATA_URL}") format("woff2-variations");
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;
@@ -21,14 +18,13 @@
     document.head.appendChild(fontStyle);
   }
 
-  // Load theme CSS
+  // Inject theme CSS inline (includes typography.css content).
   const themeId = "jelly-theme";
   if (!document.getElementById(themeId)) {
-    const link = document.createElement("link");
-    link.id = themeId;
-    link.rel = "stylesheet";
-    link.href = `${srcBasePath}/styles/jelly-theme.css`;
-    document.head.appendChild(link);
+    const themeStyle = document.createElement("style");
+    themeStyle.id = themeId;
+    themeStyle.textContent = JELLY_THEME_CSS;
+    document.head.appendChild(themeStyle);
   }
 })();
 

@@ -1,4 +1,5 @@
 import JellyCardBase from "../jelly-base.js";
+import { JELLY_WEATHER_ICONS } from "../generated/inline-assets.js";
 
 /**
  * Weather Card — displays current conditions, temperature, and a
@@ -6,8 +7,8 @@ import JellyCardBase from "../jelly-base.js";
  * Data comes exclusively from a HA weather.* entity.
  */
 
-const ICON_BASE = new URL("./weather-icons/", import.meta.url).pathname;
-const FALLBACK_ICON = `${ICON_BASE}cloudy.svg`;
+const FALLBACK_ICON = "cloudy";
+const ICON_URI_CACHE = new Map();
 
 /**
  * Conditions that don't have their own SVG file;
@@ -18,10 +19,27 @@ const ICON_ALIAS = {
 };
 
 /** Map HA condition string → SVG URL */
-function getWeatherIcon(condition) {
+function getWeatherIconKey(condition) {
   if (!condition) return FALLBACK_ICON;
   const file = ICON_ALIAS[condition] || condition;
-  return `${ICON_BASE}${file}.svg`;
+  return JELLY_WEATHER_ICONS[file] ? file : FALLBACK_ICON;
+}
+
+function getWeatherIconSvg(condition) {
+  const key = getWeatherIconKey(condition);
+  return JELLY_WEATHER_ICONS[key] || JELLY_WEATHER_ICONS[FALLBACK_ICON] || "";
+}
+
+function svgToDataUri(svg) {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function getWeatherIconUri(condition) {
+  const key = getWeatherIconKey(condition);
+  if (!ICON_URI_CACHE.has(key)) {
+    ICON_URI_CACHE.set(key, svgToDataUri(getWeatherIconSvg(key)));
+  }
+  return ICON_URI_CACHE.get(key);
 }
 
 /** Humanize a HA weather condition string for display */
@@ -233,7 +251,7 @@ customElements.define(
         : "Home";
 
       // ── Current icon (inline SVG for animation)
-      this._loadMainIcon(getWeatherIcon(condition));
+      this._loadMainIcon(condition);
 
       // ── Current temperature
       if (currentTemp != null) {
@@ -356,7 +374,7 @@ customElements.define(
         html += `
           <div class="forecast-day">
             <div class="forecast-day-label">${dayLabel}</div>
-            <img class="forecast-day-icon" src="${getWeatherIcon(condition)}" alt="${humanizeCondition(condition)}" />
+            <img class="forecast-day-icon" src="${getWeatherIconUri(condition)}" alt="${humanizeCondition(condition)}" />
             <div class="forecast-candle-wrap">${candleSVG}</div>
             ${tempLabels}
             ${precipHTML}
@@ -371,18 +389,11 @@ customElements.define(
      * Fetch SVG text and inject it inline into the main icon container
      * so SMIL animations play inside shadow DOM.
      */
-    async _loadMainIcon(url) {
-      if (!this.$icon || this._currentIconUrl === url) return;
-      this._currentIconUrl = url;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const text = await res.text();
-        // Only update if URL hasn't changed while we were fetching
-        if (this._currentIconUrl === url) {
-          this.$icon.innerHTML = text;
-        }
-      } catch (_) { /* network error — leave previous icon */ }
+    _loadMainIcon(condition) {
+      const key = getWeatherIconKey(condition);
+      if (!this.$icon || this._currentIconKey === key) return;
+      this._currentIconKey = key;
+      this.$icon.innerHTML = getWeatherIconSvg(key);
     }
 
     // ── Cleanup ───────────────────────────────────────────────

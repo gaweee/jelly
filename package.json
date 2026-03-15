@@ -4,6 +4,7 @@
   "private": true,
   "files": [
     "jelly.js",
+    "icon.png",
     "dist/jelly.js",
     "src",
     "assets",
@@ -15,9 +16,10 @@
   ],
   "scripts": {
     "build": "./scripts/build-dist.sh",
-    "clean": "rm -f dist/jelly.js && rm -rf release",
+    "clean": "rm -f jelly.js dist/jelly.js src/generated/inline-assets.js && rm -rf release",
     "package": "npm run build && mkdir -p release .npm-cache && npm pack --cache .npm-cache --pack-destination release",
     "deploy": "./install.sh",
+    "pushlocal": "HA_SSH_TARGET=root@192.168.64.2 HA_WWW_PATH=/config/www/jelly ./install.sh",
     "push": "npm run deploy",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
@@ -26,5 +28,8 @@
     "release:minor": "npm run version:minor && npm run package",
     "release:major": "npm run version:major && npm run package",
     "dev": "echo \"Edit src/, then run: npm run build && npm run deploy\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.4"
   }
 }

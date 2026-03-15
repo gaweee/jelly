@@ -10,6 +10,8 @@ HA_WWW_PATH="${HA_WWW_PATH:-/config/www/jelly}"
 npm run build >/dev/null
 
 tar -czf - \
+  jelly.js \
+  icon.png \
   dist \
   src \
   assets \

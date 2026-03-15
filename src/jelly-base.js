@@ -1,14 +1,7 @@
 // Base class for Jelly cards. Handles asset loading, shadow DOM, helpers, gestures, and optimistic UI.
+import { JELLY_BASE_CSS, JELLY_CARD_ASSETS } from "./generated/inline-assets.js";
 
-const ASSET_BASE = new URL("./cards/", import.meta.url).pathname;
-const STYLE_BASE = new URL("./styles/", import.meta.url).pathname;
 const DEFAULT_OPTIMISTIC_TIMEOUT = 1200;
-
-async function fetchText(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Jelly: failed to load ${url}`);
-  return res.text();
-}
 
 export class JellyCardBase extends HTMLElement {
   static assetCache = new Map();
@@ -331,12 +324,10 @@ export class JellyCardBase extends HTMLElement {
 
   async _loadAssets() {
     const tag = this.tagName.toLowerCase();
-    // Load shared base CSS once (singleton promise)
-    if (!JellyCardBase._baseCssPromise) {
-      JellyCardBase._baseCssPromise = fetchText(`${STYLE_BASE}jelly-base-card.css`)
-        .then(text => { JellyCardBase._baseCss = text; });
+    // Resolve shared base CSS once.
+    if (!JellyCardBase._baseCss) {
+      JellyCardBase._baseCss = JELLY_BASE_CSS;
     }
-    await JellyCardBase._baseCssPromise;
 
     const cached = JellyCardBase.assetCache.get(tag);
 
@@ -346,10 +337,11 @@ export class JellyCardBase extends HTMLElement {
     if (cached) {
       ({ html, css } = cached);
     } else {
-      [html, css] = await Promise.all([
-        fetchText(`${ASSET_BASE}${tag}.html`),
-        fetchText(`${ASSET_BASE}${tag}.css`)
-      ]);
+      const assets = JELLY_CARD_ASSETS[tag];
+      if (!assets) {
+        throw new Error(`Jelly: missing inline assets for ${tag}`);
+      }
+      ({ html, css } = assets);
       JellyCardBase.assetCache.set(tag, { html, css });
     }
 
