@@ -6,7 +6,7 @@ import JellyCardBase from "../jelly-base.js";
  * Data comes exclusively from a HA weather.* entity.
  */
 
-const ICON_BASE = "/local/jelly/src/cards/weather-icons/";
+const ICON_BASE = new URL("./weather-icons/", import.meta.url).pathname;
 const FALLBACK_ICON = `${ICON_BASE}cloudy.svg`;
 
 /**

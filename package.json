@@ -2,9 +2,28 @@
   "name": "jelly",
   "version": "0.1.0",
   "private": true,
+  "files": [
+    "dist/jelly.js",
+    "src",
+    "assets",
+    "install.sh",
+    "hacs.json",
+    "README.md",
+    "INSTALL.md",
+    "JELLY_SPEC.md"
+  ],
   "scripts": {
-    "push": "tar -czf - . | ssh root@192.168.64.2 \"mkdir -p /config/www/jelly && tar -xzf - -C /config/www/jelly\"",
-    "clean": "rm -rf dist",
-    "dev": "echo \"No dev server yet – edit src/ and run npm run push\""
+    "build": "./scripts/build-dist.sh",
+    "clean": "rm -f dist/jelly.js && rm -rf release",
+    "package": "npm run build && mkdir -p release .npm-cache && npm pack --cache .npm-cache --pack-destination release",
+    "deploy": "./install.sh",
+    "push": "npm run deploy",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "release:patch": "npm run version:patch && npm run package",
+    "release:minor": "npm run version:minor && npm run package",
+    "release:major": "npm run version:major && npm run package",
+    "dev": "echo \"Edit src/, then run: npm run build && npm run deploy\""
   }
 }

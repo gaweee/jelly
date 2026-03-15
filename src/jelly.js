@@ -1,7 +1,8 @@
 (function loadJellyTheme() {
-  // Compute base path from this module's location
+  // Resolve root from module URL so both /local/<dir> and /hacsfiles/<repo> work.
   const moduleUrl = new URL(import.meta.url);
-  const basePath = moduleUrl.pathname.replace(/\/[^/]+$/, ''); // Remove jelly.js
+  const srcBasePath = moduleUrl.pathname.replace(/\/[^/]+$/, "");
+  const rootBasePath = srcBasePath.replace(/\/src$/, "");
 
   // Inject @font-face with dynamic path
   const fontId = "jelly-font";
@@ -11,7 +12,7 @@
     fontStyle.textContent = `
       @font-face {
         font-family: "Inter";
-        src: url("${basePath}/../dist/fonts/Inter.var.woff2") format("woff2-variations");
+        src: url("${rootBasePath}/assets/fonts/Inter.var.woff2") format("woff2-variations");
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;
@@ -26,7 +27,7 @@
     const link = document.createElement("link");
     link.id = themeId;
     link.rel = "stylesheet";
-    link.href = `${basePath}/styles/jelly-theme.css?v=dev1`;
+    link.href = `${srcBasePath}/styles/jelly-theme.css`;
     document.head.appendChild(link);
   }
 })();

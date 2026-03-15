@@ -1,7 +1,7 @@
 // Base class for Jelly cards. Handles asset loading, shadow DOM, helpers, gestures, and optimistic UI.
 
-const ASSET_BASE = "/local/jelly/src/cards/";
-const STYLE_BASE = "/local/jelly/src/styles/";
+const ASSET_BASE = new URL("./cards/", import.meta.url).pathname;
+const STYLE_BASE = new URL("./styles/", import.meta.url).pathname;
 const DEFAULT_OPTIMISTIC_TIMEOUT = 1200;
 
 async function fetchText(url) {

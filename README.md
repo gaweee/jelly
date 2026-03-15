@@ -25,10 +25,19 @@ A collection of handcrafted custom cards for Home Assistant, built with clean HT
 | Camera | `jelly-camera-card` | Live still-image feed with full-screen live stream dialog |
 | Activity | `jelly-activity-card` | Scrollable timeline of recent smart home events |
 
-## Quick Start
+## Quick Start (HACS)
+
+1. In Home Assistant, open **HACS → Frontend → Custom repositories**
+2. Add this repo as type **Dashboard**
+3. Install **Jelly Dashboard**
+4. Add resource URL:
+   - `/hacsfiles/jelly/dist/jelly.js` (if repo name is `jelly`)
+5. Hard-refresh your browser
+
+## Quick Start (Manual)
 
 1. Copy the `jelly` folder to `/config/www/jelly/` on your HA instance
-2. Register the resource: **Settings → Dashboards → Resources** → add `/local/jelly/src/jelly.js` as **JavaScript Module**
+2. Register the resource: **Settings → Dashboards → Resources** → add `/local/jelly/dist/jelly.js` as **JavaScript Module**
 3. Hard-refresh your browser — Jelly cards appear in the card picker
 4. Activate the **Catppuccin Mocha** theme for the intended look
 
@@ -65,8 +74,11 @@ domains:
 ## Development
 
 ```bash
-# Push to HA via SSH
-npm run push
+# Build distributable entrypoint
+npm run build
+
+# Deploy to HA via SSH (uses install.sh and env vars)
+npm run deploy
 ```
 
 See [JELLY_SPEC.md](JELLY_SPEC.md) for the full technical specification.

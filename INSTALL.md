@@ -7,8 +7,9 @@ A step-by-step guide to installing the Jelly custom dashboard for Home Assistant
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Install Jelly Files](#install-jelly-files)
-3. [Register the Resource](#register-the-resource)
+2. [Install via HACS (Recommended)](#install-via-hacs-recommended)
+3. [Install Jelly Files (Manual)](#install-jelly-files-manual)
+4. [Register the Resource](#register-the-resource)
 4. [Catppuccin Theme Setup](#catppuccin-theme-setup)
 5. [Card Setup: HVAC](#card-setup-hvac)
 6. [Card Setup: Weather](#card-setup-weather)
@@ -30,12 +31,28 @@ A step-by-step guide to installing the Jelly custom dashboard for Home Assistant
 
 ---
 
-## Install Jelly Files
+## Install via HACS (Recommended)
+
+1. Open **HACS → Frontend → Custom repositories**
+2. Add this repository as type **Dashboard**
+3. Install **Jelly Dashboard**
+4. Add resource URL:
+   - `/hacsfiles/jelly/dist/jelly.js` (if repo name is `jelly`)
+5. Hard-refresh your browser
+
+---
+
+## Install Jelly Files (Manual)
 
 Copy the entire `jelly` folder into your Home Assistant `www` directory so the path looks like:
 
 ```
 /config/www/jelly/
+├── assets/
+│   └── fonts/
+│       └── Inter.var.woff2
+├── dist/
+│   └── jelly.js         ← resource entry point
 ├── src/
 │   ├── jelly.js          ← main entry point
 │   ├── jelly-base.js
@@ -51,13 +68,10 @@ Copy the entire `jelly` folder into your Home Assistant `www` directory so the p
 │   │   ├── jelly-base-card.css
 │   │   └── typography.css
 │   └── utils/
-├── dist/
-│   └── fonts/
-│       └── Inter.var.woff2
 └── ...
 ```
 
-> **Tip:** If developing locally, run `npm run push` from the project root to rsync files to your HA instance via SSH.
+> **Tip:** If developing locally, run `npm run deploy` from the project root to sync files to your HA instance via SSH.
 
 ---
 
@@ -66,7 +80,8 @@ Copy the entire `jelly` folder into your Home Assistant `www` directory so the p
 1. Go to **Settings → Dashboards → ⋮ (top-right) → Resources**
 2. Click **Add Resource**
 3. Enter:
-   - **URL:** `/local/jelly/src/jelly.js`
+   - **URL:** `/local/jelly/dist/jelly.js` (manual install)
+   - **URL:** `/hacsfiles/jelly/dist/jelly.js` (HACS install with repo name `jelly`)
    - **Resource type:** JavaScript Module
 4. Click **Create**
 5. **Hard-refresh** your browser (`Cmd+Shift+R` / `Ctrl+Shift+R`)
@@ -541,15 +556,15 @@ If you're developing Jelly locally and have SSH access to your HA instance:
 
 ```bash
 # From the jelly project root
-npm run push
+npm run deploy
 ```
 
 This runs:
 ```bash
-tar -czf - . | ssh root@192.168.64.2 "mkdir -p /config/www/jelly && tar -xzf - -C /config/www/jelly"
+HA_SSH_TARGET=root@192.168.64.2 HA_WWW_PATH=/config/www/jelly ./install.sh
 ```
 
-> **Note:** Update the SSH target in `package.json` to match your HA instance's IP address and credentials.
+> **Note:** Override `HA_SSH_TARGET` and `HA_WWW_PATH` env vars to match your HA instance path and credentials.
 
 After pushing, hard-refresh your browser (`Cmd+Shift+R`) to pick up the changes. If cards don't update, clear the resource cache: **Settings → Dashboards → Resources** → edit the Jelly resource URL to add a query string (e.g. `?v=2`), then refresh.
 
@@ -560,7 +575,7 @@ After pushing, hard-refresh your browser (`Cmd+Shift+R`) to pick up the changes.
 | Problem | Fix |
 |---|---|
 | Cards don't appear in the picker | Ensure the resource is registered as a **JavaScript Module** and hard-refresh |
-| "Custom element doesn't exist" | Check the resource URL path — it must be `/local/jelly/src/jelly.js` |
+| "Custom element doesn't exist" | Check resource URL path (`/local/jelly/dist/jelly.js` for manual, `/hacsfiles/jelly/dist/jelly.js` for HACS repo `jelly`) |
 | Theme colors look wrong | Verify Catppuccin is the active theme in your user profile |
 | Weather icons missing | Confirm SVG files exist at `/config/www/jelly/src/cards/weather-icons/` |
 | Camera shows "Not found" | Check that the camera entity exists and is not `unavailable` |
