@@ -1,2 +1,2 @@
 /* HACS resource entrypoint (root). */
-import "./dist/jelly.js";
+import "./src/jelly.js";
