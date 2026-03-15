@@ -22,6 +22,7 @@ const DEFAULT_RANGE = "3d";
 
 /* Catppuccin Mocha palette for canvas rendering */
 const CTP = {
+  mauve: "#cba6f7",
   blue: "#89b4fa",
   lavender: "#b4befe",
   text: "#cdd6f4",
@@ -37,78 +38,81 @@ const latestPill = {
   id: "jellyLatestPill",
 
   afterDatasetsDraw(chart) {
-    const ds = chart.data.datasets[0];
-    const meta = chart.getDatasetMeta(0);
-    if (!ds || !meta?.data?.length) return;
-
-    // find last non-null index
-    let li = ds.data.length - 1;
-    while (li >= 0 && ds.data[li] == null) li--;
-    if (li < 0) return;
-
-    const pt = meta.data[li];
-    const val = ds.data[li];
-    const unit = chart.config._jellyUnit || "";
-    const text = `${Math.round(val * 10) / 10} ${unit}`.trim();
-
     const ctx = chart.ctx;
     ctx.save();
     ctx.font = '600 11px "Inter", sans-serif';
 
-    const tw = ctx.measureText(text).width;
-    const px = 10,
-      py = 5;
-    const bw = tw + px * 2;
-    const bh = 14 + py * 2;
+    chart.data.datasets.forEach((ds, dsIdx) => {
+      const meta = chart.getDatasetMeta(dsIdx);
+      if (!ds || !meta?.data?.length) return;
 
-    // position above the point, clamped inside chart area
-    let bx = pt.x - bw / 2;
-    let by = pt.y - bh - 16;
-    bx = Math.max(
-      chart.chartArea.left + 2,
-      Math.min(bx, chart.chartArea.right - bw - 2)
-    );
-    by = Math.max(chart.chartArea.top, by);
+      // find last non-null index
+      let li = ds.data.length - 1;
+      while (li >= 0 && ds.data[li] == null) li--;
+      if (li < 0) return;
 
-    // dashed stem
-    ctx.strokeStyle = "rgba(137,180,250,0.25)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(pt.x, pt.y - 6);
-    ctx.lineTo(pt.x, by + bh);
-    ctx.stroke();
-    ctx.setLineDash([]);
+      const pt = meta.data[li];
+      const val = ds.data[li];
+      const unitKey = dsIdx === 0 ? "_jellyUnit" : "_jellyUnit2";
+      const unit = chart.config[unitKey] || "";
+      const text = `${Math.round(val * 10) / 10} ${unit}`.trim();
+      const color = ds.borderColor || CTP.blue;
 
-    // pill bg
-    ctx.fillStyle = CTP.surface0;
-    ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, 6);
-    ctx.fill();
+      const tw = ctx.measureText(text).width;
+      const px = 10,
+        py = 5;
+      const bw = tw + px * 2;
+      const bh = 14 + py * 2;
 
-    // pill text
-    ctx.fillStyle = CTP.text;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, bx + bw / 2, by + bh / 2);
+      // position above the point, clamped inside chart area
+      let bx = pt.x - bw / 2;
+      let by = pt.y - bh - 16;
+      bx = Math.max(
+        chart.chartArea.left + 2,
+        Math.min(bx, chart.chartArea.right - bw - 2)
+      );
+      by = Math.max(chart.chartArea.top, by);
 
-    // dot glow
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(137,180,250,0.25)";
-    ctx.fill();
+      // dashed stem
+      ctx.strokeStyle = color + "40";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pt.x, pt.y - 6);
+      ctx.lineTo(pt.x, by + bh);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    // dot ring
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = CTP.blue;
-    ctx.fill();
+      // pill bg
+      ctx.fillStyle = CTP.surface0;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, 6);
+      ctx.fill();
 
-    // dot center
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
+      // pill text
+      ctx.fillStyle = CTP.text;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, bx + bw / 2, by + bh / 2);
+
+      // dot glow
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = color + "40";
+      ctx.fill();
+
+      // dot ring
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // dot center
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    });
 
     ctx.restore();
   },
@@ -141,6 +145,10 @@ customElements.define(
             name: "entity",
             selector: { entity: { domain: ["sensor"] } },
           },
+          {
+            name: "entity2",
+            selector: { entity: { domain: ["sensor"] } },
+          },
           { name: "name", selector: { text: {} } },
           {
             name: "range",
@@ -159,6 +167,7 @@ customElements.define(
         ],
         labels: {
           entity: "Sensor Entity",
+          entity2: "Second Sensor Entity (optional)",
           name: "Display Name (optional)",
           range: "Default Range",
         },
@@ -177,11 +186,14 @@ customElements.define(
 
     afterLoad() {
       this.$title = this.qs(".title");
+      this.$legend = this.qs(".legend");
       this.$canvas = this.qs(".chart-canvas");
       this.$empty = this.qs(".empty-state");
       this._chart = null;
       this._data = null;
+      this._data2 = null;
       this._prevEntity = null;
+      this._prevEntity2 = null;
       this._activeRange = null;
       this._fetchAt = 0;
       this._timer = null;
@@ -222,8 +234,24 @@ customElements.define(
         ent?.attributes?.friendly_name ||
         this.config.entity;
 
+      // legend — shown only when a second sensor is configured
+      if (this.$legend) {
+        if (this.config.entity2) {
+          const ent2 = this._hass?.states?.[this.config.entity2];
+          const label1 = this.config.name || ent?.attributes?.friendly_name || this.config.entity;
+          const label2 = ent2?.attributes?.friendly_name || this.config.entity2;
+          this.$legend.innerHTML =
+            `<span class="legend-item"><span class="legend-dot" style="background:${CTP.mauve}"></span>${label1}</span>` +
+            `<span class="legend-item"><span class="legend-dot" style="background:${CTP.blue}"></span>${label2}</span>`;
+          this.$legend.style.display = "flex";
+        } else {
+          this.$legend.style.display = "none";
+        }
+      }
+
       // entity or default range changed in config → full refresh
-      if (this.config.entity !== this._prevEntity) {
+      if (this.config.entity !== this._prevEntity ||
+          (this.config.entity2 || null) !== this._prevEntity2) {
         this._setRange(this.config.range || this._activeRange || DEFAULT_RANGE);
         return;
       }
@@ -234,6 +262,16 @@ customElements.define(
         if (ds?.data?.length) {
           ds.data[ds.data.length - 1] = parseFloat(ent.state);
           this._chart.update("none");
+        }
+      }
+      if (this.config.entity2 && this._chart) {
+        const ent2 = this._hass?.states?.[this.config.entity2];
+        if (ent2 && !isNaN(parseFloat(ent2.state))) {
+          const ds2 = this._chart.data.datasets[1];
+          if (ds2?.data?.length) {
+            ds2.data[ds2.data.length - 1] = parseFloat(ent2.state);
+            this._chart.update("none");
+          }
         }
       }
 
@@ -272,29 +310,61 @@ customElements.define(
       if (!this.hass || !this.config?.entity) return;
 
       const now = Date.now();
-      // throttle: max once per 30s for same entity+range
+      // throttle: max once per 30s for same entity+range combination
       if (
         now - this._fetchAt < 30_000 &&
-        this._prevEntity === this.config.entity
+        this._prevEntity === this.config.entity &&
+        this._prevEntity2 === (this.config.entity2 || null)
       )
         return;
 
       this._fetchAt = now;
       this._prevEntity = this.config.entity;
+      this._prevEntity2 = this.config.entity2 || null;
 
-      console.log(`[Jelly:sensor-graph] fetchAndDraw — entity=${this.config.entity} range=${this._activeRange}`);
-      const raw = await this._fetchHistory();
+      const eid = this.config.entity;
+      const liveState = parseFloat(this._hass?.states?.[eid]?.state);
+      const stateObj = this._hass?.states?.[eid];
+      console.log(`[Jelly:sensor-graph] fetchAndDraw — entity=${eid} range=${this._activeRange} liveState=${liveState} stateObj=`, stateObj ? { state: stateObj.state, last_changed: stateObj.last_changed, last_updated: stateObj.last_updated, attributes: stateObj.attributes } : null);
+      const raw = await this._fetchHistory(eid);
       console.log(`[Jelly:sensor-graph] raw entries returned: ${raw.length}`, raw.slice(0, 3));
-      this._data = this._bucket(raw);
+
+      // If all APIs return nothing but the entity has a live numeric state,
+      // synthesise a single point at now so the chart shows something.
+      const finalRaw = raw.length > 0 ? raw : (
+        isFinite(liveState)
+          ? [{ last_changed: Date.now(), state: String(liveState) }]
+          : []
+      );
+      if (raw.length === 0 && finalRaw.length > 0) {
+        console.log(`[Jelly:sensor-graph] using live state fallback: ${liveState}`);
+      }
+
+      this._data = this._bucket(finalRaw);
       console.log(`[Jelly:sensor-graph] bucketed — labels=${this._data.labels.length} hasValues=${this._data.data.some(v => v != null)}`, this._data);
+
+      // Fetch second sensor if configured
+      if (this.config.entity2) {
+        const eid2 = this.config.entity2;
+        const liveState2 = parseFloat(this._hass?.states?.[eid2]?.state);
+        const raw2 = await this._fetchHistory(eid2);
+        const finalRaw2 = raw2.length > 0 ? raw2 : (
+          isFinite(liveState2)
+            ? [{ last_changed: Date.now(), state: String(liveState2) }]
+            : []
+        );
+        this._data2 = this._bucket(finalRaw2);
+      } else {
+        this._data2 = null;
+      }
+
       this._draw();
     }
 
-    async _fetchHistory() {
+    async _fetchHistory(eid) {
       const h = this._range.hours;
       const start = new Date(Date.now() - h * 36e5).toISOString();
       const end = new Date().toISOString();
-      const eid = this.config.entity;
 
       console.log(`[Jelly:sensor-graph] _fetchHistory — entity=${eid} start=${start}`);
 
@@ -339,14 +409,13 @@ customElements.define(
       // Last resort: long-term statistics (sensors not stored in state history,
       // e.g. soil monitors, energy meters from certain integrations)
       console.log(`[Jelly:sensor-graph] trying statistics fallback`);
-      return this._fetchStatistics();
+      return this._fetchStatistics(eid);
     }
 
-    async _fetchStatistics() {
+    async _fetchStatistics(eid) {
       const h = this._range.hours;
       const start = new Date(Date.now() - h * 36e5).toISOString();
       const end = new Date().toISOString();
-      const eid = this.config.entity;
       // 5minute resolution for 24h, hourly for longer ranges
       const period = h <= 24 ? "5minute" : "hour";
 
@@ -360,7 +429,15 @@ customElements.define(
           period,
           types: ["mean", "state"],
         });
-        const entries = result?.[eid] || [];
+        console.log(`[Jelly:sensor-graph] statistics raw result keys:`, Object.keys(result || {}));
+        // Match by exact key or by any key that ends with the entity id's object_id
+        // (some integrations store under a different prefix)
+        const exactEntries = result?.[eid];
+        const fallbackKey = exactEntries == null
+          ? Object.keys(result || {}).find(k => k === eid || k.endsWith(':' + eid) || k.endsWith('_' + eid.split('.')[1]))
+          : null;
+        if (fallbackKey) console.log(`[Jelly:sensor-graph] statistics key mismatch — using key: ${fallbackKey}`);
+        const entries = exactEntries ?? (fallbackKey ? result[fallbackKey] : []) ?? [];
         console.log(`[Jelly:sensor-graph] statistics entries: ${entries.length}`, entries.slice(0, 3));
         return entries.map((e) => {
           const t =
@@ -517,38 +594,95 @@ customElements.define(
       this._chart?.destroy();
 
       const ctx = this.$canvas.getContext("2d");
-      const color = CTP.blue;
+      const color1 = CTP.mauve;
+      const color2 = CTP.blue;
 
-      // gradient fill beneath the line
       const wrapH =
         this.$canvas.parentElement?.offsetHeight ||
         this.$canvas.offsetHeight ||
         200;
-      const grad = ctx.createLinearGradient(0, 0, 0, wrapH);
-      grad.addColorStop(0, color + "30");
-      grad.addColorStop(1, color + "00");
+
+      const grad1 = ctx.createLinearGradient(0, 0, 0, wrapH);
+      grad1.addColorStop(0, color1 + "30");
+      grad1.addColorStop(1, color1 + "00");
 
       const entity = this.stateObj();
       const unit = entity?.attributes?.unit_of_measurement || "";
       const h = this._range.hours;
       const ticksMax = h <= 24 ? 6 : h <= 72 ? 6 : 7;
 
+      const datasets = [
+        {
+          data,
+          borderColor: color1,
+          backgroundColor: grad1,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 2,
+          yAxisID: "y",
+        },
+      ];
+
+      const scales = {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            color: CTP.overlay0,
+            font: { family: '"Inter", sans-serif', size: 11 },
+            maxTicksLimit: ticksMax,
+            maxRotation: 0,
+          },
+        },
+        y: {
+          grid: { color: "rgba(108,112,134,0.10)" },
+          border: { display: false },
+          ticks: {
+            color: CTP.overlay0,
+            font: { family: '"Inter", sans-serif', size: 11 },
+            maxTicksLimit: 5,
+            padding: 8,
+          },
+        },
+      };
+
+      const entity2 = this.config.entity2
+        ? this._hass?.states?.[this.config.entity2]
+        : null;
+      const unit2 = entity2?.attributes?.unit_of_measurement || "";
+      const hasData2 = this._data2?.data?.some((v) => v != null);
+
+      if (hasData2) {
+        const grad2 = ctx.createLinearGradient(0, 0, 0, wrapH);
+        grad2.addColorStop(0, color2 + "20");
+        grad2.addColorStop(1, color2 + "00");
+        datasets.push({
+          data: this._data2.data,
+          borderColor: color2,
+          backgroundColor: grad2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 2,
+          yAxisID: "y2",
+        });
+        scales.y2 = {
+          position: "right",
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            color: CTP.overlay0,
+            font: { family: '"Inter", sans-serif', size: 11 },
+            maxTicksLimit: 5,
+            padding: 8,
+          },
+        };
+      }
+
       this._chart = new Chart(ctx, {
         type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              data,
-              borderColor: color,
-              backgroundColor: grad,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 0,
-              borderWidth: 2,
-            },
-          ],
-        },
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -558,34 +692,14 @@ customElements.define(
             legend: { display: false },
             tooltip: { enabled: false },
           },
-          scales: {
-            x: {
-              grid: { display: false },
-              border: { display: false },
-              ticks: {
-                color: CTP.overlay0,
-                font: { family: '"Inter", sans-serif', size: 11 },
-                maxTicksLimit: ticksMax,
-                maxRotation: 0,
-              },
-            },
-            y: {
-              grid: { color: "rgba(108,112,134,0.10)" },
-              border: { display: false },
-              ticks: {
-                color: CTP.overlay0,
-                font: { family: '"Inter", sans-serif', size: 11 },
-                maxTicksLimit: 5,
-                padding: 8,
-              },
-            },
-          },
+          scales,
           layout: { padding: { top: 32, right: 8 } },
         },
         plugins: [latestPill],
       });
 
       this._chart.config._jellyUnit = unit;
+      this._chart.config._jellyUnit2 = unit2;
     }
   }
 );

@@ -6,7 +6,10 @@
  * (e.g. SIP URL), just extend entrySchema and _defaultEntry().
  *
  * Config shape:
- *   { name: "Intercom", entries: [{ name, icon }, …] }
+ *   { name: "Intercom", entries: [{ name, icon, url }, …] }
+ *
+ * The `url` field accepts any URI the device can open — e.g.
+ *   intent:sip:1002@192.168.1.100#Intent;scheme=sip;package=org.linphone;end
  */
 import { JellyManagedEntriesEditor } from "../utils/managed-entries-editor.js";
 
@@ -24,12 +27,12 @@ class JellySipEditor extends JellyManagedEntriesEditor {
     return [
       { key: 'name', label: 'Name', type: 'text' },
       { key: 'icon', label: 'Icon', type: 'icon' },
-      // Future: { key: 'url', label: 'SIP URL', type: 'text' },
+      { key: 'url',  label: 'Dial URL (e.g. intent:sip:…)', type: 'text' },
     ];
   }
 
   _defaultEntry() {
-    return { name: '', icon: 'mdi:phone' };
+    return { name: '', icon: 'mdi:phone', url: '' };
   }
 }
 

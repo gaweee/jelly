@@ -26,6 +26,34 @@ ha-card {
 /* .title — inherits base .title + t-h2 */
 
 /* ───────────────────────────────────────────
+   Legend (dual-sensor)
+   ─────────────────────────────────────────── */
+.legend {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--jelly-text-2, var(--jelly-off));
+  opacity: 0.75;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ───────────────────────────────────────────
    Chart — flex fill
    ─────────────────────────────────────────── */
 .chart-wrap {

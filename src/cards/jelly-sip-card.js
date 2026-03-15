@@ -10,7 +10,10 @@ import { SwipeAction }  from "../utils/swipe-action.js";
  *   Right — SwipeAction  (swipe knob to confirm dial)
  *
  * Config shape:
- *   { name: "Intercom", entries: [{ name, icon }, …] }
+ *   { name: "Intercom", entries: [{ name, icon, url }, …] }
+ *
+ * When `url` is set on an entry, swiping opens that URL on the device
+ * (e.g. an Android intent URI to trigger a SIP call via Linphone).
  */
 customElements.define(
   "jelly-sip-card",
@@ -34,8 +37,8 @@ customElements.define(
         type: "custom:jelly-sip-card",
         name: "Intercom",
         entries: [
-          { name: "Living Room", icon: "mdi:sofa" },
-          { name: "Family Area", icon: "mdi:home" },
+          { name: "Living Room", icon: "mdi:sofa",  url: "intent:sip:1001@192.168.1.100#Intent;scheme=sip;package=org.linphone;end" },
+          { name: "Family Area", icon: "mdi:home",  url: "intent:sip:1002@192.168.1.100#Intent;scheme=sip;package=org.linphone;end" },
         ],
       };
     }
@@ -144,9 +147,13 @@ customElements.define(
       if (!entry) return;
 
       this.dispatchEvent(new CustomEvent('jelly-sip-dial', {
-        detail: { name: entry.name, icon: entry.icon, index: idx },
+        detail: { name: entry.name, icon: entry.icon, url: entry.url || null, index: idx },
         bubbles: true, composed: true,
       }));
+
+      if (entry.url) {
+        window.open(entry.url, '_blank', 'noopener');
+      }
     }
 
     /* ── Cleanup ── */
